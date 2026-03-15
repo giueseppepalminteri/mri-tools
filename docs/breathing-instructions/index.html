@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Breathing Instructions</title>
+<style>
+  :root {
+    --bg: #000000; 
+    --accent: #60a5fa;
+    --muted: #94a3b8;
+    --text: #ffffff;
+    --danger: #fb7185;
+  }
+
+  * { box-sizing: border-box; }
+  
+  html, body { 
+    height: 100%; 
+    margin: 0; 
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden; 
+  }
+
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 30px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+  }
+
+  h1 { font-size: 20px; margin: 0; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+
+  .display {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 30px;
+  }
+
+  .step {
+    font-size: clamp(40px, 12vw, 110px); 
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(96, 165, 250, 0.5);
+    max-width: 95vw;
+  }
+
+  .countdown {
+    font-size: clamp(60px, 15vw, 160px);
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    font-weight: 200;
+  }
+
+  .status-bar {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto 30px auto;
+  }
+
+  .progress {
+    height: 60px; 
+    background: rgba(255,255,255,0.15);
+    border-radius: 30px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    border: 3px solid rgba(255,255,255,0.2);
+  }
+
+  .progress > i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd);
+    width: 0%;
+    transition: width 0.2s linear;
+  }
+
+  .meta-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .bottom-shelf {
+    background: rgba(30, 41, 59, 0.9);
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .input-group label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  input {
+    background: #000;
+    border: 1px solid #475569;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 16px;
+    width: 90px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  button {
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: 0;
+    font-weight: 800;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .btn-start { background: var(--accent); color: #000; }
+  .btn-stop { background: var(--danger); color: #fff; }
+  .btn-save { background: #475569; color: #fff; }
+  
+  button:disabled { opacity: 0.2; cursor: not-allowed; }
+
+  .presets-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .preset-wrapper {
+    display: flex;
+    align-items: center;
+    background: #0f172a;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    overflow: hidden;
+  }
+
+  .preset-btn {
+    background: none;
+    border: 0;
+    color: #fff;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .preset-del {
+    background: rgba(251, 113, 133, 0.2);
+    color: var(--danger);
+    border: 0;
+    padding: 6px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    border-left: 1px solid #334155;
+  }
+
+  kbd { background: #475569; padding: 2px 5px; border-radius: 4px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <header>
+    <h1>Breathing Instructions</h1>
+    <div class="meta-info" style="gap:20px">
+      <span><kbd>Space</kbd> Start/Stop</span>
+      <span id="cycleInfo">Cycle 0/0</span>
+    </div>
+  </header>
+
+  <main class="display">
+    <div id="stepText" class="step">Ready</div>
+    <div id="countdown" class="countdown">00s</div>
+  </main>
+
+  <div class="status-bar">
+    <div class="progress"><i id="progressBar"></i></div>
+    <div class="meta-info">
+      <span id="stepInfo">Status: Waiting</span>
+      <span id="timeLeft">Remaining: 0s</span>
+    </div>
+  </div>
+
+  <footer class="bottom-shelf">
+    <form id="config" onsubmit="return false;" class="controls-row">
+      <div class="input-group">
+        <label>Reps</label>
+        <input id="reps" type="number" min="1" value="1" />
+      </div>
+      <div class="input-group">
+        <label>Inhale (s)</label>
+        <input id="inhale" type="number" min="1" value="5" />
+      </div>
+      <div class="input-group">
+        <label>Hold Breath (s)</label>
+        <input id="hold" type="number" min="1" value="20" />
+      </div>
+      <div class="input-group">
+        <label>Recovery Time (s)</label>
+        <input id="recovery" type="number" min="0" value="15" />
+      </div>
+
+      <div class="actions">
+        <button id="startBtn" class="btn-start">START SESSION</button>
+        <button id="stopBtn" class="btn-stop" disabled>STOP</button>
+        <button id="saveBtn" class="btn-save">SAVE PRESET</button>
+      </div>
+    </form>
+
+    <div id="presetsList" class="presets-container"></div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const presetsList = document.getElementById('presetsList');
+  const stepText = document.getElementById('stepText');
+  const countdown = document.getElementById('countdown');
+  const progressBar = document.getElementById('progressBar');
+  const cycleInfo = document.getElementById('cycleInfo');
+  const stepInfo = document.getElementById('stepInfo');
+  const timeLeft = document.getElementById('timeLeft');
+
+  const inputs = {
+    reps: document.getElementById('reps'),
+    inhale: document.getElementById('inhale'),
+    hold: document.getElementById('hold'),
+    recovery: document.getElementById('recovery')
+  };
+
+  let state = { running: false, stopRequested: false, currentCycle: 0, totalCycles: 0 };
+
+  function getConfig() {
+    return {
+      reps: parseInt(inputs.reps.value) || 1,
+      inhale: parseFloat(inputs.inhale.value) || 5,
+      hold: parseFloat(inputs.hold.value) || 20,
+      recovery: parseFloat(inputs.recovery.value) || 0
+    };
+  }
+
+  function updateUI(label, remaining, total) {
+    stepText.textContent = label;
+    const displayVal = Math.max(0, remaining);
+    countdown.textContent = `${Math.ceil(displayVal)}s`;
+
+    const progressPct = total > 0 ? (1 - (displayVal/total)) * 100 : 0;
+    progressBar.style.width = `${progressPct}%`;
+    cycleInfo.textContent = `Cycle ${state.currentCycle}/${state.totalCycles}`;
+    stepInfo.textContent = `Status: ${label}`;
+    timeLeft.textContent = `Remaining: ${Math.ceil(displayVal)}s`;
+  }
+
+  const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+  async function runTimer(duration, label) {
+    let remaining = duration;
+    const total = duration;
+    while (remaining > 0) {
+      if (state.stopRequested) return; 
+      updateUI(label, remaining, total);
+      await sleep(100);
+      remaining -= 0.1;
+    }
+    updateUI(label, 0, total);
+  }
+
+  async function startSession() {
+    const cfg = getConfig();
+    state.running = true;
+    state.stopRequested = false;
+    state.totalCycles = cfg.reps;
+    
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+
+    for (let i = 1; i <= cfg.reps; i++) {
+      if (state.stopRequested) break;
+      state.currentCycle = i;
+      const isLastCycle = (i === cfg.reps);
+
+      // 1. Inhale
+      await runTimer(cfg.inhale, "Inhale");
+      if (state.stopRequested) break;
+
+      // 2. Hold Breath
+      await runTimer(cfg.hold, "Hold Breath");
+      if (state.stopRequested) break;
+
+      // 3. Recovery (only if not the last rep)
+      if (!isLastCycle && cfg.recovery > 0) {
+        await runTimer(cfg.recovery, "Prepare for next breath hold");
+      }
+    }
+    
+    resetUI("Breathe normally");
+  }
+
+  function resetUI(msg) {
+    state.running = false;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    stepText.textContent = msg;
+    countdown.textContent = "00s";
+    progressBar.style.width = "0%";
+    cycleInfo.textContent = `Cycle 0/${state.totalCycles || 0}`;
+    stepInfo.textContent = "Status: Waiting";
+  }
+
+  function initPresets() {
+    if (!localStorage.getItem('breath_initialized')) {
+      const defaults = [
+        { id: 1, name: 'MRI Standard', reps: 1, inhale: 5, hold: 20, recovery: 15 }
+      ];
+      localStorage.setItem('breath_presets', JSON.stringify(defaults));
+      localStorage.setItem('breath_initialized', 'true');
+    }
+    renderPresets();
+  }
+
+  function savePreset() {
+    const name = prompt("Enter preset name:", "New Instruction");
+    if (!name) return;
+    const newPreset = { name, ...getConfig(), id: Date.now() };
+    const saved = JSON.parse(localStorage.getItem('breath_presets') || '[]');
+    saved.push(newPreset);
+    localStorage.setItem('breath_presets', JSON.stringify(saved));
+    renderPresets();
+  }
+
+  function deletePreset(id) {
+    let saved = JSON.parse(localStorage.getItem('breath_presets') || '[]');
+    saved = saved.filter(p => p.id !== id);
+    localStorage.setItem('breath_presets', JSON.stringify(saved));
+    renderPresets();
+  }
+
+  function renderPresets() {
+    presetsList.innerHTML = '';
+    const saved = JSON.parse(localStorage.getItem('breath_presets') || '[]');
+    saved.forEach(p => {
+        const wrap = document.createElement('div');
+        wrap.className = 'preset-wrapper';
+        const btn = document.createElement('button');
+        btn.className = 'preset-btn';
+        btn.textContent = p.name;
+        btn.onclick = () => {
+            inputs.reps.value = p.reps;
+            inputs.inhale.value = p.inhale;
+            inputs.hold.value = p.hold;
+            inputs.recovery.value = p.recovery;
+        };
+        const del = document.createElement('button');
+        del.className = 'preset-del';
+        del.innerHTML = '&times;';
+        del.onclick = (e) => { e.stopPropagation(); deletePreset(p.id); };
+        wrap.appendChild(btn);
+        wrap.appendChild(del);
+        presetsList.appendChild(wrap);
+    });
+  }
+
+  startBtn.addEventListener('click', startSession);
+  stopBtn.addEventListener('click', () => { state.stopRequested = true; });
+  saveBtn.addEventListener('click', savePreset);
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      if (!state.running) startBtn.click();
+      else stopBtn.click();
+    }
+  });
+
+  initPresets();
+})();
+</script>
+</body>
+</html>
