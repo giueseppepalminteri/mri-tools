@@ -6,7 +6,6 @@
     <title>TMJ MRI Study Control</title>
     <style>
         :root {
-            /* This variable is updated by the dropdown menu */
             --scale-factor: 1.0; 
         }
 
@@ -15,50 +14,71 @@
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
+            /* Enabled scrolling for up/down and left/right */
+            overflow: auto; 
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden; /* Prevents scrollbars during scaling */
         }
 
-        /* Top Left Controls */
+        /* Top Left Scale Control */
         #controls-container {
             position: fixed;
             top: 10px;
             left: 10px;
-            z-index: 1000;
+            z-index: 1001;
             display: flex;
             gap: 10px;
             align-items: center;
-            background: rgba(40, 40, 40, 0.8);
+            background: rgba(40, 40, 40, 0.9);
             padding: 8px;
             border-radius: 5px;
+            border: 1px solid #444;
+        }
+
+        /* Top Right Navigation Button */
+        #exit-domain-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+            background: #900; /* Dark red for distinct exit action */
+            color: white;
+            border: 1px solid #f00;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: bold;
         }
 
         select {
-            background: #444;
+            background: #222;
             color: white;
             border: 1px solid #666;
             padding: 5px;
             cursor: pointer;
         }
 
-        /* Scaling Wrapper - This handles the custom percentage */
+        /* Scaling Wrapper */
         #scaling-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            height: 100%;
+            width: fit-content;
+            min-width: 100%;
+            min-height: 100vh;
             transform: scale(var(--scale-factor));
-            transform-origin: center center;
-            transition: transform 0.2s ease-out;
+            /* Transform-origin set to top center to allow scrolling to bottom naturally */
+            transform-origin: top center; 
+            transition: transform 0.1s ease-out;
+            padding: 60px 0; /* Padding so controls don't overlap content */
         }
 
-        /* Preview Screen */
+        /* PREVIEW PAGE (Reduced by 30%) */
         #preview-screen {
             text-align: center;
             width: 95vw;
@@ -66,15 +86,15 @@
 
         .grid-container {
             display: flex;
-            gap: 1vw;
+            gap: 0.7vw; /* Reduced from 1vw */
             justify-content: center;
-            margin: 2vh 0;
+            margin: 1.4vh 0; /* Reduced from 2vh */
         }
 
         .preview-item {
-            width: 14vw;
+            width: 9.8vw; /* Reduced from 14vw (30% reduction) */
             background: #111;
-            padding: 0.5vw;
+            padding: 0.35vw;
             border: 1px solid #333;
         }
 
@@ -83,24 +103,24 @@
             display: block;
         }
 
-        /* Presentation Mode */
+        /* PRESENTATION MODE */
         #presentation-screen {
             display: none; 
             text-align: center;
             width: 100vw;
-            cursor: pointer; /* Indicates the screen is clickable */
+            cursor: pointer;
         }
 
         #instruction-text {
-            /* Responsive font size based on screen width + scaling */
-            font-size: clamp(2rem, 6vw, 5rem); 
+            /* Font size reduced by 30%: clamp(1.4rem, 4.2vw, 3.5rem) */
+            font-size: clamp(1.4rem, 4.2vw, 3.5rem); 
             font-weight: 800;
             color: #ffff00;
-            margin-bottom: 2vh;
+            margin-bottom: 1.4vh;
         }
 
         #image-display {
-            height: 60vh;
+            height: 42vh; /* Reduced from 60vh (30% reduction) */
             width: 100%;
             display: flex;
             align-items: center;
@@ -110,16 +130,15 @@
         #main-img {
             max-width: 90%;
             max-height: 100%;
-            border: 0.5vh solid #222;
+            border: 0.35vh solid #222;
         }
 
         .nav-hint {
-            margin-top: 3vh;
-            font-size: clamp(0.8rem, 2vw, 1.5rem);
+            margin-top: 2vh;
+            font-size: clamp(0.6rem, 1.4vw, 1rem);
             color: #555;
         }
 
-        /* Buttons */
         .btn {
             background: #333;
             color: white;
@@ -131,12 +150,12 @@
         }
 
         .start-btn {
-            font-size: clamp(1rem, 3vw, 2.5rem);
+            font-size: clamp(0.7rem, 2.1vw, 1.7rem);
             color: #00ff00;
             border: 2px solid #00ff00;
             background: none;
-            padding: 2vh 4vw;
-            margin-top: 2vh;
+            padding: 1.5vh 3vw;
+            margin-top: 1.5vh;
         }
     </style>
 </head>
@@ -146,12 +165,14 @@
         <label for="zoom-select">Scale:</label>
         <select id="zoom-select" onchange="updateScale(this.value)">
             </select>
-        <button id="home-btn" class="btn" onclick="goHome()" style="display:none;">🏠 EXIT</button>
+        <button id="home-btn" class="btn" onclick="goHome()" style="display:none;">🏠 EXIT PHASE</button>
     </div>
+
+    <a href="../index.html" id="exit-domain-btn">BACK TO INDEX</a>
 
     <div id="scaling-wrapper">
         <div id="preview-screen">
-            <h1 style="font-size: 3vw; color: #ccc;">TMJ STUDY SEQUENCE PREVIEW</h1>
+            <h1 style="font-size: 2.1vw; color: #ccc;">TMJ STUDY SEQUENCE PREVIEW</h1>
             <div class="grid-container">
                 <div class="preview-item"><img src="phase1.jpg"></div>
                 <div class="preview-item"><img src="phase2.jpg"></div>
@@ -185,7 +206,6 @@
         let currentIdx = 0;
         let isStarted = false;
 
-        // Elements
         const zoomSelect = document.getElementById('zoom-select');
         const previewScreen = document.getElementById('preview-screen');
         const presentationScreen = document.getElementById('presentation-screen');
@@ -193,8 +213,8 @@
         const mainText = document.getElementById('instruction-text');
         const homeBtn = document.getElementById('home-btn');
 
-        // 1. Populate Zoom Dropdown (10% to 200%)
-        for (let i = 10; i <= 200; i += 10) {
+        // Populate Zoom Dropdown (30% to 130%)
+        for (let i = 30; i <= 130; i += 10) {
             let opt = document.createElement('option');
             opt.value = i / 100;
             opt.innerHTML = i + '%';
@@ -206,10 +226,8 @@
             document.documentElement.style.setProperty('--scale-factor', val);
         }
 
-        // 2. Navigation Logic
         function handleAdvance() {
             if (!isStarted) return;
-            
             if (currentIdx === studyPhases.length - 1) {
                 goHome();
             } else {
@@ -244,6 +262,7 @@
             presentationScreen.style.display = 'block';
             homeBtn.style.display = 'block';
             updateDisplay();
+            window.scrollTo(0,0); // Reset scroll position when starting
         }
 
         function goHome() {
@@ -251,6 +270,7 @@
             previewScreen.style.display = 'block';
             presentationScreen.style.display = 'none';
             homeBtn.style.display = 'none';
+            window.scrollTo(0,0);
         }
 
         function updateDisplay() {
