@@ -107,12 +107,12 @@
     <div id="preview-screen">
         <h1 style="color: #ccc;">TMJ STUDY SEQUENCE PREVIEW</h1>
         <div class="grid-container">
-            <div class="preview-item"><img src="phase1.png"><div style="color:#888; margin-top:5px;">1. CLOSED</div></div>
-            <div class="preview-item"><img src="phase2.png"><div style="color:#888; margin-top:5px;">2. SLIGHT</div></div>
-            <div class="preview-item"><img src="phase3.png"><div style="color:#888; margin-top:5px;">3. BIT MORE</div></div>
-            <div class="preview-item"><img src="phase4.png"><div style="color:#888; margin-top:5px;">4. HALFWAY</div></div>
-            <div class="preview-item"><img src="phase5.png"><div style="color:#888; margin-top:5px;">5. WIDE</div></div>
-            <div class="preview-item"><img src="phase6.png"><div style="color:#888; margin-top:5px;">6. MAXIMUM</div></div>
+            <div class="preview-item"><img src="phase1.jpg"><div style="color:#888; margin-top:5px;">1. CLOSED</div></div>
+            <div class="preview-item"><img src="phase2.jpg"><div style="color:#888; margin-top:5px;">2. SLIGHT</div></div>
+            <div class="preview-item"><img src="phase3.jpg"><div style="color:#888; margin-top:5px;">3. BIT MORE</div></div>
+            <div class="preview-item"><img src="phase4.jpg"><div style="color:#888; margin-top:5px;">4. HALFWAY</div></div>
+            <div class="preview-item"><img src="phase5.jpg"><div style="color:#888; margin-top:5px;">5. WIDE</div></div>
+            <div class="preview-item"><img src="phase6.jpg"><div style="color:#888; margin-top:5px;">6. MAXIMUM</div></div>
         </div>
         <div class="start-btn" onclick="startPresentation()">CLICK OR PRESS SPACE TO START</div>
     </div>
@@ -121,19 +121,19 @@
         <button id="home-btn" onclick="goHome()">🏠 EXIT TO PREVIEW</button>
         <div id="instruction-text">Mouth Completely Closed</div>
         <div id="image-display">
-            <img id="main-img" src="phase1.png">
+            <img id="main-img" src="phase1.jpg">
         </div>
         <div style="margin-top: 20px; color: #444;">SPACE: Next | LEFT ARROW: Back</div>
     </div>
 
     <script>
         const studyPhases = [
-            { img: "phase1.png", text: "Mouth Completely Closed" },
-            { img: "phase2.png", text: "Slightly Open" },
-            { img: "phase3.png", text: "A Bit More Open" },
-            { img: "phase4.png", text: "Halfway Open" },
-            { img: "phase5.png", text: "Open Wide" },
-            { img: "phase6.png", text: "Maximum Opening (Wide Open)" }
+            { img: "phase1.jpg", text: "Mouth Completely Closed" },
+            { img: "phase2.jpg", text: "Slightly Open" },
+            { img: "phase3.jpg", text: "A Bit More Open" },
+            { img: "phase4.jpg", text: "Halfway Open" },
+            { img: "phase5.jpg", text: "Open Wide" },
+            { img: "phase6.jpg", text: "Maximum Opening (Wide Open)" }
         ];
 
         let currentIdx = 0;
