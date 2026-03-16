@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMJ MRI Study Control</title>
     <style>
+        :root {
+            /* This variable is updated by the dropdown menu */
+            --scale-factor: 1.0; 
+        }
+
         body {
             background-color: black;
             color: #ffffff;
@@ -15,27 +20,62 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            overflow: hidden;
+            overflow: hidden; /* Prevents scrollbars during scaling */
         }
 
-        /* Preview Grid */
+        /* Top Left Controls */
+        #controls-container {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: rgba(40, 40, 40, 0.8);
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        select {
+            background: #444;
+            color: white;
+            border: 1px solid #666;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        /* Scaling Wrapper - This handles the custom percentage */
+        #scaling-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            transform: scale(var(--scale-factor));
+            transform-origin: center center;
+            transition: transform 0.2s ease-out;
+        }
+
+        /* Preview Screen */
         #preview-screen {
             text-align: center;
-            width: 98%;
+            width: 95vw;
         }
 
         .grid-container {
             display: flex;
-            gap: 15px;
+            gap: 1vw;
             justify-content: center;
-            margin: 40px 0;
+            margin: 2vh 0;
         }
 
         .preview-item {
             width: 14vw;
-            border: 1px solid #333;
-            padding: 5px;
             background: #111;
+            padding: 0.5vw;
+            border: 1px solid #333;
         }
 
         .preview-item img {
@@ -47,83 +87,89 @@
         #presentation-screen {
             display: none; 
             text-align: center;
-            width: 100%;
-            position: relative;
+            width: 100vw;
+            cursor: pointer; /* Indicates the screen is clickable */
         }
 
         #instruction-text {
-            font-size: 4rem;
+            /* Responsive font size based on screen width + scaling */
+            font-size: clamp(2rem, 6vw, 5rem); 
             font-weight: 800;
             color: #ffff00;
-            margin-bottom: 20px;
+            margin-bottom: 2vh;
         }
 
         #image-display {
-            height: 70vh;
+            height: 60vh;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         #main-img {
-            max-width: 95%;
+            max-width: 90%;
             max-height: 100%;
-            border: 4px solid #222;
+            border: 0.5vh solid #222;
         }
 
-        /* Back to Main Button */
-        #home-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+        .nav-hint {
+            margin-top: 3vh;
+            font-size: clamp(0.8rem, 2vw, 1.5rem);
+            color: #555;
+        }
+
+        /* Buttons */
+        .btn {
             background: #333;
             color: white;
             border: 1px solid #555;
-            padding: 10px 15px;
+            padding: 10px 20px;
             cursor: pointer;
             border-radius: 5px;
             font-size: 1rem;
-            transition: background 0.2s;
-        }
-
-        #home-btn:hover {
-            background: #555;
         }
 
         .start-btn {
-            font-size: 2rem;
+            font-size: clamp(1rem, 3vw, 2.5rem);
             color: #00ff00;
             border: 2px solid #00ff00;
-            padding: 10px 30px;
-            border-radius: 10px;
-            display: inline-block;
-            margin-top: 20px;
-            cursor: pointer;
+            background: none;
+            padding: 2vh 4vw;
+            margin-top: 2vh;
         }
     </style>
 </head>
 <body>
 
-    <div id="preview-screen">
-        <h1 style="color: #ccc;">TMJ STUDY SEQUENCE PREVIEW</h1>
-        <div class="grid-container">
-            <div class="preview-item"><img src="phase1.jpg"><div style="color:#888; margin-top:5px;">1. CLOSED</div></div>
-            <div class="preview-item"><img src="phase2.jpg"><div style="color:#888; margin-top:5px;">2. SLIGHT</div></div>
-            <div class="preview-item"><img src="phase3.jpg"><div style="color:#888; margin-top:5px;">3. BIT MORE</div></div>
-            <div class="preview-item"><img src="phase4.jpg"><div style="color:#888; margin-top:5px;">4. HALFWAY</div></div>
-            <div class="preview-item"><img src="phase5.jpg"><div style="color:#888; margin-top:5px;">5. WIDE</div></div>
-            <div class="preview-item"><img src="phase6.jpg"><div style="color:#888; margin-top:5px;">6. MAXIMUM</div></div>
-        </div>
-        <div class="start-btn" onclick="startPresentation()">CLICK OR PRESS SPACE TO START</div>
+    <div id="controls-container">
+        <label for="zoom-select">Scale:</label>
+        <select id="zoom-select" onchange="updateScale(this.value)">
+            </select>
+        <button id="home-btn" class="btn" onclick="goHome()" style="display:none;">🏠 EXIT</button>
     </div>
 
-    <div id="presentation-screen">
-        <button id="home-btn" onclick="goHome()">🏠 EXIT TO PREVIEW</button>
-        <div id="instruction-text">Mouth Completely Closed</div>
-        <div id="image-display">
-            <img id="main-img" src="phase1.jpg">
+    <div id="scaling-wrapper">
+        <div id="preview-screen">
+            <h1 style="font-size: 3vw; color: #ccc;">TMJ STUDY SEQUENCE PREVIEW</h1>
+            <div class="grid-container">
+                <div class="preview-item"><img src="phase1.jpg"></div>
+                <div class="preview-item"><img src="phase2.jpg"></div>
+                <div class="preview-item"><img src="phase3.jpg"></div>
+                <div class="preview-item"><img src="phase4.jpg"></div>
+                <div class="preview-item"><img src="phase5.jpg"></div>
+                <div class="preview-item"><img src="phase6.jpg"></div>
+            </div>
+            <button class="btn start-btn" onclick="startPresentation()">CLICK OR PRESS SPACE TO START</button>
         </div>
-        <div style="margin-top: 20px; color: #444;">SPACE: Next | LEFT ARROW: Back</div>
+
+        <div id="presentation-screen" onclick="handleAdvance()">
+            <div id="instruction-text">Mouth Completely Closed</div>
+            <div id="image-display">
+                <img id="main-img" src="phase1.jpg">
+            </div>
+            <div class="nav-hint">CLICK or SPACE: Next | LEFT ARROW: Back</div>
+        </div>
     </div>
 
     <script>
@@ -139,33 +185,55 @@
         let currentIdx = 0;
         let isStarted = false;
 
+        // Elements
+        const zoomSelect = document.getElementById('zoom-select');
         const previewScreen = document.getElementById('preview-screen');
         const presentationScreen = document.getElementById('presentation-screen');
         const mainImg = document.getElementById('main-img');
         const mainText = document.getElementById('instruction-text');
+        const homeBtn = document.getElementById('home-btn');
+
+        // 1. Populate Zoom Dropdown (10% to 200%)
+        for (let i = 10; i <= 200; i += 10) {
+            let opt = document.createElement('option');
+            opt.value = i / 100;
+            opt.innerHTML = i + '%';
+            if (i === 100) opt.selected = true;
+            zoomSelect.appendChild(opt);
+        }
+
+        function updateScale(val) {
+            document.documentElement.style.setProperty('--scale-factor', val);
+        }
+
+        // 2. Navigation Logic
+        function handleAdvance() {
+            if (!isStarted) return;
+            
+            if (currentIdx === studyPhases.length - 1) {
+                goHome();
+            } else {
+                currentIdx++;
+                updateDisplay();
+            }
+        }
+
+        function handleBack() {
+            if (isStarted && currentIdx > 0) {
+                currentIdx--;
+                updateDisplay();
+            }
+        }
 
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
-                if (!isStarted) {
-                    startPresentation();
-                } else {
-                    // Check if we are at the end of the sequence
-                    if (currentIdx === studyPhases.length - 1) {
-                        goHome();
-                    } else {
-                        currentIdx++;
-                        updateDisplay();
-                    }
-                }
+                if (!isStarted) startPresentation();
+                else handleAdvance();
             }
-
-            if (e.code === 'ArrowLeft' && isStarted) {
+            if (e.code === 'ArrowLeft') {
                 e.preventDefault();
-                if (currentIdx > 0) {
-                    currentIdx--;
-                    updateDisplay();
-                }
+                handleBack();
             }
         });
 
@@ -174,6 +242,7 @@
             isStarted = true;
             previewScreen.style.display = 'none';
             presentationScreen.style.display = 'block';
+            homeBtn.style.display = 'block';
             updateDisplay();
         }
 
@@ -181,6 +250,7 @@
             isStarted = false;
             previewScreen.style.display = 'block';
             presentationScreen.style.display = 'none';
+            homeBtn.style.display = 'none';
         }
 
         function updateDisplay() {
