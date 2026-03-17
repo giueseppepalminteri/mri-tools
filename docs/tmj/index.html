@@ -114,6 +114,19 @@
             display: block;
         }
 
+        .preview-item label {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #ccc;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .preview-item input[type="checkbox"] {
+            margin-right: 6px;
+        }
+
         /* --- PRESENTATION MODE --- */
         #presentation-screen {
             display: none; 
@@ -183,12 +196,30 @@
             <div id="preview-screen">
                 <h1 style="color: #ccc;">TMJ STUDY PREVIEW</h1>
                 <div class="grid-container">
-                    <div class="preview-item"><img src="phase1.jpg"></div>
-                    <div class="preview-item"><img src="phase2.jpg"></div>
-                    <div class="preview-item"><img src="phase3.jpg"></div>
-                    <div class="preview-item"><img src="phase4.jpg"></div>
-                    <div class="preview-item"><img src="phase5.jpg"></div>
-                    <div class="preview-item"><img src="phase6.jpg"></div>
+                    <div class="preview-item">
+                        <img src="phase1.jpg">
+                        <label><input type="checkbox" class="phase-checkbox" data-index="0" checked> Include</label>
+                    </div>
+                    <div class="preview-item">
+                        <img src="phase2.jpg">
+                        <label><input type="checkbox" class="phase-checkbox" data-index="1" checked> Include</label>
+                    </div>
+                    <div class="preview-item">
+                        <img src="phase3.jpg">
+                        <label><input type="checkbox" class="phase-checkbox" data-index="2" checked> Include</label>
+                    </div>
+                    <div class="preview-item">
+                        <img src="phase4.jpg">
+                        <label><input type="checkbox" class="phase-checkbox" data-index="3" checked> Include</label>
+                    </div>
+                    <div class="preview-item">
+                        <img src="phase5.jpg">
+                        <label><input type="checkbox" class="phase-checkbox" data-index="4" checked> Include</label>
+                    </div>
+                    <div class="preview-item">
+                        <img src="phase6.jpg">
+                        <label><input type="checkbox" class="phase-checkbox" data-index="5" checked> Include</label>
+                    </div>
                 </div>
                 <button class="btn start-btn" onclick="startPresentation()">START STUDY</button>
             </div>
@@ -215,6 +246,7 @@
 
         let currentIdx = 0;
         let isStarted = false;
+        let activePhases = studyPhases;
 
         const zoomSelect = document.getElementById('zoom-select');
         const scalingWrapper = document.getElementById('scaling-wrapper');
@@ -224,6 +256,13 @@
         const mainImg = document.getElementById('main-img');
         const mainText = document.getElementById('instruction-text');
         const homeBtn = document.getElementById('home-btn');
+        const phaseCheckboxes = Array.from(document.querySelectorAll('.phase-checkbox'));
+
+        function getSelectedPhases() {
+            return phaseCheckboxes
+                .filter(cb => cb.checked)
+                .map(cb => studyPhases[Number(cb.dataset.index)]);
+        }
 
         // Populate Zoom List (30% to 130%)
         for (let i = 30; i <= 130; i += 10) {
@@ -247,7 +286,7 @@
 
         function handleAdvance() {
             if (!isStarted) return;
-            if (currentIdx === studyPhases.length - 1) {
+            if (currentIdx === activePhases.length - 1) {
                 goHome();
             } else {
                 currentIdx++;
@@ -275,6 +314,13 @@
         });
 
         function startPresentation() {
+            const selected = getSelectedPhases();
+            if (selected.length === 0) {
+                alert('Please select at least one image before starting the study.');
+                return;
+            }
+
+            activePhases = selected;
             currentIdx = 0;
             isStarted = true;
             previewScreen.style.display = 'none';
@@ -286,6 +332,7 @@
 
         function goHome() {
             isStarted = false;
+            activePhases = studyPhases;
             previewScreen.style.display = 'block';
             presentationScreen.style.display = 'none';
             homeBtn.style.display = 'none';
@@ -293,8 +340,8 @@
         }
 
         function updateDisplay() {
-            mainImg.src = studyPhases[currentIdx].img;
-            mainText.innerText = studyPhases[currentIdx].text;
+            mainImg.src = activePhases[currentIdx].img;
+            mainText.innerText = activePhases[currentIdx].text;
         }
     </script>
 </body>
