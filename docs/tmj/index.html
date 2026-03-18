@@ -3,187 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMJ MRI Study - Auto-Fit</title>
+    <title>TMJ MRI Study - Professional Toolbox</title>
     <style>
         :root {
             --scale-factor: 1.0; 
+            --accent-teal: #94d2bd;
         }
 
-        /* Prevent body from scrolling entirely at 100% */
         body {
             background-color: #000;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
+            margin: 0; padding: 0;
+            height: 100vh; width: 100vw;
             overflow: hidden; 
             display: flex;
             flex-direction: column;
         }
 
-        /* Top Controls */
-        #controls-container {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 1001;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            background: rgba(30, 30, 30, 0.9);
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #444;
+        /* --- TOOLBOX STYLES (COPIED FROM BREATHING TOOL) --- */
+        #settings-panel {
+            position: fixed; top: 15px; left: 15px; z-index: 3000;
+            background: rgba(0, 0, 0, 0.9); border: 1px solid #444;
+            border-radius: 8px; padding: 10px; transition: all 0.3s ease;
         }
+        #settings-panel.collapsed { background: transparent; border: none; padding: 0; }
+        #settings-content { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; font-size: 0.8rem; }
+        .collapsed #settings-content { display: none; }
+        #settings-toggle { cursor: pointer; font-size: 24px; color: var(--accent-teal); display: inline-block; }
+        
+        .control-row { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        select { background: #222; color: white; border: 1px solid #666; padding: 4px; border-radius: 4px; }
+        
+        /* Mirroring Logic */
+        .mirror-all { transform: scaleX(-1); }
+        .mirror-patient-only { transform: scaleX(-1); }
 
+        /* --- TMJ UI STYLES --- */
         #exit-domain-btn {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1001;
-            background: #700;
-            color: white;
-            border: 1px solid #a00;
-            padding: 8px 15px;
-            cursor: pointer;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 0.8rem;
-            font-weight: bold;
+            position: fixed; top: 10px; right: 10px; z-index: 1001;
+            background: #700; color: white; border: 1px solid #a00;
+            padding: 8px 15px; cursor: pointer; border-radius: 8px;
+            text-decoration: none; font-size: 0.8rem; font-weight: bold;
         }
 
-        select {
-            background: #222;
-            color: white;
-            border: 1px solid #666;
-            padding: 4px;
-        }
-
-        /* This container occupies exactly the space between top buttons and screen bottom */
         #main-viewport {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding-top: 60px; /* Room for buttons */
-            box-sizing: border-box;
-            overflow: hidden; /* Important */
+            flex: 1; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            box-sizing: border-box; overflow: hidden;
         }
 
         #scaling-wrapper {
             transform: scale(var(--scale-factor));
             transform-origin: top center; 
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
             transition: transform 0.1s ease-out;
         }
 
-        /* Shared Screen Styles */
         #preview-screen, #presentation-screen {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            box-sizing: border-box;
-            padding: 10px;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center; box-sizing: border-box; padding: 10px;
         }
 
-        /* --- PREVIEW GRID --- */
         .grid-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            align-items: center;
-            overflow-y: auto; /* Allow grid to scroll internally if very small screen */
-            max-height: 70vh;
-            margin: 10px 0;
+            display: flex; flex-wrap: wrap; gap: 10px;
+            justify-content: center; align-items: center;
+            overflow-y: auto; max-height: 70vh; margin: 10px 0;
         }
 
-        .preview-item {
-            width: clamp(80px, 15vw, 150px);
-            background: #111;
-            border: 1px solid #333;
-            padding: 5px;
-        }
-
+        .preview-item { width: clamp(80px, 15vw, 150px); background: #111; border: 1px solid #333; padding: 5px; }
         .preview-item img { width: 100%; display: block; }
         .preview-item.unselected img { filter: grayscale(100%); opacity: 0.4; }
 
-        /* --- PRESENTATION SCREEN --- */
         #instruction-text {
-            font-size: clamp(1.2rem, 6vh, 2.5rem); /* Responsive font height */
-            font-weight: 800;
-            color: #ffff00;
-            margin: 5px 0;
-            flex-shrink: 0; /* Don't let text get squashed */
-        }
-
-        #image-display {
-            flex: 1; /* Take all remaining vertical space */
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 0; /* Allow the container to shrink */
-        }
-
-        #main-img {
-            max-height: 100%; /* Fit to the image-display container */
-            max-width: 95%;   /* Don't touch screen edges */
-            object-fit: contain;
-            border: 3px solid #333;
-        }
-
-        .nav-hint {
-            font-size: clamp(0.7rem, 2vh, 1rem);
-            color: #666;
-            margin: 5px 0;
+            font-size: clamp(1.2rem, 6vh, 2.5rem);
+            font-weight: 800; color: #ffff00; margin: 15px 0;
             flex-shrink: 0;
         }
 
-        .btn {
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 6px;
+        #image-display {
+            flex: 1; width: 100%;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 0;
         }
 
-        .start-btn {
-            color: #00ff00;
-            border-color: #00ff00;
-            font-weight: bold;
+        #main-img {
+            max-height: 100%; max-width: 95%;
+            object-fit: contain; border: 3px solid #333;
         }
+
+        .nav-hint { font-size: clamp(0.7rem, 2vh, 1rem); color: #666; margin: 10px 0; flex-shrink: 0; }
+        .btn { background: #333; color: white; border: 1px solid #555; padding: 10px 20px; cursor: pointer; border-radius: 6px; }
+        .start-btn { color: #00ff00; border-color: #00ff00; font-weight: bold; }
     </style>
 </head>
-<body>
+<body id="main-body">
 
-    <div id="controls-container">
-        <label for="zoom-select">Scale:</label>
-        <select id="zoom-select" onchange="updateScale(this.value)"></select>
-        <button id="home-btn" class="btn" onclick="goHome()" style="display:none; padding: 4px 10px;">🏠 EXIT</button>
+    <div id="settings-panel" class="collapsed">
+        <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>
+        <div id="settings-content">
+            <div class="control-row">
+                <label>Zoom: </label>
+                <select id="zoom-select" onchange="updateScale(this.value)"></select>
+            </div>
+            <hr style="border:0; border-top:1px solid #333">
+            <div class="control-row">
+                <input type="checkbox" id="m-p-check" onchange="toggleMirror('patient')">
+                <label for="m-p-check">Mirror Patient Only</label>
+            </div>
+            <div class="control-row">
+                <input type="checkbox" id="m-a-check" onchange="toggleMirror('all')">
+                <label for="m-a-check">Mirror Everything</label>
+            </div>
+            <hr style="border:0; border-top:1px solid #333">
+            <button id="home-btn" class="btn" onclick="goHome()" style="display:none; width: 100%; padding: 5px;">🏠 EXIT STUDY</button>
+        </div>
     </div>
 
     <a href="../index.html" id="exit-domain-btn">BACK TO INDEX</a>
 
     <div id="main-viewport">
-        <div id="scaling-wrapper">
+        <div id="scaling-wrapper" id="patient-view">
             
             <div id="preview-screen">
                 <h2 style="color: #888; margin: 0;">TMJ STUDY PREVIEW</h2>
-                <div class="grid-container" id="grid-container">
-                    </div>
+                <div class="grid-container" id="grid-container"></div>
                 <button class="btn start-btn" onclick="startPresentation()">START STUDY</button>
             </div>
 
@@ -212,6 +159,25 @@
         let isStarted = false;
         let activePhases = [];
 
+        const body = document.getElementById('main-body');
+        const scalingWrapper = document.getElementById('scaling-wrapper');
+
+        // Settings Panel Logic
+        function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
+
+        // Mirror Logic (Mutually Exclusive)
+        function toggleMirror(type) {
+            const cp = document.getElementById('m-p-check');
+            const ca = document.getElementById('m-a-check');
+            if (type === 'patient') {
+                if (cp.checked) { ca.checked = false; body.classList.remove('mirror-all'); scalingWrapper.classList.add('mirror-patient-only'); }
+                else { scalingWrapper.classList.remove('mirror-patient-only'); }
+            } else {
+                if (ca.checked) { cp.checked = false; scalingWrapper.classList.remove('mirror-patient-only'); body.classList.add('mirror-all'); }
+                else { body.classList.remove('mirror-all'); }
+            }
+        }
+
         // Generate Preview Grid
         const grid = document.getElementById('grid-container');
         studyPhases.forEach((phase, i) => {
@@ -219,7 +185,7 @@
             div.className = 'preview-item';
             div.innerHTML = `
                 <img src="${phase.img}" onclick="toggleSelect(${i}, this.parentElement)">
-                <label><input type="checkbox" class="phase-checkbox" data-index="${i}" checked onchange="updateSelectionStyle(${i}, this.parentElement.parentElement)"> Include</label>
+                <label style="font-size: 0.7rem;"><input type="checkbox" class="phase-checkbox" data-index="${i}" checked onchange="updateSelectionStyle(${i}, this.parentElement.parentElement)"> Include</label>
             `;
             grid.appendChild(div);
         });
@@ -247,12 +213,8 @@
 
         function updateScale(val) {
             document.documentElement.style.setProperty('--scale-factor', val);
-            if (val > 1) {
-                document.body.style.overflow = 'auto';
-            } else {
-                document.body.style.overflow = 'hidden';
-                window.scrollTo(0,0);
-            }
+            document.body.style.overflow = (val > 1) ? 'auto' : 'hidden';
+            if (val <= 1) window.scrollTo(0,0);
         }
 
         function startPresentation() {
@@ -268,7 +230,7 @@
             isStarted = true;
             document.getElementById('preview-screen').style.display = 'none';
             document.getElementById('presentation-screen').style.display = 'flex';
-            document.getElementById('home-btn').style.display = 'inline-block';
+            document.getElementById('home-btn').style.display = 'block';
             updateDisplay();
         }
 
