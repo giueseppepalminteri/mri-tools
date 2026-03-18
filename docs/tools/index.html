@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRI Patient Hub - Sync Fixed</title>
+    <title>MRI Patient Hub - Lock & Color Sync</title>
     <style>
         :root {
             --scale-factor: 1.0;
             --total-cycle: 10s;
-            --peak-percent: 40%;
+            --peak-percent: 50%;
             --bg-base: #001219;
             --bg-pulse: #002b36;
             --accent-teal: #94d2bd;
-            --highlight-yellow: #ffff00;
+            --color-in: #00ff88;  /* Vibrant Green */
+            --color-out: #00d1ff; /* Electric Blue */
         }
 
         body {
             background-color: var(--bg-base);
             color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
             margin: 0; padding: 0;
             height: 100vh; width: 100vw;
             overflow: hidden;
@@ -53,7 +54,6 @@
         /* Main Viewport */
         #main-viewport { flex: 1; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; }
         
-        /* The Background Pulse - Now purely CSS driven */
         #pulse-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 0; pointer-events: none;
@@ -80,9 +80,10 @@
         /* Breathe In/Out Text */
         #breath-text-display {
             position: absolute; bottom: 12%; font-size: 5.5rem; font-weight: 900;
-            color: var(--highlight-yellow); text-shadow: 0 0 30px rgba(255, 255, 0, 0.6), 0 0 10px rgba(0,0,0,1);
             z-index: 5; display: none; pointer-events: none; text-align: center; width: 100%;
         }
+        #breath-text-display.inhale { color: var(--color-in); text-shadow: 0 0 30px rgba(0, 255, 136, 0.5); }
+        #breath-text-display.exhale { color: var(--color-out); text-shadow: 0 0 30px rgba(0, 209, 255, 0.5); }
 
         /* Instruction Area */
         #instruction-input {
@@ -91,20 +92,20 @@
             text-align: center; text-transform: uppercase; outline: none; resize: none; overflow: hidden;
         }
         #instruction-input::placeholder { color: var(--accent-teal); transition: color 0.5s ease; }
-        #instruction-input.faint::placeholder { color: rgba(255, 255, 255, 0.03); }
-        #instruction-input.faint:hover::placeholder { color: rgba(255, 255, 255, 0.3); }
+        #instruction-input.faint::placeholder { color: rgba(255, 255, 255, 0.05); }
 
         /* Toolbar */
         #bottom-toolbar {
             background: #050505; border-top: 1px solid #222; z-index: 2001;
             display: flex; flex-direction: column; padding: 10px; gap: 10px;
         }
-        .toolbar-row { display: flex; justify-content: center; align-items: center; gap: 25px; }
+        .toolbar-row { display: flex; justify-content: center; align-items: center; gap: 20px; }
         .tool-group { display: flex; align-items: center; gap: 8px; }
         
         button { background: #222; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         input[type="number"] { background: #111; color: var(--accent-teal); border: 1px solid #444; padding: 5px; border-radius: 4px; font-weight: bold; text-align: center; width: 55px; }
-        .val-label { font-size: 0.75rem; color: #777; text-transform: uppercase; letter-spacing: 1px; }
+        input:disabled { opacity: 0.4; cursor: not-allowed; }
+        .val-label { font-size: 0.7rem; color: #777; text-transform: uppercase; letter-spacing: 1px; }
     </style>
     <style id="dynamic-animations"></style>
 </head>
@@ -155,13 +156,18 @@
         <div class="toolbar-row">
             <div class="tool-group">
                 <span class="val-label">BPM:</span>
-                <input type="number" id="bpm-val" value="6" min="1" onchange="calcBreathing('bpm')">
+                <input type="number" id="bpm-val" value="6" min="1" step="0.5" onchange="calcBreathing('bpm')">
                 
+                <span style="width:10px"></span>
+
+                <input type="checkbox" id="lock-check" checked onchange="toggleLock(this.checked)">
+                <label for="lock-check" class="val-label">Lock In/Out</label>
+
                 <span class="val-label">In (s):</span>
-                <input type="number" id="in-val" value="4" step="0.5" min="0.5" onchange="calcBreathing('in')">
+                <input type="number" id="in-val" value="5.0" step="0.5" min="0.5" onchange="calcBreathing('in')">
                 
                 <span class="val-label">Out (s):</span>
-                <input type="number" id="out-val" value="6" step="0.5" min="0.5" onchange="calcBreathing('out')">
+                <input type="number" id="out-val" value="5.0" step="0.5" min="0.5" onchange="calcBreathing('out')">
             </div>
 
             <div class="tool-group">
@@ -183,15 +189,10 @@
         const pulseCircle = document.getElementById('pulse-circle');
         let textTimer;
 
-        // Settings & Placeholder Logic
         function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
         setTimeout(() => { inputArea.classList.add('faint'); }, 3000);
-        
-        inputArea.addEventListener("input", function() { 
-            this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; 
-        });
+        inputArea.addEventListener("input", function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; });
 
-        // Mirroring (Mutually Exclusive)
         function toggleMirror(type) {
             const cp = document.getElementById('m-p-check');
             const ca = document.getElementById('m-a-check');
@@ -205,19 +206,34 @@
             }
         }
 
-        // --- THE MASTER BREATHING ENGINE ---
+        // --- BREATHING ENGINE WITH LOCK ---
+        function toggleLock(isLocked) {
+            document.getElementById('in-val').disabled = isLocked;
+            document.getElementById('out-val').disabled = isLocked;
+            if (isLocked) calcBreathing('bpm');
+        }
+
         function calcBreathing(changedField) {
             let bpm = parseFloat(document.getElementById('bpm-val').value);
             let inSec = parseFloat(document.getElementById('in-val').value);
             let outSec = parseFloat(document.getElementById('out-val').value);
-            
-            if (changedField === 'bpm') {
+            const isLocked = document.getElementById('lock-check').checked;
+
+            if (isLocked) {
+                // If locked, BPM is master, In and Out are always equal
                 let total = 60 / bpm;
-                outSec = total - inSec;
-                if (outSec <= 0) { inSec = total * 0.4; outSec = total * 0.6; }
+                inSec = total / 2;
+                outSec = total / 2;
             } else {
-                // If In or Out changed, update BPM to reflect the new total cycle
-                bpm = 60 / (inSec + outSec);
+                // If unlocked and BPM changed, adjust Out-time to fit
+                if (changedField === 'bpm') {
+                    let total = 60 / bpm;
+                    outSec = total - inSec;
+                    if (outSec <= 0) { inSec = total * 0.5; outSec = total * 0.5; }
+                } else {
+                    // If In or Out changed manually, update BPM to match
+                    bpm = 60 / (inSec + outSec);
+                }
             }
 
             document.getElementById('bpm-val').value = bpm.toFixed(1);
@@ -233,7 +249,6 @@
             
             document.documentElement.style.setProperty('--total-cycle', total + 's');
             
-            // Inject dynamic keyframes: 0% to peak = Inhale, peak to 100% = Exhale
             document.getElementById('dynamic-animations').innerText = `
                 @keyframes circleBreathe {
                     0%, 100% { transform: scale(0.6); opacity: 0; }
@@ -245,12 +260,12 @@
                 }
             `;
 
-            // RESTART ALL ANIMATIONS: Force browser to reset timeline to 0
+            // Reset CSS Timelines
             viewport.classList.remove('animating');
             void viewport.offsetWidth; 
             viewport.classList.add('animating');
 
-            // SYNC TEXT: Clear existing cycle and start fresh
+            // Reset Text Cycle
             clearTimeout(textTimer);
             if (document.getElementById('text-toggle').checked) {
                 runTextSync(inSec * 1000, outSec * 1000);
@@ -258,18 +273,21 @@
         }
 
         function runTextSync(inMs, outMs) {
-            // Immediately start at Inhale
-            breathText.innerText = "BREATHE IN";
-            breathText.style.opacity = "1";
-
-            const scheduleNext = (isNextExhale) => {
-                const delay = isNextExhale ? inMs : outMs;
-                textTimer = setTimeout(() => {
-                    breathText.innerText = isNextExhale ? "BREATHE OUT" : "BREATHE IN";
-                    scheduleNext(!isNextExhale);
-                }, delay);
+            const startInhale = () => {
+                breathText.innerText = "BREATHE IN";
+                breathText.className = "inhale";
+                breathText.style.display = "block";
+                textTimer = setTimeout(startExhale, inMs);
             };
-            scheduleNext(true);
+
+            const startExhale = () => {
+                breathText.innerText = "BREATHE OUT";
+                breathText.className = "exhale";
+                breathText.style.display = "block";
+                textTimer = setTimeout(startInhale, outMs);
+            };
+
+            startInhale();
         }
 
         function updatePulseVisibility(v) {
@@ -279,10 +297,11 @@
 
         function updateTextVisibility(v) {
             breathText.style.display = v ? 'block' : 'none';
-            calcBreathing('bpm');
+            if (!v) clearTimeout(textTimer);
+            else calcBreathing('bpm');
         }
 
-        // Timer Logic
+        // --- TIMER LOGIC ---
         let globalInt; let elapsed = 0;
         const topUI = document.getElementById('top-status');
         const timeText = document.getElementById('status-text');
@@ -299,13 +318,12 @@
             globalInt = setInterval(() => { rem--; let m = Math.floor(rem/60).toString().padStart(2,'0'); let s = (rem%60).toString().padStart(2,'0'); timeText.innerText = `${m}:${s}`; progFill.style.width = ((total-rem)/total*100)+'%'; if(rem <= 0) stopAllTimers(); }, 1000);
         }
 
-        // Zoom Logic
         const zs = document.getElementById('zoom-select');
         for(let i=30; i<=150; i+=10){ let o=document.createElement('option'); o.value=i/100; o.innerText=i+'%'; if(i==100)o.selected=true; zs.appendChild(o); }
         function updateScale(v) { document.documentElement.style.setProperty('--scale-factor', v); document.body.style.overflow = (v > 1) ? 'auto' : 'hidden'; if (v <= 1) window.scrollTo(0,0); }
 
-        // Initial Start
-        calcBreathing('bpm');
+        // Initialize at 50/50 lock
+        toggleLock(true);
     </script>
 </body>
 </html>
