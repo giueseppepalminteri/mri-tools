@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRI Patient Hub - Clinical Sync</title>
+    <title>MRI Patient Hub - Sync Fixed</title>
     <style>
         :root {
             --scale-factor: 1.0;
             --total-cycle: 10s;
-            --peak-percent: 40%; 
+            --peak-percent: 40%;
             --bg-base: #001219;
             --bg-pulse: #002b36;
             --accent-teal: #94d2bd;
@@ -18,7 +18,7 @@
         body {
             background-color: var(--bg-base);
             color: #ffffff;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0; padding: 0;
             height: 100vh; width: 100vw;
             overflow: hidden;
@@ -29,10 +29,7 @@
         .mirror-all { transform: scaleX(-1); }
         .mirror-patient-only { transform: scaleX(-1); }
 
-        /* Animation Classes */
-        .pulse-active { animation: bgPulse var(--total-cycle) linear infinite; }
-
-        /* Settings Panel (Collapsible) */
+        /* Settings Panel */
         #settings-panel {
             position: fixed; top: 15px; left: 15px; z-index: 3000;
             background: rgba(0, 0, 0, 0.9); border: 1px solid #444;
@@ -54,27 +51,37 @@
         #progress-bar-fill { height: 100%; width: 0%; background: var(--accent-teal); transition: width 1s linear; }
 
         /* Main Viewport */
-        #main-viewport { flex: 1; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        #main-viewport { flex: 1; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; }
+        
+        /* The Background Pulse - Now purely CSS driven */
+        #pulse-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+        }
+        .animating #pulse-bg { animation: bgPulse var(--total-cycle) linear infinite; }
+
         #scaling-wrapper {
             transform: scale(var(--scale-factor)); transform-origin: top center;
             width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1;
         }
         #patient-content-wrapper {
             width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative;
         }
 
-        /* Breathing Pulse & Text */
+        /* Breathing Circle */
         #pulse-circle {
             position: absolute; display: none; width: 55vh; height: 55vh;
             background: radial-gradient(circle, var(--accent-teal) 0%, transparent 75%);
-            border-radius: 50%; z-index: 1;
+            border-radius: 50%; z-index: 1; pointer-events: none;
         }
-        .animating #pulse-circle { animation: clinicalBreathe var(--total-cycle) linear infinite; }
+        .animating #pulse-circle { animation: circleBreathe var(--total-cycle) linear infinite; }
 
+        /* Breathe In/Out Text */
         #breath-text-display {
             position: absolute; bottom: 12%; font-size: 5.5rem; font-weight: 900;
             color: var(--highlight-yellow); text-shadow: 0 0 30px rgba(255, 255, 0, 0.6), 0 0 10px rgba(0,0,0,1);
-            z-index: 2; display: none; pointer-events: none; text-align: center; width: 100%; transition: opacity 0.3s ease;
+            z-index: 5; display: none; pointer-events: none; text-align: center; width: 100%;
         }
 
         /* Instruction Area */
@@ -83,11 +90,11 @@
             color: #fff; font-size: clamp(2rem, 8vh, 5.5rem); font-weight: 800;
             text-align: center; text-transform: uppercase; outline: none; resize: none; overflow: hidden;
         }
-        #instruction-input::placeholder { color: var(--accent-teal); transition: color 1s ease; }
+        #instruction-input::placeholder { color: var(--accent-teal); transition: color 0.5s ease; }
         #instruction-input.faint::placeholder { color: rgba(255, 255, 255, 0.03); }
         #instruction-input.faint:hover::placeholder { color: rgba(255, 255, 255, 0.3); }
 
-        /* TWO-ROW BOTTOM TOOLBAR */
+        /* Toolbar */
         #bottom-toolbar {
             background: #050505; border-top: 1px solid #222; z-index: 2001;
             display: flex; flex-direction: column; padding: 10px; gap: 10px;
@@ -96,12 +103,10 @@
         .tool-group { display: flex; align-items: center; gap: 8px; }
         
         button { background: #222; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        input[type="number"] { background: #111; color: #fff; border: 1px solid #444; padding: 5px; border-radius: 4px; font-weight: bold; text-align: center; }
+        input[type="number"] { background: #111; color: var(--accent-teal); border: 1px solid #444; padding: 5px; border-radius: 4px; font-weight: bold; text-align: center; width: 55px; }
         .val-label { font-size: 0.75rem; color: #777; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* Specific input widths */
-        #bpm-val, #in-val, #out-val { width: 50px; border-color: #333; color: var(--accent-teal); }
     </style>
+    <style id="dynamic-animations"></style>
 </head>
 <body id="main-body">
 
@@ -120,7 +125,8 @@
         <div id="progress-bar-container"><div id="progress-bar-fill"></div></div>
     </div>
 
-    <div id="main-viewport">
+    <div id="main-viewport" class="animating">
+        <div id="pulse-bg"></div>
         <div id="scaling-wrapper">
             <div id="patient-content-wrapper">
                 <div id="pulse-circle"></div>
@@ -134,13 +140,13 @@
         <div class="toolbar-row">
             <div class="tool-group"><button onclick="document.getElementById('instruction-input').value = ''">Clear Text</button></div>
             <div class="tool-group">
-                <span class="val-label">Timer (Up):</span>
+                <span class="val-label">Timer:</span>
                 <button onclick="startTimer()">Start</button>
                 <button style="color:#ff5f5f" onclick="stopAllTimers()">Stop</button>
             </div>
             <div class="tool-group">
                 <span class="val-label">Countdown:</span>
-                <input type="number" id="cd-val" value="60" style="width: 55px;">
+                <input type="number" id="cd-val" value="60">
                 <button onclick="startCountdown()">Start</button>
                 <button style="color:#ff5f5f" onclick="stopAllTimers()">Stop</button>
             </div>
@@ -156,9 +162,6 @@
                 
                 <span class="val-label">Out (s):</span>
                 <input type="number" id="out-val" value="6" step="0.5" min="0.5" onchange="calcBreathing('out')">
-                
-                <input type="checkbox" id="split-io" onchange="toggleSplitIO(this.checked)">
-                <label for="split-io">Split In/Out</label>
             </div>
 
             <div class="tool-group">
@@ -174,36 +177,21 @@
     <script>
         const inputArea = document.getElementById('instruction-input');
         const body = document.getElementById('main-body');
+        const viewport = document.getElementById('main-viewport');
         const patientWrapper = document.getElementById('patient-content-wrapper');
         const breathText = document.getElementById('breath-text-display');
         const pulseCircle = document.getElementById('pulse-circle');
-        let breathAnimFrame = null;
-        let cycleStart = performance.now();
-        let lastTotal = 0;
-        let splitInOut = false;
+        let textTimer;
 
-        // Track current breathing phase & progress so changes preserve sync
-        let currentPhase = 'in'; // 'in' or 'out'
-        let phaseProgress = 0; // 0..1
-        let lastInMs = 0;
-        let lastOutMs = 0;
-
-        function toggleSplitIO(checked) {
-            splitInOut = checked;
-            if (!splitInOut) {
-                // When locking, make in/out equal and recalculate BPM
-                const inVal = parseFloat(document.getElementById('in-val').value);
-                document.getElementById('out-val').value = inVal.toFixed(1);
-                calcBreathing('in');
-            } else {
-                calcBreathing('bpm');
-            }
-        }
-
+        // Settings & Placeholder Logic
         function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
         setTimeout(() => { inputArea.classList.add('faint'); }, 3000);
-        inputArea.addEventListener("input", function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; });
+        
+        inputArea.addEventListener("input", function() { 
+            this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; 
+        });
 
+        // Mirroring (Mutually Exclusive)
         function toggleMirror(type) {
             const cp = document.getElementById('m-p-check');
             const ca = document.getElementById('m-a-check');
@@ -217,47 +205,21 @@
             }
         }
 
-        // --- INTERDEPENDENT BREATHING LOGIC ---
+        // --- THE MASTER BREATHING ENGINE ---
         function calcBreathing(changedField) {
             let bpm = parseFloat(document.getElementById('bpm-val').value);
             let inSec = parseFloat(document.getElementById('in-val').value);
             let outSec = parseFloat(document.getElementById('out-val').value);
-            let total = 60 / bpm;
-
-            if (!splitInOut) {
-                // Keep In/Out equal unless user chooses to split them
-                if (changedField === 'bpm') {
-                    total = 60 / bpm;
-                    inSec = outSec = total / 2;
-                } else {
-                    // In or Out changed; keep both equal and update BPM
-                    inSec = outSec = (changedField === 'in' ? inSec : outSec);
-                    total = inSec + outSec;
-                    bpm = 60 / total;
-                }
+            
+            if (changedField === 'bpm') {
+                let total = 60 / bpm;
+                outSec = total - inSec;
+                if (outSec <= 0) { inSec = total * 0.4; outSec = total * 0.6; }
             } else {
-                if (changedField === 'bpm') {
-                    // If BPM changes, keep In-time but adjust Out-time to fit new total
-                    if (inSec >= total) inSec = total * 0.4; // fallback ratio
-                    outSec = total - inSec;
-                } else if (changedField === 'in') {
-                    // If In changes, adjust Out but keep BPM (Total) the same
-                    if (inSec >= total) {
-                        total = inSec + 1; // expand total if In is too big
-                        bpm = 60 / total;
-                    }
-                    outSec = total - inSec;
-                } else if (changedField === 'out') {
-                    // If Out changes, adjust In but keep BPM (Total) the same
-                    if (outSec >= total) {
-                        total = outSec + 1;
-                        bpm = 60 / total;
-                    }
-                    inSec = total - outSec;
-                }
+                // If In or Out changed, update BPM to reflect the new total cycle
+                bpm = 60 / (inSec + outSec);
             }
 
-            // Update UI
             document.getElementById('bpm-val').value = bpm.toFixed(1);
             document.getElementById('in-val').value = inSec.toFixed(1);
             document.getElementById('out-val').value = outSec.toFixed(1);
@@ -266,40 +228,16 @@
         }
 
         function applySync(bpm, inSec, outSec) {
-            const total = inSec + outSec; // Always use actual in+out cycle for timing
+            const total = 60 / bpm;
             const peakPercent = (inSec / total) * 100;
-
-            // Preserve current phase & progress when parameters change
-            const now = performance.now();
-            let elapsedWithinCycle = 0;
-
-            if (lastTotal > 0) {
-                if (currentPhase === 'in') {
-                    elapsedWithinCycle = phaseProgress * lastInMs;
-                } else {
-                    elapsedWithinCycle = lastInMs + phaseProgress * lastOutMs;
-                }
-            }
-
-            // Rebase cycleStart so the visible phase/position remains consistent
-            cycleStart = now - elapsedWithinCycle;
-            lastTotal = total;
-            lastInMs = inSec * 1000;
-            lastOutMs = outSec * 1000;
-
+            
             document.documentElement.style.setProperty('--total-cycle', total + 's');
-
-            // Dynamic Keyframes for asymmetric breathing
-            let styleTag = document.getElementById('dynamic-animations');
-            if (!styleTag) {
-                styleTag = document.createElement("style");
-                styleTag.id = 'dynamic-animations';
-                document.head.appendChild(styleTag);
-            }
-            styleTag.innerText = `
-                @keyframes clinicalBreathe {
-                    0%, 100% { transform: scale(0.65); opacity: 0.2; }
-                    ${peakPercent}% { transform: scale(1.35); opacity: 0.7; }
+            
+            // Inject dynamic keyframes: 0% to peak = Inhale, peak to 100% = Exhale
+            document.getElementById('dynamic-animations').innerText = `
+                @keyframes circleBreathe {
+                    0%, 100% { transform: scale(0.6); opacity: 0; }
+                    ${peakPercent}% { transform: scale(1.3); opacity: 0.6; }
                 }
                 @keyframes bgPulse {
                     0%, 100% { background-color: var(--bg-base); }
@@ -307,68 +245,35 @@
                 }
             `;
 
-            // Reset CSS Animations
-            patientWrapper.classList.remove('animating');
-            void patientWrapper.offsetWidth;
-            patientWrapper.classList.add('animating');
+            // RESTART ALL ANIMATIONS: Force browser to reset timeline to 0
+            viewport.classList.remove('animating');
+            void viewport.offsetWidth; 
+            viewport.classList.add('animating');
 
-            // Sync Text + Pulse Brightness
-            if (document.getElementById('text-toggle').checked || document.getElementById('pulse-toggle').checked) {
-                startBreathingLoop(inSec * 1000, outSec * 1000, total * 1000);
-            } else {
-                stopBreathingLoop();
+            // SYNC TEXT: Clear existing cycle and start fresh
+            clearTimeout(textTimer);
+            if (document.getElementById('text-toggle').checked) {
+                runTextSync(inSec * 1000, outSec * 1000);
             }
         }
 
-        function stopBreathingLoop() {
-            if (breathAnimFrame) {
-                cancelAnimationFrame(breathAnimFrame);
-                breathAnimFrame = null;
-            }
-        }
+        function runTextSync(inMs, outMs) {
+            // Immediately start at Inhale
+            breathText.innerText = "BREATHE IN";
+            breathText.style.opacity = "1";
 
-        function startBreathingLoop(inMs, outMs, totalMs) {
-            stopBreathingLoop();
-            const fadeMs = 300;
-
-            const updateFrame = () => {
-                const now = performance.now();
-                const elapsed = (now - cycleStart) % totalMs;
-                const isInhale = elapsed < inMs;
-                const phaseTime = isInhale ? elapsed : elapsed - inMs;
-                const phaseDuration = isInhale ? inMs : outMs;
-
-                // Track current phase + progress for stable syncing when params change
-                currentPhase = isInhale ? 'in' : 'out';
-                phaseProgress = phaseTime / phaseDuration;
-
-                // Text sync
-                const phaseText = isInhale ? 'BREATHE IN' : 'BREATHE OUT';
-                if (breathText.innerText !== phaseText) {
-                    breathText.innerText = phaseText;
-                }
-
-                const fadeStart = phaseDuration - fadeMs;
-                let opacity = 1;
-                if (phaseTime >= fadeStart) {
-                    opacity = Math.max(0.15, 1 - (phaseTime - fadeStart) / fadeMs);
-                }
-                breathText.style.opacity = opacity;
-
-                // Pulse brightness (brightest at end of inhale, dimmest at end of exhale)
-                const progress = phaseTime / phaseDuration;
-                const brightness = isInhale ? (0.35 + 0.65 * progress) : (0.35 + 0.65 * (1 - progress));
-                pulseCircle.style.filter = `brightness(${brightness})`;
-
-                breathAnimFrame = requestAnimationFrame(updateFrame);
+            const scheduleNext = (isNextExhale) => {
+                const delay = isNextExhale ? inMs : outMs;
+                textTimer = setTimeout(() => {
+                    breathText.innerText = isNextExhale ? "BREATHE OUT" : "BREATHE IN";
+                    scheduleNext(!isNextExhale);
+                }, delay);
             };
-
-            updateFrame();
+            scheduleNext(true);
         }
 
         function updatePulseVisibility(v) {
             pulseCircle.style.display = v ? 'block' : 'none';
-            body.classList.toggle('pulse-active', v);
             calcBreathing('bpm');
         }
 
@@ -377,7 +282,7 @@
             calcBreathing('bpm');
         }
 
-        // Timer/Countdown
+        // Timer Logic
         let globalInt; let elapsed = 0;
         const topUI = document.getElementById('top-status');
         const timeText = document.getElementById('status-text');
@@ -394,11 +299,12 @@
             globalInt = setInterval(() => { rem--; let m = Math.floor(rem/60).toString().padStart(2,'0'); let s = (rem%60).toString().padStart(2,'0'); timeText.innerText = `${m}:${s}`; progFill.style.width = ((total-rem)/total*100)+'%'; if(rem <= 0) stopAllTimers(); }, 1000);
         }
 
-        // Scale
+        // Zoom Logic
         const zs = document.getElementById('zoom-select');
         for(let i=30; i<=150; i+=10){ let o=document.createElement('option'); o.value=i/100; o.innerText=i+'%'; if(i==100)o.selected=true; zs.appendChild(o); }
         function updateScale(v) { document.documentElement.style.setProperty('--scale-factor', v); document.body.style.overflow = (v > 1) ? 'auto' : 'hidden'; if (v <= 1) window.scrollTo(0,0); }
 
+        // Initial Start
         calcBreathing('bpm');
     </script>
 </body>
