@@ -114,6 +114,10 @@
             display: block;
         }
 
+        .preview-item.unselected img {
+            filter: grayscale(100%);
+        }
+
         .preview-item label {
             display: block;
             margin-top: 5px;
@@ -257,6 +261,18 @@
         const mainText = document.getElementById('instruction-text');
         const homeBtn = document.getElementById('home-btn');
         const phaseCheckboxes = Array.from(document.querySelectorAll('.phase-checkbox'));
+
+        // Add event listeners to checkboxes to gray out unselected images
+        phaseCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                const previewItem = cb.closest('.preview-item');
+                if (cb.checked) {
+                    previewItem.classList.remove('unselected');
+                } else {
+                    previewItem.classList.add('unselected');
+                }
+            });
+        });
 
         function getSelectedPhases() {
             return phaseCheckboxes
