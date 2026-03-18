@@ -156,6 +156,9 @@
                 
                 <span class="val-label">Out (s):</span>
                 <input type="number" id="out-val" value="6" step="0.5" min="0.5" onchange="calcBreathing('out')">
+                
+                <input type="checkbox" id="split-io" onchange="toggleSplitIO(this.checked)">
+                <label for="split-io">Split In/Out</label>
             </div>
 
             <div class="tool-group">
@@ -174,7 +177,22 @@
         const patientWrapper = document.getElementById('patient-content-wrapper');
         const breathText = document.getElementById('breath-text-display');
         const pulseCircle = document.getElementById('pulse-circle');
-        let breathInterval;
+        let breathAnimFrame = null;
+        let cycleStart = performance.now();
+        let lastTotal = 0;
+        let splitInOut = false;
+
+        function toggleSplitIO(checked) {
+            splitInOut = checked;
+            if (!splitInOut) {
+                // When locking, make in/out equal and recalculate BPM
+                const inVal = parseFloat(document.getElementById('in-val').value);
+                document.getElementById('out-val').value = inVal.toFixed(1);
+                calcBreathing('in');
+            } else {
+                calcBreathing('bpm');
+            }
+        }
 
         function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
         setTimeout(() => { inputArea.classList.add('faint'); }, 3000);
@@ -200,24 +218,37 @@
             let outSec = parseFloat(document.getElementById('out-val').value);
             let total = 60 / bpm;
 
-            if (changedField === 'bpm') {
-                // If BPM changes, keep In-time but adjust Out-time to fit new total
-                if (inSec >= total) inSec = total * 0.4; // fallback ratio
-                outSec = total - inSec;
-            } else if (changedField === 'in') {
-                // If In changes, adjust Out but keep BPM (Total) the same
-                if (inSec >= total) {
-                    total = inSec + 1; // expand total if In is too big
+            if (!splitInOut) {
+                // Keep In/Out equal unless user chooses to split them
+                if (changedField === 'bpm') {
+                    total = 60 / bpm;
+                    inSec = outSec = total / 2;
+                } else {
+                    // In or Out changed; keep both equal and update BPM
+                    inSec = outSec = (changedField === 'in' ? inSec : outSec);
+                    total = inSec + outSec;
                     bpm = 60 / total;
                 }
-                outSec = total - inSec;
-            } else if (changedField === 'out') {
-                // If Out changes, adjust In but keep BPM (Total) the same
-                if (outSec >= total) {
-                    total = outSec + 1;
-                    bpm = 60 / total;
+            } else {
+                if (changedField === 'bpm') {
+                    // If BPM changes, keep In-time but adjust Out-time to fit new total
+                    if (inSec >= total) inSec = total * 0.4; // fallback ratio
+                    outSec = total - inSec;
+                } else if (changedField === 'in') {
+                    // If In changes, adjust Out but keep BPM (Total) the same
+                    if (inSec >= total) {
+                        total = inSec + 1; // expand total if In is too big
+                        bpm = 60 / total;
+                    }
+                    outSec = total - inSec;
+                } else if (changedField === 'out') {
+                    // If Out changes, adjust In but keep BPM (Total) the same
+                    if (outSec >= total) {
+                        total = outSec + 1;
+                        bpm = 60 / total;
+                    }
+                    inSec = total - outSec;
                 }
-                inSec = total - outSec;
             }
 
             // Update UI
@@ -231,9 +262,19 @@
         function applySync(bpm, inSec, outSec) {
             const total = 60 / bpm;
             const peakPercent = (inSec / total) * 100;
-            
+
+            // Preserve current phase of cycle when parameters change
+            const now = performance.now();
+            let phaseFraction = 0;
+            if (lastTotal > 0) {
+                const elapsed = (now - cycleStart) % (lastTotal * 1000);
+                phaseFraction = elapsed / (lastTotal * 1000);
+            }
+            cycleStart = now - phaseFraction * (total * 1000);
+            lastTotal = total;
+
             document.documentElement.style.setProperty('--total-cycle', total + 's');
-            
+
             // Dynamic Keyframes for asymmetric breathing
             let styleTag = document.getElementById('dynamic-animations');
             if (!styleTag) {
@@ -243,8 +284,8 @@
             }
             styleTag.innerText = `
                 @keyframes clinicalBreathe {
-                    0%, 100% { transform: scale(0.65); opacity: 0.1; }
-                    ${peakPercent}% { transform: scale(1.35); opacity: 0.6; }
+                    0%, 100% { transform: scale(0.65); opacity: 0.2; }
+                    ${peakPercent}% { transform: scale(1.35); opacity: 0.7; }
                 }
                 @keyframes bgPulse {
                     0%, 100% { background-color: var(--bg-base); }
@@ -257,28 +298,54 @@
             void patientWrapper.offsetWidth;
             patientWrapper.classList.add('animating');
 
-            // Sync Text
-            clearInterval(breathInterval);
-            if (document.getElementById('text-toggle').checked) {
-                runTextCycle(inSec * 1000, outSec * 1000);
+            // Sync Text + Pulse Brightness
+            if (document.getElementById('text-toggle').checked || document.getElementById('pulse-toggle').checked) {
+                startBreathingLoop(inSec * 1000, outSec * 1000, total * 1000);
+            } else {
+                stopBreathingLoop();
             }
         }
 
-        function runTextCycle(inMs, outMs) {
-            breathText.innerText = "BREATHE IN";
-            breathText.style.opacity = "1";
-            const step = (isInhale) => {
-                const wait = isInhale ? inMs : outMs;
-                breathInterval = setTimeout(() => {
-                    breathText.style.opacity = "0";
-                    setTimeout(() => {
-                        breathText.innerText = isInhale ? "BREATHE OUT" : "BREATHE IN";
-                        breathText.style.opacity = "1";
-                        step(!isInhale);
-                    }, 300);
-                }, wait - 300);
+        function stopBreathingLoop() {
+            if (breathAnimFrame) {
+                cancelAnimationFrame(breathAnimFrame);
+                breathAnimFrame = null;
+            }
+        }
+
+        function startBreathingLoop(inMs, outMs, totalMs) {
+            stopBreathingLoop();
+            const fadeMs = 300;
+
+            const updateFrame = () => {
+                const now = performance.now();
+                const elapsed = (now - cycleStart) % totalMs;
+                const isInhale = elapsed < inMs;
+                const phaseTime = isInhale ? elapsed : elapsed - inMs;
+                const phaseDuration = isInhale ? inMs : outMs;
+
+                // Text sync
+                const phaseText = isInhale ? 'BREATHE IN' : 'BREATHE OUT';
+                if (breathText.innerText !== phaseText) {
+                    breathText.innerText = phaseText;
+                }
+
+                const fadeStart = phaseDuration - fadeMs;
+                let opacity = 1;
+                if (phaseTime >= fadeStart) {
+                    opacity = Math.max(0.15, 1 - (phaseTime - fadeStart) / fadeMs);
+                }
+                breathText.style.opacity = opacity;
+
+                // Pulse brightness (brightest at end of inhale, dimmest at end of exhale)
+                const progress = phaseTime / phaseDuration;
+                const brightness = isInhale ? (0.35 + 0.65 * progress) : (0.35 + 0.65 * (1 - progress));
+                pulseCircle.style.filter = `brightness(${brightness})`;
+
+                breathAnimFrame = requestAnimationFrame(updateFrame);
             };
-            step(true);
+
+            updateFrame();
         }
 
         function updatePulseVisibility(v) {
