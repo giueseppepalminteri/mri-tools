@@ -20,6 +20,9 @@
     --tint-yellow: rgba(250, 204, 21, 0.15);
     --tint-red: rgba(251, 113, 133, 0.2);
     --tint-green: rgba(74, 222, 128, 0.2);
+
+    --scale-factor: 1.0;
+    --accent-teal: #94d2bd; /* Toolbox Accent */
   }
 
   * { box-sizing: border-box; }
@@ -39,6 +42,38 @@
   }
   body.attending { animation: attentionFlash var(--flash-duration) infinite; }
 
+  /* --- MIRRORING ENGINE --- */
+  .mirror-all { transform: scaleX(-1); }
+  .mirror-patient-active { transform: scaleX(-1); }
+
+  /* --- TOOLBOX STYLES --- */
+  #settings-panel {
+      position: fixed; top: 15px; left: 15px; z-index: 3000;
+      background: rgba(0, 0, 0, 0.9); border: 1px solid #444;
+      border-radius: 8px; padding: 10px; transition: all 0.3s ease;
+  }
+  #settings-panel.collapsed { background: transparent; border: none; padding: 0; }
+  #settings-content { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; font-size: 0.8rem; }
+  .collapsed #settings-content { display: none; }
+  #settings-toggle { cursor: pointer; font-size: 24px; color: var(--accent-teal); display: inline-block; }
+  
+  .control-row { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .control-row select { background: #222; color: white; border: 1px solid #666; padding: 4px; border-radius: 4px; width: auto;}
+
+  /* --- WRAPPERS FOR SCALE/MIRROR --- */
+  #scaling-layer {
+      transform: scale(var(--scale-factor));
+      transform-origin: top center; 
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+  }
+
+  #mirror-layer {
+      width: 100%; flex: 1; /* Only flexes to take up remaining space */
+      display: flex; flex-direction: column;
+      transition: transform 0.2s ease;
+  }
+
   /* Modal Styles */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85);
@@ -57,7 +92,8 @@
   }
   .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
 
-  .app-container { display: flex; flex-direction: column; height: 100vh; padding: 30px; position: relative; z-index: 1; }
+  /* Layout adjustments for wrappers */
+  .app-container { display: flex; flex-direction: column; height: 100%; padding: 30px; padding-top: 60px; position: relative; z-index: 1; }
 
   header {
     display: flex; justify-content: space-between; align-items: center;
@@ -65,7 +101,7 @@
     background: rgba(0,0,0,0.5); border-radius: 8px;
   }
 
-  .display { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+  .display { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%;}
 
   .phase-square {
     width: 80vh; height: 80vh; max-width: 90vw; max-height: 55vh;
@@ -79,7 +115,7 @@
   .countdown { font-size: clamp(60px, 15vw, 130px); font-weight: 200; font-variant-numeric: tabular-nums; }
 
   .progress { height: 40px; background: rgba(0,0,0,0.6); border-radius: 20px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); margin-bottom: 20px;}
-  .progress > i { display: block; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; }
+  .progress > i { display: block; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.1s linear;}
 
   .bottom-shelf { background: var(--panel-bg); padding: 20px; border-radius: 20px; border: 2px solid #475569; }
   .controls-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: center; margin-bottom: 15px; }
@@ -99,6 +135,25 @@
 </head>
 <body id="mainBody">
 
+<div id="settings-panel" class="collapsed">
+    <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>
+    <div id="settings-content">
+        <div class="control-row">
+            <label>Zoom: </label>
+            <select id="zoom-select" onchange="updateScale(this.value)"></select>
+        </div>
+        <hr style="border:0; border-top:1px solid #333">
+        <div class="control-row">
+            <input type="checkbox" id="m-p-check" onchange="toggleMirror('patient')">
+            <label for="m-p-check">Mirror Patient Only</label>
+        </div>
+        <div class="control-row">
+            <input type="checkbox" id="m-a-check" onchange="toggleMirror('all')">
+            <label for="m-a-check">Mirror Everything</label>
+        </div>
+    </div>
+</div>
+
 <div id="helpModal" class="modal-overlay">
   <div class="modal-content">
     <h2 style="margin-top:0; color:var(--accent)">Instructions</h2>
@@ -110,46 +165,50 @@
   </div>
 </div>
 
-<div class="app-container">
-  <header>
-    <h1>MRI Breathe Instruction</h1>
-    <div style="display:flex; gap:15px; align-items:center">
-        <button id="openHelpBtn" class="btn-help">HELP</button>
-        <div id="cycleInfo" style="font-weight:bold">Cycle 0/0</div>
-    </div>
-  </header>
-
-  <main class="display">
-    <div id="phaseSquare" class="phase-square">
-        <div id="stepText" class="step">Ready</div>
-        <div id="countdown" class="countdown">00s</div>
-    </div>
-  </main>
-
-  <div class="progress"><i id="progressBar"></i></div>
-
-  <footer class="bottom-shelf">
-    <form class="controls-row" onsubmit="return false">
-      <div class="input-group"><label>Reps</label><input id="reps" type="number" value="1" /></div>
-      <div class="input-group"><label>Inhale</label><input id="inhale" type="number" value="2" /></div>
-      <div class="input-group"><label>Hold</label><input id="hold" type="number" value="20" /></div>
-      <div class="input-group"><label>Recovery</label><input id="recovery" type="number" value="18" /></div>
-      <div class="input-group">
-        <label>Alert</label>
-        <select id="alertSpeed">
-            <option value="2">Slow</option>
-            <option value="1">Medium</option>
-            <option value="0.4">Fast</option>
-        </select>
+<div id="scaling-layer">
+  <div class="app-container">
+    
+    <header>
+      <h1>MRI Breathe Instruction</h1>
+      <div style="display:flex; gap:15px; align-items:center">
+          <button id="openHelpBtn" class="btn-help">HELP</button>
+          <div id="cycleInfo" style="font-weight:bold">Cycle 0/0</div>
       </div>
+    </header>
 
-      <div class="actions">
-        <button id="attnBtn" class="btn-attention">ATTENTION</button>
-        <button id="startBtn" class="btn-start">START</button>
-        <button id="stopBtn" class="btn-stop" disabled>STOP</button>
+    <main id="mirror-layer" class="display">
+      <div id="phaseSquare" class="phase-square">
+          <div id="stepText" class="step">Ready</div>
+          <div id="countdown" class="countdown">00s</div>
       </div>
-    </form>
-  </footer>
+    </main>
+
+    <div class="progress"><i id="progressBar"></i></div>
+
+    <footer class="bottom-shelf">
+      <form class="controls-row" onsubmit="return false">
+        <div class="input-group"><label>Reps</label><input id="reps" type="number" value="1" /></div>
+        <div class="input-group"><label>Inhale</label><input id="inhale" type="number" value="2" /></div>
+        <div class="input-group"><label>Hold</label><input id="hold" type="number" value="20" /></div>
+        <div class="input-group"><label>Recovery</label><input id="recovery" type="number" value="18" /></div>
+        <div class="input-group">
+          <label>Alert</label>
+          <select id="alertSpeed">
+              <option value="2">Slow</option>
+              <option value="1">Medium</option>
+              <option value="0.4">Fast</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button id="attnBtn" class="btn-attention">ATTENTION</button>
+          <button id="startBtn" class="btn-start">START</button>
+          <button id="stopBtn" class="btn-stop" disabled>STOP</button>
+        </div>
+      </form>
+    </footer>
+
+  </div>
 </div>
 
 <script>
@@ -231,6 +290,7 @@ RECOMMENDED APP SETTINGS:
     stepText.textContent = "Breathe normally";
     setTint('green');
     countdown.textContent = "00s";
+    progressBar.style.width = "0%";
   };
 
   stopBtn.onclick = () => {
@@ -264,6 +324,51 @@ RECOMMENDED APP SETTINGS:
     document.documentElement.style.setProperty('--flash-duration', e.target.value + 's');
   };
 })();
+
+// --- TOOLBOX LOGIC ---
+const scalingLayer = document.getElementById('scaling-layer');
+const mirrorLayer = document.getElementById('mirror-layer');
+const bodyEl = document.getElementById('mainBody');
+
+function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
+
+function toggleMirror(type) {
+    const cp = document.getElementById('m-p-check');
+    const ca = document.getElementById('m-a-check');
+    
+    if (type === 'patient') {
+        if (cp.checked) {
+            ca.checked = false;
+            bodyEl.classList.remove('mirror-all');
+            mirrorLayer.classList.add('mirror-patient-active');
+        } else {
+            mirrorLayer.classList.remove('mirror-patient-active');
+        }
+    } else {
+        if (ca.checked) {
+            cp.checked = false;
+            mirrorLayer.classList.remove('mirror-patient-active');
+            bodyEl.classList.add('mirror-all');
+        } else {
+            bodyEl.classList.remove('mirror-all');
+        }
+    }
+}
+
+// Zoom Populator
+const zoomSelect = document.getElementById('zoom-select');
+for (let i = 30; i <= 150; i += 10) {
+    let opt = document.createElement('option');
+    opt.value = i / 100;
+    opt.innerHTML = i + '%';
+    if (i === 100) opt.selected = true;
+    zoomSelect.appendChild(opt);
+}
+
+function updateScale(val) {
+    document.documentElement.style.setProperty('--scale-factor', val);
+}
+
 </script>
 </body>
 </html>
