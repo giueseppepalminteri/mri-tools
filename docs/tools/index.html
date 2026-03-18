@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRI Patient Hub - Sync Pro</title>
+    <title>MRI Patient Hub - Clinical Sync</title>
     <style>
         :root {
             --scale-factor: 1.0;
-            --breath-speed: 5s;
+            --total-cycle: 10s;
+            --peak-percent: 50%; /* Where inhale ends and exhale starts */
             --bg-base: #001219;
             --bg-pulse: #002b36;
             --accent-teal: #94d2bd;
+            --highlight-yellow: #ffff00;
         }
 
         body {
@@ -23,18 +25,18 @@
             display: flex; flex-direction: column;
         }
 
-        /* Mirroring States */
+        /* Mirroring */
         .mirror-all { transform: scaleX(-1); }
         .mirror-patient-only { transform: scaleX(-1); }
 
-        /* Background Pulse */
+        /* Background Pulse Logic */
         .pulse-active {
-            animation: bgPulse var(--breath-speed) ease-in-out infinite;
+            animation: bgPulse var(--total-cycle) linear infinite;
         }
 
         @keyframes bgPulse {
             0%, 100% { background-color: var(--bg-base); }
-            50% { background-color: var(--bg-pulse); }
+            var(--peak-percent) { background-color: var(--bg-pulse); }
         }
 
         /* Settings Panel */
@@ -48,7 +50,6 @@
             padding: 10px;
             transition: all 0.3s ease;
         }
-
         #settings-panel.collapsed { background: transparent; border: none; padding: 0; }
         #settings-content { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
         .collapsed #settings-content { display: none; }
@@ -66,7 +67,6 @@
             background: rgba(0, 0, 0, 0.4);
             padding: 10px; border-radius: 15px;
         }
-
         #status-text { font-size: 3.5rem; font-weight: bold; font-family: monospace; color: var(--accent-teal); }
         #progress-bar-container { width: 100%; height: 8px; background: #111; border-radius: 4px; margin-top: 10px; overflow: hidden; display: none; }
         #progress-bar-fill { height: 100%; width: 0%; background: var(--accent-teal); transition: width 1s linear; }
@@ -83,51 +83,53 @@
         #patient-content-wrapper {
             width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: transform 0.3s ease;
             position: relative;
         }
 
-        /* Breathing Pulse & Text */
+        /* Breathing Circle */
         #pulse-circle {
             position: absolute;
             display: none;
-            width: 50vh; height: 50vh;
+            width: 55vh; height: 55vh;
             background: radial-gradient(circle, var(--accent-teal) 0%, transparent 75%);
             border-radius: 50%;
             z-index: 1;
         }
 
+        /* Dynamic Animation class */
         .animating #pulse-circle {
-            animation: circleBreathe var(--breath-speed) ease-in-out infinite;
+            animation: clinicalBreathe var(--total-cycle) linear infinite;
         }
 
+        @keyframes clinicalBreathe {
+            0%, 100% { transform: scale(0.6); opacity: 0.1; }
+            var(--peak-percent) { transform: scale(1.3); opacity: 0.6; }
+        }
+
+        /* HIGH VISIBILITY BREATH TEXT */
         #breath-text-display {
             position: absolute;
-            bottom: 15%;
-            font-size: 3.5rem;
-            font-weight: 300;
-            letter-spacing: 8px;
-            color: #ffff00; /* Yellow for better visibility */
-            text-shadow: 0 0 15px rgba(0,0,0,0.8);
+            bottom: 12%;
+            font-size: 5rem; /* Increased size */
+            font-weight: 900;
+            letter-spacing: 5px;
+            color: var(--highlight-yellow);
+            text-shadow: 0 0 30px rgba(255, 255, 0, 0.6), 0 0 10px rgba(0,0,0,1);
             z-index: 2;
             display: none;
             pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-
-        @keyframes circleBreathe {
-            0%, 100% { transform: scale(0.7); opacity: 0.1; }
-            50% { transform: scale(1.2); opacity: 0.5; }
+            text-align: center;
+            width: 100%;
+            transition: opacity 0.3s ease;
         }
 
         /* Instruction Area */
         #instruction-input {
-            z-index: 10; width: 85%; background: transparent; border: none;
-            color: #fff; font-size: clamp(2rem, 8vh, 5rem); font-weight: 800;
+            z-index: 10; width: 90%; background: transparent; border: none;
+            color: #fff; font-size: clamp(2rem, 8vh, 5.5rem); font-weight: 800;
             text-align: center; text-transform: uppercase; outline: none;
             resize: none; overflow: hidden;
         }
-
         #instruction-input::placeholder { color: var(--accent-teal); transition: color 1s ease; }
         #instruction-input.faint::placeholder { color: rgba(255, 255, 255, 0.03); }
         #instruction-input.faint:hover::placeholder { color: rgba(255, 255, 255, 0.3); }
@@ -135,14 +137,16 @@
         /* Bottom Toolbar */
         #bottom-toolbar {
             background: #050505; padding: 12px;
-            display: flex; gap: 20px; justify-content: center; align-items: center;
+            display: flex; gap: 15px; justify-content: center; align-items: center;
             border-top: 1px solid #222; z-index: 2001; flex-wrap: wrap;
         }
 
         .tool-group { display: flex; align-items: center; gap: 8px; border-right: 1px solid #333; padding-right: 15px; }
         .tool-group:last-child { border: none; }
         button { background: #222; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        input[type="number"] { background: #111; color: #fff; border: 1px solid #444; padding: 5px; border-radius: 4px; }
+        input[type="number"] { background: #111; color: #fff; border: 1px solid #444; padding: 5px; border-radius: 4px; font-weight: bold; }
+        
+        .val-label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
     </style>
 </head>
 <body id="main-body">
@@ -182,10 +186,13 @@
         </div>
 
         <div class="tool-group">
-            <span>Countdown:</span>
-            <input type="number" id="cd-val" value="60" style="width: 50px;">
-            <button onclick="startCountdown()">Start</button>
-            <button style="color:#ff5f5f" onclick="stopAllTimers()">Stop</button>
+            <span class="val-label">BPM:</span>
+            <input type="number" id="bpm-val" value="6" step="1" min="1" onchange="syncBreathing()">
+            
+            <span class="val-label">In (s):</span>
+            <input type="number" id="in-val" value="4" step="0.5" min="0.5" onchange="syncBreathing()">
+            
+            <span class="val-label" id="out-display" style="color:var(--accent-teal)">Out: 6s</span>
         </div>
 
         <div class="tool-group">
@@ -194,9 +201,12 @@
             
             <input type="checkbox" id="text-toggle" onchange="updateTextVisibility(this.checked)">
             <label for="text-toggle">Text</label>
-
-            <input type="number" id="breath-val" value="5" step="0.5" onchange="updateBreathSpeed(this.value)" style="width: 45px;">
-            <span>Cycle (s)</span>
+        </div>
+        
+        <div class="tool-group">
+            <span class="val-label">Countdown:</span>
+            <input type="number" id="cd-val" value="60" style="width: 50px;">
+            <button onclick="startCountdown()">Start</button>
         </div>
     </div>
 
@@ -208,10 +218,9 @@
         const pulseCircle = document.getElementById('pulse-circle');
         let breathInterval;
 
-        // Settings Toggle
         function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
 
-        // Instruction Text Fade
+        // Instruction Text Logic
         setTimeout(() => { inputArea.classList.add('faint'); }, 3000);
         inputArea.addEventListener("input", function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; });
 
@@ -229,78 +238,108 @@
             }
         }
 
-        // --- SYNCHRONIZED BREATHING LOGIC ---
+        // --- DYNAMIC BREATHING LOGIC ---
         function updatePulseVisibility(v) {
             pulseCircle.style.display = v ? 'block' : 'none';
             body.classList.toggle('pulse-active', v);
-            resetAnimations();
+            syncBreathing();
         }
 
         function updateTextVisibility(v) {
             breathText.style.display = v ? 'block' : 'none';
-            resetAnimations();
+            syncBreathing();
         }
 
-        function updateBreathSpeed(val) {
-            document.documentElement.style.setProperty('--breath-speed', val + 's');
-            resetAnimations();
-        }
+        function syncBreathing() {
+            const bpm = parseFloat(document.getElementById('bpm-val').value);
+            const inSec = parseFloat(document.getElementById('in-val').value);
+            
+            const totalSec = 60 / bpm;
+            const outSec = totalSec - inSec;
+            
+            // Safety check
+            if (outSec <= 0) {
+                document.getElementById('out-display').innerText = "ERROR";
+                document.getElementById('out-display').style.color = "red";
+                return;
+            }
+            
+            document.getElementById('out-display').innerText = `Out: ${outSec.toFixed(1)}s`;
+            document.getElementById('out-display').style.color = "var(--accent-teal)";
 
-        function resetAnimations() {
-            // Restart the CSS animations so they align perfectly with the JS timer
+            // Update CSS Variables for Keyframes
+            const peakPercent = (inSec / totalSec) * 100;
+            document.documentElement.style.setProperty('--total-cycle', totalSec + 's');
+            
+            // Generate a dynamic keyframe for the pulse expansion/contraction
+            const styleSheet = document.createElement("style");
+            styleSheet.innerText = `
+                @keyframes clinicalBreathe {
+                    0%, 100% { transform: scale(0.65); opacity: 0.1; }
+                    ${peakPercent}% { transform: scale(1.3); opacity: 0.6; }
+                }
+                @keyframes bgPulse {
+                    0%, 100% { background-color: var(--bg-base); }
+                    ${peakPercent}% { background-color: var(--bg-pulse); }
+                }
+            `;
+            document.head.appendChild(styleSheet);
+
+            // Reset Animation
             patientWrapper.classList.remove('animating');
-            void patientWrapper.offsetWidth; // Trigger reflow
+            void patientWrapper.offsetWidth;
             patientWrapper.classList.add('animating');
 
+            // Sync Text Intervals
             clearInterval(breathInterval);
-
-            const isTextOn = document.getElementById('text-toggle').checked;
-            const isPulseOn = document.getElementById('pulse-toggle').checked;
-
-            if (isTextOn) {
-                const speed = parseFloat(document.getElementById('breath-val').value) * 1000;
-                const halfCycle = speed / 2;
-
-                // Sync start: 0ms = Inhale start
-                breathText.innerText = "BREATHE IN";
-                breathText.style.opacity = "1";
-
-                breathInterval = setInterval(() => {
-                    // Start fading out slightly before the swap to make it smooth
-                    breathText.style.opacity = "0";
-                    
-                    setTimeout(() => {
-                        breathText.innerText = (breathText.innerText === "BREATHE IN") ? "BREATHE OUT" : "BREATHE IN";
-                        breathText.style.opacity = "1";
-                    }, 400); // 400ms fade duration
-                    
-                }, halfCycle);
+            if (document.getElementById('text-toggle').checked) {
+                runTextCycle(inSec * 1000, outSec * 1000);
             }
         }
 
-        // Timers
+        function runTextCycle(inMs, outMs) {
+            breathText.innerText = "BREATHE IN";
+            breathText.style.opacity = "1";
+            
+            // Recursive timeout allows for unequal In/Out times
+            const step = (isInhale) => {
+                const waitTime = isInhale ? inMs : outMs;
+                breathInterval = setTimeout(() => {
+                    breathText.style.opacity = "0";
+                    setTimeout(() => {
+                        breathText.innerText = isInhale ? "BREATHE OUT" : "BREATHE IN";
+                        breathText.style.opacity = "1";
+                        step(!isInhale);
+                    }, 300); // fade time
+                }, waitTime - 300);
+            };
+            step(true);
+        }
+
+        // Timer Logic
         let globalInt; let elapsed = 0;
         const topUI = document.getElementById('top-status');
         const timeText = document.getElementById('status-text');
         const progFill = document.getElementById('progress-bar-fill');
 
         function stopAllTimers() { clearInterval(globalInt); topUI.style.display = 'none'; document.getElementById('progress-bar-container').style.display = 'none'; }
-        
         function startTimer() {
             stopAllTimers(); elapsed = 0; topUI.style.display = 'block';
             globalInt = setInterval(() => { elapsed++; let m = Math.floor(elapsed/60).toString().padStart(2,'0'); let s = (elapsed%60).toString().padStart(2,'0'); timeText.innerText = `${m}:${s}`; }, 1000);
         }
-
         function startCountdown() {
             stopAllTimers(); let total = parseInt(document.getElementById('cd-val').value); let rem = total;
             topUI.style.display = 'block'; document.getElementById('progress-bar-container').style.display = 'block';
             globalInt = setInterval(() => { rem--; let m = Math.floor(rem/60).toString().padStart(2,'0'); let s = (rem%60).toString().padStart(2,'0'); timeText.innerText = `${m}:${s}`; progFill.style.width = ((total-rem)/total*100)+'%'; if(rem <= 0) stopAllTimers(); }, 1000);
         }
 
-        // Scale
+        // Scale Logic
         const zs = document.getElementById('zoom-select');
         for(let i=30; i<=150; i+=10){ let o=document.createElement('option'); o.value=i/100; o.innerText=i+'%'; if(i==100)o.selected=true; zs.appendChild(o); }
         function updateScale(v) { document.documentElement.style.setProperty('--scale-factor', v); document.body.style.overflow = (v > 1) ? 'auto' : 'hidden'; if (v <= 1) window.scrollTo(0,0); }
+
+        // Init
+        syncBreathing();
     </script>
 </body>
 </html>
