@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRI Patient Instruction Hub</title>
+    <style>
+        :root {
+            --scale-factor: 1.0;
+            --breath-speed: 5s; /* Default cycle */
+            --bg-color: #001219;
+            --accent-teal: #94d2bd;
+            --relax-blue: #005f73;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #ffffff;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Left Scale */
+        #zoom-container {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        /* Top Center Status (Timer/Countdown) */
+        #top-status {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            text-align: center;
+            min-width: 250px;
+        }
+
+        #status-text {
+            font-size: 3rem;
+            font-weight: bold;
+            font-family: monospace;
+            color: var(--accent-teal);
+            text-shadow: 0 0 20px rgba(148, 210, 189, 0.5);
+        }
+
+        #progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #111;
+            border-radius: 4px;
+            margin-top: 5px;
+            display: none;
+            overflow: hidden;
+        }
+
+        #progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-teal);
+            transition: width 1s linear;
+        }
+
+        /* Main Area */
+        #main-viewport {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #scaling-wrapper {
+            transform: scale(var(--scale-factor));
+            transform-origin: top center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Breathing Pulse */
+        #breathing-container {
+            position: absolute;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #pulse-circle {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, var(--accent-teal) 0%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: breathe var(--breath-speed) ease-in-out infinite;
+        }
+
+        #breath-label {
+            font-size: 2.5rem;
+            margin-top: 20px;
+            font-weight: 300;
+            letter-spacing: 5px;
+            color: var(--accent-teal);
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(0.8); opacity: 0.2; }
+            50% { transform: scale(1.2); opacity: 0.6; }
+        }
+
+        /* Canvas for Drawing */
+        #drawing-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        /* Bottom Toolbar */
+        #bottom-toolbar {
+            background: #0a0a0a;
+            padding: 15px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            border-top: 1px solid #333;
+            z-index: 2001;
+            flex-wrap: wrap;
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-right: 1px solid #333;
+            padding-right: 15px;
+        }
+
+        button {
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover { background: #333; }
+        input[type="number"] { width: 50px; background: #222; color: #fff; border: 1px solid #444; padding: 5px; }
+        
+        .active-btn { background: var(--relax-blue); border-color: var(--accent-teal); }
+    </style>
+</head>
+<body>
+
+    <div id="zoom-container">
+        <label>Zoom: </label>
+        <select id="zoom-select" onchange="updateScale(this.value)"></select>
+    </div>
+
+    <div id="top-status">
+        <div id="status-text">00:00</div>
+        <div id="progress-bar-container">
+            <div id="progress-bar-fill"></div>
+        </div>
+    </div>
+
+    <div id="main-viewport">
+        <div id="scaling-wrapper">
+            <div id="breathing-container">
+                <div id="pulse-circle"></div>
+                <div id="breath-label">BREATHE</div>
+            </div>
+            <canvas id="drawing-canvas"></canvas>
+        </div>
+    </div>
+
+    <div id="bottom-toolbar">
+        <div class="tool-group">
+            <button onclick="clearCanvas()">Clear Screen</button>
+        </div>
+
+        <div class="tool-group">
+            <span>Timer:</span>
+            <button id="timer-btn" onclick="toggleTimer()">Start</button>
+            <button onclick="resetTimer()">Reset</button>
+        </div>
+
+        <div class="tool-group">
+            <span>Countdown:</span>
+            <input type="number" id="cd-seconds" value="30">
+            <button id="cd-btn" onclick="startCountdown()">Start</button>
+        </div>
+
+        <div class="tool-group">
+            <span>Breath (sec):</span>
+            <input type="number" id="breath-val" value="5" step="0.5" onchange="updateBreath(this.value)">
+        </div>
+    </div>
+
+    <script>
+        // --- SCALING LOGIC ---
+        const zoomSelect = document.getElementById('zoom-select');
+        for (let i = 30; i <= 150; i += 10) {
+            let opt = document.createElement('option');
+            opt.value = i / 100;
+            opt.innerHTML = i + '%';
+            if (i === 100) opt.selected = true;
+            zoomSelect.appendChild(opt);
+        }
+
+        function updateScale(val) {
+            document.documentElement.style.setProperty('--scale-factor', val);
+            document.body.style.overflow = (val > 1) ? 'auto' : 'hidden';
+            if (val <= 1) window.scrollTo(0,0);
+        }
+
+        // --- DRAWING LOGIC ---
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.strokeStyle = '#94d2bd';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        canvas.addEventListener('mousedown', () => drawing = true);
+        canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('mousemove', draw);
+
+        function draw(e) {
+            if (!drawing) return;
+            // Adjust for scale factor
+            const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scale-factor'));
+            ctx.lineTo(e.clientX / scale, e.clientY / scale);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX / scale, e.clientY / scale);
+        }
+
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        // --- TIMER / COUNTDOWN LOGIC ---
+        let timerInterval;
+        let timerSeconds = 0;
+        let isTimerRunning = false;
+        const statusText = document.getElementById('status-text');
+
+        function formatTime(s) {
+            const mins = Math.floor(s / 60).toString().padStart(2, '0');
+            const secs = (s % 60).toString().padStart(2, '0');
+            return `${mins}:${secs}`;
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timer-btn');
+            if (!isTimerRunning) {
+                isTimerRunning = true;
+                btn.innerText = "Stop";
+                btn.classList.add('active-btn');
+                timerInterval = setInterval(() => {
+                    timerSeconds++;
+                    statusText.innerText = formatTime(timerSeconds);
+                }, 1000);
+            } else {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                btn.innerText = "Start";
+                btn.classList.remove('active-btn');
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerSeconds = 0;
+            isTimerRunning = false;
+            statusText.innerText = "00:00";
+            document.getElementById('timer-btn').innerText = "Start";
+            document.getElementById('timer-btn').classList.remove('active-btn');
+        }
+
+        function startCountdown() {
+            clearInterval(timerInterval);
+            let duration = parseInt(document.getElementById('cd-seconds').value);
+            let timeLeft = duration;
+            const bar = document.getElementById('progress-bar-container');
+            const fill = document.getElementById('progress-bar-fill');
+            
+            bar.style.display = 'block';
+            statusText.innerText = formatTime(timeLeft);
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                statusText.innerText = formatTime(timeLeft);
+                let percent = ((duration - timeLeft) / duration) * 100;
+                fill.style.width = percent + '%';
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    statusText.innerText = "DONE";
+                    setTimeout(() => bar.style.display = 'none', 3000);
+                }
+            }, 1000);
+        }
+
+        // --- BREATHING LOGIC ---
+        function updateBreath(val) {
+            document.documentElement.style.setProperty('--breath-speed', val + 's');
+            const label = document.getElementById('breath-label');
+            
+            // Sync text with animation
+            clearInterval(window.breathTextInterval);
+            label.innerText = "BREATHE IN";
+            window.breathTextInterval = setInterval(() => {
+                label.innerText = (label.innerText === "BREATHE IN") ? "BREATHE OUT" : "BREATHE IN";
+            }, (val * 1000) / 2);
+        }
+        
+        // Init breath text
+        updateBreath(5);
+
+    </script>
+</body>
+</html>
