@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRI Patient Hub - Keyboard Input</title>
+    <title>MRI Patient Hub - Pro Control</title>
     <style>
         :root {
             --scale-factor: 1.0;
-            --breath-speed: 5s; /* Frequency */
+            --breath-speed: 5s;
             --bg-base: #001219;
             --bg-pulse: #002b36;
             --accent-teal: #94d2bd;
@@ -24,7 +24,15 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            /* The whole screen pulses in intensity */
+            transition: transform 0.3s ease;
+        }
+
+        /* Mirror Classes */
+        .mirror-all { transform: scaleX(-1); }
+        .mirror-patient { transform: scaleX(-1); }
+
+        /* Background Pulse (Breath Sync) */
+        .pulse-active {
             animation: bgPulse var(--breath-speed) ease-in-out infinite;
         }
 
@@ -33,19 +41,25 @@
             50% { background-color: var(--bg-pulse); }
         }
 
-        /* Top Left Scale */
-        #zoom-container {
+        /* Top Left Controls */
+        #controls-container {
             position: fixed;
-            top: 15px;
-            left: 15px;
+            top: 10px;
+            left: 10px;
             z-index: 2000;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
             border-radius: 8px;
             border: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.85rem;
         }
 
-        /* Top Center Status (Hidden by default) */
+        .control-row { display: flex; align-items: center; gap: 10px; }
+
+        /* Top Center Status */
         #top-status {
             position: fixed;
             top: 15px;
@@ -54,7 +68,7 @@
             z-index: 2000;
             text-align: center;
             min-width: 300px;
-            display: none; /* Removed when not in use */
+            display: none;
             background: rgba(0, 0, 0, 0.4);
             padding: 10px;
             border-radius: 15px;
@@ -63,29 +77,17 @@
         #status-text {
             font-size: 3.5rem;
             font-weight: bold;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: monospace;
             color: var(--accent-teal);
-            text-shadow: 0 0 15px rgba(148, 210, 189, 0.6);
         }
 
         #progress-bar-container {
-            width: 100%;
-            height: 10px;
-            background: #111;
-            border-radius: 5px;
-            margin-top: 10px;
-            display: none;
-            overflow: hidden;
+            width: 100%; height: 10px; background: #111; border-radius: 5px; margin-top: 10px; overflow: hidden;
         }
 
-        #progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: var(--accent-teal);
-            transition: width 1s linear;
-        }
+        #progress-bar-fill { height: 100%; width: 0%; background: var(--accent-teal); transition: width 1s linear; }
 
-        /* Main Area */
+        /* Main Viewport */
         #main-viewport {
             flex: 1;
             display: flex;
@@ -97,20 +99,23 @@
         #scaling-wrapper {
             transform: scale(var(--scale-factor));
             transform-origin: top center;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: transform 0.1s ease-out;
         }
 
+        /* Patient Content Wrapper (This flips for Mirror Content) */
+        #patient-content {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: transform 0.3s ease;
+        }
+
         /* Breathing Circle */
-        #pulse-circle {
+        #breathing-element {
             position: absolute;
-            width: 40vh;
-            height: 40vh;
+            display: none; /* Controlled by checkbox */
+            width: 40vh; height: 40vh;
             background: radial-gradient(circle, var(--accent-teal) 0%, transparent 75%);
             border-radius: 50%;
             z-index: 1;
@@ -122,11 +127,11 @@
             50% { transform: scale(1.1); opacity: 0.4; }
         }
 
-        /* Interactive Text Area */
+        /* Textarea and Placeholder Logic */
         #instruction-input {
             position: relative;
             z-index: 10;
-            width: 80%;
+            width: 85%;
             background: transparent;
             border: none;
             color: #fff;
@@ -135,59 +140,70 @@
             text-align: center;
             text-transform: uppercase;
             outline: none;
-            cursor: text;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
             resize: none;
             overflow: hidden;
+            display: none; /* Controlled by checkbox */
         }
 
+        /* Placeholder initial state */
         #instruction-input::placeholder {
+            color: rgba(148, 210, 189, 0.8);
+            transition: color 2s ease;
+        }
+
+        /* Very faint placeholder after 3s (handled via JS class) */
+        #instruction-input.faint::placeholder {
+            color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Brighter on hover */
+        #instruction-input.faint:hover::placeholder {
             color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Visible text when typed */
+        #instruction-input:not(:placeholder-shown) {
+            text-shadow: 0 0 20px rgba(148, 210, 189, 0.4);
         }
 
         /* Bottom Toolbar */
         #bottom-toolbar {
             background: #050505;
             padding: 15px;
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            align-items: center;
-            border-top: 1px solid #222;
-            z-index: 2001;
-            flex-wrap: wrap;
+            display: flex; gap: 20px; justify-content: center; align-items: center;
+            border-top: 1px solid #222; z-index: 2001; flex-wrap: wrap;
         }
 
-        .tool-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-right: 1px solid #333;
-            padding-right: 15px;
-        }
-
-        button {
-            background: #222;
-            color: white;
-            border: 1px solid #444;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
+        .tool-group { display: flex; align-items: center; gap: 8px; border-right: 1px solid #333; padding-right: 15px; }
+        button { background: #222; color: white; border: 1px solid #444; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         button:hover { background: #333; border-color: var(--accent-teal); }
         input { background: #111; color: #fff; border: 1px solid #444; padding: 6px; border-radius: 4px; }
-        
-        .active-timer { color: var(--accent-teal); border-color: var(--accent-teal); box-shadow: 0 0 10px rgba(148, 210, 189, 0.3); }
-        .stop-btn { color: #ff5f5f; border-color: #444; }
+        .stop-btn { color: #ff5f5f; }
     </style>
 </head>
 <body>
 
-    <div id="zoom-container">
-        <label>Zoom: </label>
-        <select id="zoom-select" onchange="updateScale(this.value)"></select>
+    <div id="controls-container">
+        <div class="control-row">
+            <label>Zoom:</label>
+            <select id="zoom-select" onchange="updateScale(this.value)"></select>
+        </div>
+        <div class="control-row">
+            <input type="checkbox" id="check-breath" onchange="toggleVisibility('breathing-element', this.checked); toggleBgPulse(this.checked)">
+            <label for="check-breath">Show Breath Pulse</label>
+        </div>
+        <div class="control-row">
+            <input type="checkbox" id="check-text" onchange="toggleVisibility('instruction-input', this.checked)">
+            <label for="check-text">Show Instructions</label>
+        </div>
+        <div class="control-row">
+            <input type="checkbox" id="flip-patient-check" onchange="mirrorPatient(this.checked)">
+            <label for="flip-patient-check">Mirror Content Only</label>
+        </div>
+        <div class="control-row">
+            <input type="checkbox" id="flip-all-check" onchange="mirrorAll(this.checked)">
+            <label for="flip-all-check">Mirror Everything</label>
+        </div>
     </div>
 
     <div id="top-status">
@@ -199,28 +215,30 @@
 
     <div id="main-viewport">
         <div id="scaling-wrapper">
-            <div id="pulse-circle"></div>
-            <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="2"></textarea>
+            <div id="patient-content">
+                <div id="breathing-element"></div>
+                <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="2"></textarea>
+            </div>
         </div>
     </div>
 
     <div id="bottom-toolbar">
         <div class="tool-group">
             <span>Timer (Up):</span>
-            <button id="timer-start" onclick="startTimer()">Start</button>
+            <button onclick="startTimer()">Start</button>
             <button class="stop-btn" onclick="stopAllTimers()">Stop & Hide</button>
         </div>
 
         <div class="tool-group">
             <span>Countdown:</span>
-            <input type="number" id="cd-input" value="60" style="width: 60px;">
-            <button id="cd-start" onclick="startCountdown()">Start</button>
+            <input type="number" id="cd-input" value="60" style="width: 55px;">
+            <button onclick="startCountdown()">Start</button>
             <button class="stop-btn" onclick="stopAllTimers()">Stop & Hide</button>
         </div>
 
         <div class="tool-group">
             <span>Breath Cycle (s):</span>
-            <input type="number" id="breath-val" value="5" step="0.5" onchange="updateBreath(this.value)" style="width: 50px;">
+            <input type="number" id="breath-val" value="5" step="0.5" onchange="updateBreath(this.value)" style="width: 45px;">
         </div>
 
         <div class="tool-group" style="border:none;">
@@ -229,6 +247,36 @@
     </div>
 
     <script>
+        // --- VISIBILITY & TEXT LOGIC ---
+        const inputArea = document.getElementById('instruction-input');
+        
+        // Faint placeholder logic
+        setTimeout(() => {
+            inputArea.classList.add('faint');
+        }, 3000);
+
+        function toggleVisibility(id, isVisible) {
+            document.getElementById(id).style.display = isVisible ? 'block' : 'none';
+            if (id === 'instruction-input' && isVisible) inputArea.focus();
+        }
+
+        function toggleBgPulse(isActive) {
+            document.body.classList.toggle('pulse-active', isActive);
+        }
+
+        // --- MIRROR LOGIC ---
+        function mirrorPatient(shouldFlip) {
+            // Flips status bar and main patient content
+            const patientWrapper = document.getElementById('patient-content');
+            const status = document.getElementById('top-status');
+            patientWrapper.classList.toggle('mirror-patient', shouldFlip);
+            status.classList.toggle('mirror-patient', shouldFlip);
+        }
+
+        function mirrorAll(shouldFlip) {
+            document.body.classList.toggle('mirror-all', shouldFlip);
+        }
+
         // --- SCALING LOGIC ---
         const zoomSelect = document.getElementById('zoom-select');
         for (let i = 30; i <= 150; i += 10) {
@@ -250,33 +298,23 @@
         let secondsCounter = 0;
         const topDisplay = document.getElementById('top-status');
         const statusText = document.getElementById('status-text');
-        const progressContainer = document.getElementById('progress-bar-container');
         const progressFill = document.getElementById('progress-bar-fill');
-
-        function formatTime(s) {
-            const m = Math.floor(s / 60).toString().padStart(2, '0');
-            const sec = (s % 60).toString().padStart(2, '0');
-            return `${m}:${sec}`;
-        }
 
         function stopAllTimers() {
             clearInterval(globalInterval);
             topDisplay.style.display = 'none';
-            progressContainer.style.display = 'none';
-            document.getElementById('timer-start').classList.remove('active-timer');
-            document.getElementById('cd-start').classList.remove('active-timer');
+            document.getElementById('progress-bar-container').style.display = 'none';
         }
 
         function startTimer() {
             stopAllTimers();
             secondsCounter = 0;
             topDisplay.style.display = 'block';
-            statusText.innerText = "00:00";
-            document.getElementById('timer-start').classList.add('active-timer');
-
             globalInterval = setInterval(() => {
                 secondsCounter++;
-                statusText.innerText = formatTime(secondsCounter);
+                let m = Math.floor(secondsCounter / 60).toString().padStart(2, '0');
+                let s = (secondsCounter % 60).toString().padStart(2, '0');
+                statusText.innerText = `${m}:${s}`;
             }, 1000);
         }
 
@@ -284,40 +322,28 @@
             stopAllTimers();
             let duration = parseInt(document.getElementById('cd-input').value);
             let timeLeft = duration;
-            
             topDisplay.style.display = 'block';
-            progressContainer.style.display = 'block';
-            statusText.innerText = formatTime(timeLeft);
-            progressFill.style.width = '0%';
-            document.getElementById('cd-start').classList.add('active-timer');
-
+            document.getElementById('progress-bar-container').style.display = 'block';
+            
             globalInterval = setInterval(() => {
                 timeLeft--;
-                statusText.innerText = formatTime(timeLeft);
-                let percent = ((duration - timeLeft) / duration) * 100;
-                progressFill.style.width = percent + '%';
-
-                if (timeLeft <= 0) {
-                    stopAllTimers();
-                    topDisplay.style.display = 'block';
-                    statusText.innerText = "COMPLETE";
-                    setTimeout(() => { topDisplay.style.display = 'none'; }, 3000);
-                }
+                let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                let s = (timeLeft % 60).toString().padStart(2, '0');
+                statusText.innerText = `${m}:${s}`;
+                progressFill.style.width = ((duration - timeLeft) / duration * 100) + '%';
+                if (timeLeft <= 0) stopAllTimers();
             }, 1000);
         }
 
-        // --- BREATHING LOGIC ---
         function updateBreath(val) {
             document.documentElement.style.setProperty('--breath-speed', val + 's');
         }
 
-        // --- TEXTAREA AUTO-RESIZE ---
-        const tx = document.getElementById('instruction-input');
-        tx.addEventListener("input", OnInput, false);
-        function OnInput() {
+        // Auto-resize typing area
+        inputArea.addEventListener("input", function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + "px";
-        }
+        });
     </script>
 </body>
 </html>
