@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRI Patient Hub - Pro Control</title>
+    <title>MRI Patient Hub - Sync Pro</title>
     <style>
         :root {
             --scale-factor: 1.0;
@@ -27,7 +27,7 @@
         .mirror-all { transform: scaleX(-1); }
         .mirror-patient-only { transform: scaleX(-1); }
 
-        /* Background Pulse Animation */
+        /* Background Pulse */
         .pulse-active {
             animation: bgPulse var(--breath-speed) ease-in-out infinite;
         }
@@ -37,7 +37,7 @@
             50% { background-color: var(--bg-pulse); }
         }
 
-        /* Collapsible Settings Panel */
+        /* Settings Panel */
         #settings-panel {
             position: fixed;
             top: 15px; left: 15px;
@@ -47,35 +47,14 @@
             border-radius: 8px;
             padding: 10px;
             transition: all 0.3s ease;
-            max-width: 200px;
         }
 
-        #settings-panel.collapsed {
-            background: transparent;
-            border: none;
-            padding: 0;
-        }
-
-        #settings-content {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
+        #settings-panel.collapsed { background: transparent; border: none; padding: 0; }
+        #settings-content { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
         .collapsed #settings-content { display: none; }
+        #settings-toggle { cursor: pointer; font-size: 24px; color: var(--accent-teal); display: inline-block; }
 
-        #settings-toggle {
-            cursor: pointer;
-            font-size: 24px;
-            color: var(--accent-teal);
-            display: inline-block;
-            transition: transform 0.3s ease;
-        }
-
-        #settings-toggle:hover { transform: rotate(45deg); }
-
-        /* Timer UI */
+        /* Timer HUD */
         #top-status {
             position: fixed;
             top: 15px; left: 50%;
@@ -88,21 +67,12 @@
             padding: 10px; border-radius: 15px;
         }
 
-        #status-text {
-            font-size: 3.5rem; font-weight: bold; font-family: monospace; color: var(--accent-teal);
-        }
-
-        #progress-bar-container {
-            width: 100%; height: 8px; background: #111; border-radius: 4px; margin-top: 10px; overflow: hidden; display: none;
-        }
-
+        #status-text { font-size: 3.5rem; font-weight: bold; font-family: monospace; color: var(--accent-teal); }
+        #progress-bar-container { width: 100%; height: 8px; background: #111; border-radius: 4px; margin-top: 10px; overflow: hidden; display: none; }
         #progress-bar-fill { height: 100%; width: 0%; background: var(--accent-teal); transition: width 1s linear; }
 
         /* Main Workspace */
-        #main-viewport {
-            flex: 1; display: flex; justify-content: center; align-items: center; overflow: hidden;
-        }
-
+        #main-viewport { flex: 1; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #scaling-wrapper {
             transform: scale(var(--scale-factor));
             transform-origin: top center;
@@ -121,29 +91,33 @@
         #pulse-circle {
             position: absolute;
             display: none;
-            width: 45vh; height: 45vh;
+            width: 50vh; height: 50vh;
             background: radial-gradient(circle, var(--accent-teal) 0%, transparent 75%);
             border-radius: 50%;
             z-index: 1;
+        }
+
+        .animating #pulse-circle {
             animation: circleBreathe var(--breath-speed) ease-in-out infinite;
         }
 
         #breath-text-display {
             position: absolute;
-            bottom: 20%;
-            font-size: 3rem;
+            bottom: 15%;
+            font-size: 3.5rem;
             font-weight: 300;
-            letter-spacing: 10px;
-            color: var(--accent-teal);
-            opacity: 0.6;
+            letter-spacing: 8px;
+            color: #ffff00; /* Yellow for better visibility */
+            text-shadow: 0 0 15px rgba(0,0,0,0.8);
             z-index: 2;
             display: none;
             pointer-events: none;
+            transition: opacity 0.4s ease;
         }
 
         @keyframes circleBreathe {
-            0%, 100% { transform: scale(0.75); opacity: 0.1; }
-            50% { transform: scale(1.15); opacity: 0.4; }
+            0%, 100% { transform: scale(0.7); opacity: 0.1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
         }
 
         /* Instruction Area */
@@ -154,17 +128,9 @@
             resize: none; overflow: hidden;
         }
 
-        #instruction-input::placeholder {
-            color: var(--accent-teal); transition: color 1s ease;
-        }
-
-        #instruction-input.faint::placeholder {
-            color: rgba(255, 255, 255, 0.03);
-        }
-
-        #instruction-input.faint:hover::placeholder {
-            color: rgba(255, 255, 255, 0.3);
-        }
+        #instruction-input::placeholder { color: var(--accent-teal); transition: color 1s ease; }
+        #instruction-input.faint::placeholder { color: rgba(255, 255, 255, 0.03); }
+        #instruction-input.faint:hover::placeholder { color: rgba(255, 255, 255, 0.3); }
 
         /* Bottom Toolbar */
         #bottom-toolbar {
@@ -175,10 +141,8 @@
 
         .tool-group { display: flex; align-items: center; gap: 8px; border-right: 1px solid #333; padding-right: 15px; }
         .tool-group:last-child { border: none; }
-        
         button { background: #222; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         input[type="number"] { background: #111; color: #fff; border: 1px solid #444; padding: 5px; border-radius: 4px; }
-        label { font-size: 0.9rem; }
     </style>
 </head>
 <body id="main-body">
@@ -186,20 +150,10 @@
     <div id="settings-panel" class="collapsed">
         <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>
         <div id="settings-content">
-            <div style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">VIEW SETTINGS</div>
-            <div class="control-row">
-                <label>Zoom:</label>
-                <select id="zoom-select" onchange="updateScale(this.value)"></select>
-            </div>
-            <hr style="border: 0; border-top: 1px solid #333; width: 100%;">
-            <div class="control-row">
-                <input type="checkbox" id="mirror-p-check" onchange="toggleMirror('patient')">
-                <label for="mirror-p-check">Mirror Patient Only</label>
-            </div>
-            <div class="control-row">
-                <input type="checkbox" id="mirror-a-check" onchange="toggleMirror('all')">
-                <label for="mirror-a-check">Mirror Everything</label>
-            </div>
+            <div class="control-row"><label>Zoom: </label><select id="zoom-select" onchange="updateScale(this.value)"></select></div>
+            <hr style="border:0; border-top:1px solid #333">
+            <div class="control-row"><input type="checkbox" id="m-p-check" onchange="toggleMirror('patient')"><label for="m-p-check">Mirror Patient Only</label></div>
+            <div class="control-row"><input type="checkbox" id="m-a-check" onchange="toggleMirror('all')"><label for="m-a-check">Mirror Everything</label></div>
         </div>
     </div>
 
@@ -219,9 +173,7 @@
     </div>
 
     <div id="bottom-toolbar">
-        <div class="tool-group">
-            <button onclick="document.getElementById('instruction-input').value = ''">Clear Text</button>
-        </div>
+        <div class="tool-group"><button onclick="document.getElementById('instruction-input').value = ''">Clear Text</button></div>
 
         <div class="tool-group">
             <span>Timer:</span>
@@ -253,126 +205,102 @@
         const body = document.getElementById('main-body');
         const patientWrapper = document.getElementById('patient-content-wrapper');
         const breathText = document.getElementById('breath-text-display');
+        const pulseCircle = document.getElementById('pulse-circle');
         let breathInterval;
 
-        // --- 1. SETTINGS PANEL LOGIC ---
-        function toggleSettingsPanel() {
-            document.getElementById('settings-panel').classList.toggle('collapsed');
-        }
+        // Settings Toggle
+        function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
 
-        // --- 2. INSTRUCTION TEXT LOGIC ---
+        // Instruction Text Fade
         setTimeout(() => { inputArea.classList.add('faint'); }, 3000);
-        inputArea.addEventListener("input", function() {
-            this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px";
-        });
+        inputArea.addEventListener("input", function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; });
 
-        // --- 3. MIRROR LOGIC (MUTUALLY EXCLUSIVE) ---
+        // Mirror Logic
         function toggleMirror(type) {
-            const checkP = document.getElementById('mirror-p-check');
-            const checkA = document.getElementById('mirror-a-check');
-            const statusBox = document.getElementById('top-status');
-
+            const cp = document.getElementById('m-p-check');
+            const ca = document.getElementById('m-a-check');
+            const st = document.getElementById('top-status');
             if (type === 'patient') {
-                if (checkP.checked) {
-                    checkA.checked = false; body.classList.remove('mirror-all');
-                    patientWrapper.classList.add('mirror-patient-only');
-                    statusBox.classList.add('mirror-patient-only');
-                } else {
-                    patientWrapper.classList.remove('mirror-patient-only');
-                    statusBox.classList.remove('mirror-patient-only');
-                }
+                if (cp.checked) { ca.checked = false; body.classList.remove('mirror-all'); patientWrapper.classList.add('mirror-patient-only'); st.classList.add('mirror-patient-only'); }
+                else { patientWrapper.classList.remove('mirror-patient-only'); st.classList.remove('mirror-patient-only'); }
             } else {
-                if (checkA.checked) {
-                    checkP.checked = false;
-                    patientWrapper.classList.remove('mirror-patient-only');
-                    statusBox.classList.remove('mirror-patient-only');
-                    body.classList.add('mirror-all');
-                } else {
-                    body.classList.remove('mirror-all');
-                }
+                if (ca.checked) { cp.checked = false; patientWrapper.classList.remove('mirror-patient-only'); st.classList.remove('mirror-patient-only'); body.classList.add('mirror-all'); }
+                else { body.classList.remove('mirror-all'); }
             }
         }
 
-        // --- 4. PULSE & BREATH SYNC ---
+        // --- SYNCHRONIZED BREATHING LOGIC ---
         function updatePulseVisibility(v) {
-            document.getElementById('pulse-circle').style.display = v ? 'block' : 'none';
+            pulseCircle.style.display = v ? 'block' : 'none';
             body.classList.toggle('pulse-active', v);
+            resetAnimations();
         }
 
         function updateTextVisibility(v) {
             breathText.style.display = v ? 'block' : 'none';
-            if (v) syncBreathText();
-            else clearInterval(breathInterval);
-        }
-
-        function syncBreathText() {
-            clearInterval(breathInterval);
-            const speed = parseFloat(document.getElementById('breath-val').value) * 1000;
-            const halfSpeed = speed / 2;
-            
-            breathText.innerText = "BREATHE IN";
-            // Set interval to toggle text at exactly the halfway point of the animation
-            breathInterval = setInterval(() => {
-                breathText.innerText = (breathText.innerText === "BREATHE IN") ? "BREATHE OUT" : "BREATHE IN";
-            }, halfSpeed);
+            resetAnimations();
         }
 
         function updateBreathSpeed(val) {
             document.documentElement.style.setProperty('--breath-speed', val + 's');
-            if (document.getElementById('text-toggle').checked) syncBreathText();
+            resetAnimations();
         }
 
-        // --- 5. TIMERS ---
-        let globalInt;
-        let elapsed = 0;
+        function resetAnimations() {
+            // Restart the CSS animations so they align perfectly with the JS timer
+            patientWrapper.classList.remove('animating');
+            void patientWrapper.offsetWidth; // Trigger reflow
+            patientWrapper.classList.add('animating');
+
+            clearInterval(breathInterval);
+
+            const isTextOn = document.getElementById('text-toggle').checked;
+            const isPulseOn = document.getElementById('pulse-toggle').checked;
+
+            if (isTextOn) {
+                const speed = parseFloat(document.getElementById('breath-val').value) * 1000;
+                const halfCycle = speed / 2;
+
+                // Sync start: 0ms = Inhale start
+                breathText.innerText = "BREATHE IN";
+                breathText.style.opacity = "1";
+
+                breathInterval = setInterval(() => {
+                    // Start fading out slightly before the swap to make it smooth
+                    breathText.style.opacity = "0";
+                    
+                    setTimeout(() => {
+                        breathText.innerText = (breathText.innerText === "BREATHE IN") ? "BREATHE OUT" : "BREATHE IN";
+                        breathText.style.opacity = "1";
+                    }, 400); // 400ms fade duration
+                    
+                }, halfCycle);
+            }
+        }
+
+        // Timers
+        let globalInt; let elapsed = 0;
         const topUI = document.getElementById('top-status');
         const timeText = document.getElementById('status-text');
         const progFill = document.getElementById('progress-bar-fill');
 
-        function stopAllTimers() {
-            clearInterval(globalInt); topUI.style.display = 'none';
-            document.getElementById('progress-bar-container').style.display = 'none';
-        }
-
+        function stopAllTimers() { clearInterval(globalInt); topUI.style.display = 'none'; document.getElementById('progress-bar-container').style.display = 'none'; }
+        
         function startTimer() {
             stopAllTimers(); elapsed = 0; topUI.style.display = 'block';
-            globalInt = setInterval(() => {
-                elapsed++;
-                let m = Math.floor(elapsed/60).toString().padStart(2,'0');
-                let s = (elapsed%60).toString().padStart(2,'0');
-                timeText.innerText = `${m}:${s}`;
-            }, 1000);
+            globalInt = setInterval(() => { elapsed++; let m = Math.floor(elapsed/60).toString().padStart(2,'0'); let s = (elapsed%60).toString().padStart(2,'0'); timeText.innerText = `${m}:${s}`; }, 1000);
         }
 
         function startCountdown() {
-            stopAllTimers();
-            let total = parseInt(document.getElementById('cd-val').value);
-            let rem = total;
-            topUI.style.display = 'block';
-            document.getElementById('progress-bar-container').style.display = 'block';
-            globalInt = setInterval(() => {
-                rem--;
-                let m = Math.floor(rem/60).toString().padStart(2,'0');
-                let s = (rem%60).toString().padStart(2,'0');
-                timeText.innerText = `${m}:${s}`;
-                progFill.style.width = ((total-rem)/total*100)+'%';
-                if(rem <= 0) stopAllTimers();
-            }, 1000);
+            stopAllTimers(); let total = parseInt(document.getElementById('cd-val').value); let rem = total;
+            topUI.style.display = 'block'; document.getElementById('progress-bar-container').style.display = 'block';
+            globalInt = setInterval(() => { rem--; let m = Math.floor(rem/60).toString().padStart(2,'0'); let s = (rem%60).toString().padStart(2,'0'); timeText.innerText = `${m}:${s}`; progFill.style.width = ((total-rem)/total*100)+'%'; if(rem <= 0) stopAllTimers(); }, 1000);
         }
 
-        // --- 6. ZOOM LOGIC ---
-        const zoomSel = document.getElementById('zoom-select');
-        for (let i = 30; i <= 150; i += 10) {
-            let opt = document.createElement('option');
-            opt.value = i / 100; opt.innerText = i + '%';
-            if (i === 100) opt.selected = true;
-            zoomSel.appendChild(opt);
-        }
-        function updateScale(val) {
-            document.documentElement.style.setProperty('--scale-factor', val);
-            document.body.style.overflow = (val > 1) ? 'auto' : 'hidden';
-            if (val <= 1) window.scrollTo(0,0);
-        }
+        // Scale
+        const zs = document.getElementById('zoom-select');
+        for(let i=30; i<=150; i+=10){ let o=document.createElement('option'); o.value=i/100; o.innerText=i+'%'; if(i==100)o.selected=true; zs.appendChild(o); }
+        function updateScale(v) { document.documentElement.style.setProperty('--scale-factor', v); document.body.style.overflow = (v > 1) ? 'auto' : 'hidden'; if (v <= 1) window.scrollTo(0,0); }
     </script>
 </body>
 </html>
