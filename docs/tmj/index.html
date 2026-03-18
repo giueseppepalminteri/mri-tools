@@ -9,18 +9,18 @@
             --scale-factor: 1.0; 
         }
 
+        /* Lock the body strictly to the viewport */
         body {
-            background-color: black;
+            background-color: #000;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            /* Disable scrolling by default, enable only when scaled above 100% */
+            height: 100vh;
+            width: 100vw;
             overflow: hidden; 
-            background: #000;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
         }
 
         /* Top Left Scale Control */
@@ -63,38 +63,42 @@
             cursor: pointer;
         }
 
-        /* Main Viewport: This keeps content centered vertically when small */
+        /* Main Viewport acts as a flexible container bounding the scaling wrapper */
         #main-viewport {
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Centering happens here */
+            justify-content: center;
             align-items: center;
             width: 100%;
-            padding: 80px 0; /* Space for fixed buttons */
+            height: 100%;
+            padding-top: 70px; /* Space for fixed buttons */
+            padding-bottom: 20px;
             box-sizing: border-box;
         }
 
-        /* Scaling Wrapper */
+        /* Scaling Wrapper fills viewport perfectly at 100% */
         #scaling-wrapper {
             transform: scale(var(--scale-factor));
-            /* Growing from top-center prevents text from being cut off at the top */
             transform-origin: top center; 
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             transition: transform 0.1s ease-out;
-            /* width/height fit-content prevents phantom scrollbars */
-            width: fit-content;
-            height: fit-content;
+            width: 100%;
+            height: 100%;
         }
 
-        /* --- PREVIEW PAGE (30% Reduced Base) --- */
+        /* --- PREVIEW PAGE --- */
         #preview-screen {
             text-align: center;
             width: 100%;
-            max-width: 90vw; /* Limit width to fit screen */
-            margin: 0 auto; /* Center horizontally */
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .grid-container {
@@ -102,16 +106,17 @@
             flex-wrap: wrap;
             gap: 1vw;
             justify-content: center;
+            align-items: center;
             margin: 20px 0;
+            max-height: 60vh; /* Bounds the grid so it doesn't force a scroll */
         }
 
         .preview-item {
-            width: calc(10vw - 1vw); /* Adjusted for gap */
-            min-width: 120px; /* Minimum size to prevent too small */
-            max-width: 200px; /* Maximum size to prevent too large */
+            width: clamp(70px, 12vw, 180px); /* Fluid sizing based on viewport */
             background: #111;
             padding: 5px;
             border: 1px solid #333;
+            box-sizing: border-box;
         }
 
         .preview-item img {
@@ -126,7 +131,7 @@
         .preview-item label {
             display: block;
             margin-top: 5px;
-            font-size: 0.85rem;
+            font-size: clamp(0.7rem, 1.5vh, 0.85rem);
             color: #ccc;
             text-align: center;
             cursor: pointer;
@@ -138,22 +143,28 @@
 
         /* --- PRESENTATION MODE --- */
         #presentation-screen {
-            display: none; 
+            display: none; /* Changed dynamically to 'flex' via JS */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            width: 100vw;
+            width: 100%;
+            height: 100%;
             cursor: pointer;
         }
 
         #instruction-text {
-            font-size: 3rem; /* Fixed base size */
+            font-size: clamp(1.5rem, 5vh, 3rem); /* Dynamically shrinks if screen height is short */
             font-weight: 800;
             color: #ffff00;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             padding: 0 20px;
         }
 
         #image-display {
-            height: 500px; /* Fixed base height for 100% fit */
+            flex: 1; /* Automatically takes up all remaining available vertical space */
+            min-height: 0; /* Crucial: allows the flex container to shrink below content size if needed */
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -162,12 +173,14 @@
         #main-img {
             max-height: 100%;
             max-width: 90vw;
+            object-fit: contain; /* Keeps image proportions correct */
             border: 4px solid #222;
+            box-sizing: border-box;
         }
 
         .nav-hint {
-            margin-top: 20px;
-            font-size: 1.2rem;
+            margin-top: 15px;
+            font-size: clamp(0.9rem, 2vh, 1.2rem);
             color: #555;
         }
 
@@ -181,11 +194,11 @@
         }
 
         .start-btn {
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 2.5vh, 1.2rem);
             color: #00ff00;
             border: 2px solid #00ff00;
             background: none;
-            margin-top: 20px;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -202,8 +215,9 @@
 
     <div id="main-viewport">
         <div id="scaling-wrapper">
+            
             <div id="preview-screen">
-                <h1 style="color: #ccc;">TMJ STUDY PREVIEW</h1>
+                <h1 style="color: #ccc; font-size: clamp(1.5rem, 4vh, 2.5rem); margin: 0;">TMJ STUDY PREVIEW</h1>
                 <div class="grid-container">
                     <div class="preview-item">
                         <img src="phase1.jpg">
@@ -240,6 +254,7 @@
                 </div>
                 <div class="nav-hint">CLICK or SPACE: Next | LEFT ARROW: Back</div>
             </div>
+
         </div>
     </div>
 
@@ -258,7 +273,6 @@
         let activePhases = studyPhases;
 
         const zoomSelect = document.getElementById('zoom-select');
-        const scalingWrapper = document.getElementById('scaling-wrapper');
         const mainViewport = document.getElementById('main-viewport');
         const previewScreen = document.getElementById('preview-screen');
         const presentationScreen = document.getElementById('presentation-screen');
@@ -267,7 +281,7 @@
         const homeBtn = document.getElementById('home-btn');
         const phaseCheckboxes = Array.from(document.querySelectorAll('.phase-checkbox'));
 
-        // Add event listeners to checkboxes to gray out unselected images
+        // Checkbox events
         phaseCheckboxes.forEach(cb => {
             cb.addEventListener('change', () => {
                 const previewItem = cb.closest('.preview-item');
@@ -279,7 +293,7 @@
             });
         });
 
-        // Add event listeners to images to toggle checkboxes
+        // Toggle checkbox on image click
         const previewItems = document.querySelectorAll('.preview-item');
         previewItems.forEach(item => {
             const img = item.querySelector('img');
@@ -296,7 +310,7 @@
                 .map(cb => studyPhases[Number(cb.dataset.index)]);
         }
 
-        // Populate Zoom List (30% to 130%)
+        // Populate Zoom List
         for (let i = 30; i <= 130; i += 10) {
             let opt = document.createElement('option');
             opt.value = i / 100;
@@ -308,13 +322,14 @@
         function updateScale(val) {
             document.documentElement.style.setProperty('--scale-factor', val);
             
-            // If scale is > 100%, align to top to ensure scrolling works correctly
+            // Only scroll when > 100%
             if (val > 1) {
                 mainViewport.style.justifyContent = 'flex-start';
                 document.body.style.overflow = 'auto';
             } else {
                 mainViewport.style.justifyContent = 'center';
                 document.body.style.overflow = 'hidden';
+                window.scrollTo(0,0);
             }
         }
 
@@ -357,8 +372,11 @@
             activePhases = selected;
             currentIdx = 0;
             isStarted = true;
+            
+            // Crucial change: Switch to flex instead of block to maintain centering
             previewScreen.style.display = 'none';
-            presentationScreen.style.display = 'block';
+            presentationScreen.style.display = 'flex'; 
+            
             homeBtn.style.display = 'inline-block';
             updateDisplay();
             window.scrollTo(0,0);
@@ -367,8 +385,11 @@
         function goHome() {
             isStarted = false;
             activePhases = studyPhases;
-            previewScreen.style.display = 'block';
+            
+            // Crucial change: Switch to flex instead of block
+            previewScreen.style.display = 'flex';
             presentationScreen.style.display = 'none';
+            
             homeBtn.style.display = 'none';
             window.scrollTo(0,0);
         }
