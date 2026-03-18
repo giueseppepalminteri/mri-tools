@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMJ MRI Study - Fixed Scaling</title>
+    <title>TMJ MRI Study - Auto-Fit</title>
     <style>
         :root {
             --scale-factor: 1.0; 
         }
 
-        /* Lock the body strictly to the viewport */
+        /* Prevent body from scrolling entirely at 100% */
         body {
             background-color: #000;
             color: #ffffff;
@@ -23,35 +23,34 @@
             flex-direction: column;
         }
 
-        /* Top Left Scale Control */
+        /* Top Controls */
         #controls-container {
             position: fixed;
-            top: 15px;
-            left: 15px;
+            top: 10px;
+            left: 10px;
             z-index: 1001;
             display: flex;
             gap: 10px;
             align-items: center;
             background: rgba(30, 30, 30, 0.9);
-            padding: 10px;
+            padding: 8px;
             border-radius: 8px;
             border: 1px solid #444;
         }
 
-        /* Top Right Navigation Button */
         #exit-domain-btn {
             position: fixed;
-            top: 15px;
-            right: 15px;
+            top: 10px;
+            right: 10px;
             z-index: 1001;
             background: #700;
             color: white;
             border: 1px solid #a00;
-            padding: 10px 18px;
+            padding: 8px 15px;
             cursor: pointer;
             border-radius: 8px;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: bold;
         }
 
@@ -59,146 +58,112 @@
             background: #222;
             color: white;
             border: 1px solid #666;
-            padding: 5px;
-            cursor: pointer;
+            padding: 4px;
         }
 
-        /* Main Viewport acts as a flexible container bounding the scaling wrapper */
+        /* This container occupies exactly the space between top buttons and screen bottom */
         #main-viewport {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
             width: 100%;
             height: 100%;
-            padding-top: 70px; /* Space for fixed buttons */
-            padding-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-top: 60px; /* Room for buttons */
             box-sizing: border-box;
+            overflow: hidden; /* Important */
         }
 
-        /* Scaling Wrapper fills viewport perfectly at 100% */
         #scaling-wrapper {
             transform: scale(var(--scale-factor));
             transform-origin: top center; 
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             transition: transform 0.1s ease-out;
-            width: 100%;
-            height: 100%;
         }
 
-        /* --- PREVIEW PAGE --- */
-        #preview-screen {
-            text-align: center;
+        /* Shared Screen Styles */
+        #preview-screen, #presentation-screen {
             width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 10px;
         }
 
+        /* --- PREVIEW GRID --- */
         .grid-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 1vw;
+            gap: 10px;
             justify-content: center;
             align-items: center;
-            margin: 20px 0;
-            max-height: 60vh; /* Bounds the grid so it doesn't force a scroll */
+            overflow-y: auto; /* Allow grid to scroll internally if very small screen */
+            max-height: 70vh;
+            margin: 10px 0;
         }
 
         .preview-item {
-            width: clamp(70px, 12vw, 180px); /* Fluid sizing based on viewport */
+            width: clamp(80px, 15vw, 150px);
             background: #111;
-            padding: 5px;
             border: 1px solid #333;
-            box-sizing: border-box;
+            padding: 5px;
         }
 
-        .preview-item img {
-            width: 100%;
-            display: block;
-        }
+        .preview-item img { width: 100%; display: block; }
+        .preview-item.unselected img { filter: grayscale(100%); opacity: 0.4; }
 
-        .preview-item.unselected img {
-            filter: grayscale(100%);
-        }
-
-        .preview-item label {
-            display: block;
-            margin-top: 5px;
-            font-size: clamp(0.7rem, 1.5vh, 0.85rem);
-            color: #ccc;
-            text-align: center;
-            cursor: pointer;
-        }
-
-        .preview-item input[type="checkbox"] {
-            margin-right: 6px;
-        }
-
-        /* --- PRESENTATION MODE --- */
-        #presentation-screen {
-            display: none; /* Changed dynamically to 'flex' via JS */
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
+        /* --- PRESENTATION SCREEN --- */
         #instruction-text {
-            font-size: clamp(1.5rem, 5vh, 3rem); /* Dynamically shrinks if screen height is short */
+            font-size: clamp(1.2rem, 6vh, 2.5rem); /* Responsive font height */
             font-weight: 800;
             color: #ffff00;
-            margin-bottom: 15px;
-            padding: 0 20px;
+            margin: 5px 0;
+            flex-shrink: 0; /* Don't let text get squashed */
         }
 
         #image-display {
-            flex: 1; /* Automatically takes up all remaining available vertical space */
-            min-height: 0; /* Crucial: allows the flex container to shrink below content size if needed */
+            flex: 1; /* Take all remaining vertical space */
             width: 100%;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            min-height: 0; /* Allow the container to shrink */
         }
 
         #main-img {
-            max-height: 100%;
-            max-width: 90vw;
-            object-fit: contain; /* Keeps image proportions correct */
-            border: 4px solid #222;
-            box-sizing: border-box;
+            max-height: 100%; /* Fit to the image-display container */
+            max-width: 95%;   /* Don't touch screen edges */
+            object-fit: contain;
+            border: 3px solid #333;
         }
 
         .nav-hint {
-            margin-top: 15px;
-            font-size: clamp(0.9rem, 2vh, 1.2rem);
-            color: #555;
+            font-size: clamp(0.7rem, 2vh, 1rem);
+            color: #666;
+            margin: 5px 0;
+            flex-shrink: 0;
         }
 
         .btn {
             background: #333;
             color: white;
             border: 1px solid #555;
-            padding: 12px 24px;
+            padding: 10px 20px;
             cursor: pointer;
             border-radius: 6px;
         }
 
         .start-btn {
-            font-size: clamp(1rem, 2.5vh, 1.2rem);
             color: #00ff00;
-            border: 2px solid #00ff00;
-            background: none;
-            margin-top: 15px;
+            border-color: #00ff00;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -206,9 +171,8 @@
 
     <div id="controls-container">
         <label for="zoom-select">Scale:</label>
-        <select id="zoom-select" onchange="updateScale(this.value)">
-            </select>
-        <button id="home-btn" class="btn" onclick="goHome()" style="display:none; margin-left:10px;">🏠 EXIT</button>
+        <select id="zoom-select" onchange="updateScale(this.value)"></select>
+        <button id="home-btn" class="btn" onclick="goHome()" style="display:none; padding: 4px 10px;">🏠 EXIT</button>
     </div>
 
     <a href="../index.html" id="exit-domain-btn">BACK TO INDEX</a>
@@ -217,42 +181,18 @@
         <div id="scaling-wrapper">
             
             <div id="preview-screen">
-                <h1 style="color: #ccc; font-size: clamp(1.5rem, 4vh, 2.5rem); margin: 0;">TMJ STUDY PREVIEW</h1>
-                <div class="grid-container">
-                    <div class="preview-item">
-                        <img src="phase1.jpg">
-                        <label><input type="checkbox" class="phase-checkbox" data-index="0" checked> Include</label>
+                <h2 style="color: #888; margin: 0;">TMJ STUDY PREVIEW</h2>
+                <div class="grid-container" id="grid-container">
                     </div>
-                    <div class="preview-item">
-                        <img src="phase2.jpg">
-                        <label><input type="checkbox" class="phase-checkbox" data-index="1" checked> Include</label>
-                    </div>
-                    <div class="preview-item">
-                        <img src="phase3.jpg">
-                        <label><input type="checkbox" class="phase-checkbox" data-index="2" checked> Include</label>
-                    </div>
-                    <div class="preview-item">
-                        <img src="phase4.jpg">
-                        <label><input type="checkbox" class="phase-checkbox" data-index="3" checked> Include</label>
-                    </div>
-                    <div class="preview-item">
-                        <img src="phase5.jpg">
-                        <label><input type="checkbox" class="phase-checkbox" data-index="4" checked> Include</label>
-                    </div>
-                    <div class="preview-item">
-                        <img src="phase6.jpg">
-                        <label><input type="checkbox" class="phase-checkbox" data-index="5" checked> Include</label>
-                    </div>
-                </div>
                 <button class="btn start-btn" onclick="startPresentation()">START STUDY</button>
             </div>
 
-            <div id="presentation-screen" onclick="handleAdvance()">
+            <div id="presentation-screen" style="display:none;" onclick="handleAdvance()">
                 <div id="instruction-text">Mouth Completely Closed</div>
                 <div id="image-display">
                     <img id="main-img" src="phase1.jpg">
                 </div>
-                <div class="nav-hint">CLICK or SPACE: Next | LEFT ARROW: Back</div>
+                <div class="nav-hint">CLICK/SPACE: Next | LEFT ARROW: Back</div>
             </div>
 
         </div>
@@ -270,48 +210,23 @@
 
         let currentIdx = 0;
         let isStarted = false;
-        let activePhases = studyPhases;
+        let activePhases = [];
 
-        const zoomSelect = document.getElementById('zoom-select');
-        const mainViewport = document.getElementById('main-viewport');
-        const previewScreen = document.getElementById('preview-screen');
-        const presentationScreen = document.getElementById('presentation-screen');
-        const mainImg = document.getElementById('main-img');
-        const mainText = document.getElementById('instruction-text');
-        const homeBtn = document.getElementById('home-btn');
-        const phaseCheckboxes = Array.from(document.querySelectorAll('.phase-checkbox'));
-
-        // Checkbox events
-        phaseCheckboxes.forEach(cb => {
-            cb.addEventListener('change', () => {
-                const previewItem = cb.closest('.preview-item');
-                if (cb.checked) {
-                    previewItem.classList.remove('unselected');
-                } else {
-                    previewItem.classList.add('unselected');
-                }
-            });
+        // Generate Preview Grid
+        const grid = document.getElementById('grid-container');
+        studyPhases.forEach((phase, i) => {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            div.innerHTML = `
+                <img src="${phase.img}" onclick="toggleSelect(${i}, this.parentElement)">
+                <label><input type="checkbox" class="phase-checkbox" data-index="${i}" checked onchange="updateSelectionStyle(${i}, this.parentElement.parentElement)"> Include</label>
+            `;
+            grid.appendChild(div);
         });
-
-        // Toggle checkbox on image click
-        const previewItems = document.querySelectorAll('.preview-item');
-        previewItems.forEach(item => {
-            const img = item.querySelector('img');
-            const checkbox = item.querySelector('.phase-checkbox');
-            img.addEventListener('click', () => {
-                checkbox.checked = !checkbox.checked;
-                checkbox.dispatchEvent(new Event('change'));
-            });
-        });
-
-        function getSelectedPhases() {
-            return phaseCheckboxes
-                .filter(cb => cb.checked)
-                .map(cb => studyPhases[Number(cb.dataset.index)]);
-        }
 
         // Populate Zoom List
-        for (let i = 30; i <= 130; i += 10) {
+        const zoomSelect = document.getElementById('zoom-select');
+        for (let i = 30; i <= 150; i += 10) {
             let opt = document.createElement('option');
             opt.value = i / 100;
             opt.innerHTML = i + '%';
@@ -319,85 +234,71 @@
             zoomSelect.appendChild(opt);
         }
 
+        function toggleSelect(index, el) {
+            const cb = el.querySelector('input');
+            cb.checked = !cb.checked;
+            updateSelectionStyle(index, el);
+        }
+
+        function updateSelectionStyle(index, el) {
+            const cb = el.querySelector('input');
+            el.classList.toggle('unselected', !cb.checked);
+        }
+
         function updateScale(val) {
             document.documentElement.style.setProperty('--scale-factor', val);
-            
-            // Only scroll when > 100%
             if (val > 1) {
-                mainViewport.style.justifyContent = 'flex-start';
                 document.body.style.overflow = 'auto';
             } else {
-                mainViewport.style.justifyContent = 'center';
                 document.body.style.overflow = 'hidden';
                 window.scrollTo(0,0);
             }
         }
 
-        function handleAdvance() {
-            if (!isStarted) return;
-            if (currentIdx === activePhases.length - 1) {
-                goHome();
-            } else {
-                currentIdx++;
-                updateDisplay();
-            }
-        }
-
-        function handleBack() {
-            if (isStarted && currentIdx > 0) {
-                currentIdx--;
-                updateDisplay();
-            }
-        }
-
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                if (!isStarted) startPresentation();
-                else handleAdvance();
-            }
-            if (e.code === 'ArrowLeft') {
-                e.preventDefault();
-                handleBack();
-            }
-        });
-
         function startPresentation() {
-            const selected = getSelectedPhases();
-            if (selected.length === 0) {
-                alert('Please select at least one image before starting the study.');
-                return;
-            }
+            const cbs = document.querySelectorAll('.phase-checkbox');
+            activePhases = [];
+            cbs.forEach(cb => {
+                if(cb.checked) activePhases.push(studyPhases[cb.dataset.index]);
+            });
 
-            activePhases = selected;
+            if (activePhases.length === 0) return alert('Select at least one image.');
+
             currentIdx = 0;
             isStarted = true;
-            
-            // Crucial change: Switch to flex instead of block to maintain centering
-            previewScreen.style.display = 'none';
-            presentationScreen.style.display = 'flex'; 
-            
-            homeBtn.style.display = 'inline-block';
+            document.getElementById('preview-screen').style.display = 'none';
+            document.getElementById('presentation-screen').style.display = 'flex';
+            document.getElementById('home-btn').style.display = 'inline-block';
             updateDisplay();
-            window.scrollTo(0,0);
         }
 
         function goHome() {
             isStarted = false;
-            activePhases = studyPhases;
-            
-            // Crucial change: Switch to flex instead of block
-            previewScreen.style.display = 'flex';
-            presentationScreen.style.display = 'none';
-            
-            homeBtn.style.display = 'none';
-            window.scrollTo(0,0);
+            document.getElementById('preview-screen').style.display = 'flex';
+            document.getElementById('presentation-screen').style.display = 'none';
+            document.getElementById('home-btn').style.display = 'none';
         }
 
         function updateDisplay() {
-            mainImg.src = activePhases[currentIdx].img;
-            mainText.innerText = activePhases[currentIdx].text;
+            document.getElementById('main-img').src = activePhases[currentIdx].img;
+            document.getElementById('instruction-text').innerText = activePhases[currentIdx].text;
         }
+
+        function handleAdvance() {
+            if (!isStarted) return;
+            if (currentIdx === activePhases.length - 1) goHome();
+            else { currentIdx++; updateDisplay(); }
+        }
+
+        function handleBack() {
+            if (isStarted && currentIdx > 0) { currentIdx--; updateDisplay(); }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') { e.preventDefault(); if(!isStarted) startPresentation(); else handleAdvance(); }
+            if (e.code === 'ArrowLeft') handleBack();
+            if (e.code === 'ArrowRight') handleAdvance();
+        });
     </script>
 </body>
 </html>
