@@ -182,6 +182,12 @@
         let lastTotal = 0;
         let splitInOut = false;
 
+        // Track current breathing phase & progress so changes preserve sync
+        let currentPhase = 'in'; // 'in' or 'out'
+        let phaseProgress = 0; // 0..1
+        let lastInMs = 0;
+        let lastOutMs = 0;
+
         function toggleSplitIO(checked) {
             splitInOut = checked;
             if (!splitInOut) {
@@ -263,15 +269,23 @@
             const total = inSec + outSec; // Always use actual in+out cycle for timing
             const peakPercent = (inSec / total) * 100;
 
-            // Preserve current phase of cycle when parameters change
+            // Preserve current phase & progress when parameters change
             const now = performance.now();
-            let phaseFraction = 0;
+            let elapsedWithinCycle = 0;
+
             if (lastTotal > 0) {
-                const elapsed = (now - cycleStart) % (lastTotal * 1000);
-                phaseFraction = elapsed / (lastTotal * 1000);
+                if (currentPhase === 'in') {
+                    elapsedWithinCycle = phaseProgress * lastInMs;
+                } else {
+                    elapsedWithinCycle = lastInMs + phaseProgress * lastOutMs;
+                }
             }
-            cycleStart = now - phaseFraction * (total * 1000);
+
+            // Rebase cycleStart so the visible phase/position remains consistent
+            cycleStart = now - elapsedWithinCycle;
             lastTotal = total;
+            lastInMs = inSec * 1000;
+            lastOutMs = outSec * 1000;
 
             document.documentElement.style.setProperty('--total-cycle', total + 's');
 
@@ -323,6 +337,10 @@
                 const isInhale = elapsed < inMs;
                 const phaseTime = isInhale ? elapsed : elapsed - inMs;
                 const phaseDuration = isInhale ? inMs : outMs;
+
+                // Track current phase + progress for stable syncing when params change
+                currentPhase = isInhale ? 'in' : 'out';
+                phaseProgress = phaseTime / phaseDuration;
 
                 // Text sync
                 const phaseText = isInhale ? 'BREATHE IN' : 'BREATHE OUT';
