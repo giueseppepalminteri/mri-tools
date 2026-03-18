@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMJ MRI Study - Professional Toolbox</title>
+    <title>TMJ MRI Study - Fixed Mirroring</title>
     <style>
         :root {
             --scale-factor: 1.0; 
@@ -21,7 +21,14 @@
             flex-direction: column;
         }
 
-        /* --- TOOLBOX STYLES (COPIED FROM BREATHING TOOL) --- */
+        /* --- MIRRORING ENGINE --- */
+        /* Mirror Everything (The entire body) */
+        .mirror-all { transform: scaleX(-1); }
+
+        /* Mirror Patient Only (Targeted wrapper) */
+        .mirror-patient-active { transform: scaleX(-1); }
+
+        /* --- TOOLBOX STYLES --- */
         #settings-panel {
             position: fixed; top: 15px; left: 15px; z-index: 3000;
             background: rgba(0, 0, 0, 0.9); border: 1px solid #444;
@@ -35,11 +42,7 @@
         .control-row { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
         select { background: #222; color: white; border: 1px solid #666; padding: 4px; border-radius: 4px; }
         
-        /* Mirroring Logic */
-        .mirror-all { transform: scaleX(-1); }
-        .mirror-patient-only { transform: scaleX(-1); }
-
-        /* --- TMJ UI STYLES --- */
+        /* --- UI ELEMENTS --- */
         #exit-domain-btn {
             position: fixed; top: 10px; right: 10px; z-index: 1001;
             background: #700; color: white; border: 1px solid #a00;
@@ -53,12 +56,19 @@
             box-sizing: border-box; overflow: hidden;
         }
 
-        #scaling-wrapper {
+        /* SCALE WRAPPER: Handles Zoom */
+        #scaling-layer {
             transform: scale(var(--scale-factor));
             transform-origin: top center; 
             width: 100%; height: 100%;
             display: flex; flex-direction: column;
-            transition: transform 0.1s ease-out;
+        }
+
+        /* MIRROR WRAPPER: Handles Patient Flipping */
+        #mirror-layer {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            transition: transform 0.2s ease;
         }
 
         #preview-screen, #presentation-screen {
@@ -126,22 +136,24 @@
     <a href="../index.html" id="exit-domain-btn">BACK TO INDEX</a>
 
     <div id="main-viewport">
-        <div id="scaling-wrapper" id="patient-view">
-            
-            <div id="preview-screen">
-                <h2 style="color: #888; margin: 0;">TMJ STUDY PREVIEW</h2>
-                <div class="grid-container" id="grid-container"></div>
-                <button class="btn start-btn" onclick="startPresentation()">START STUDY</button>
-            </div>
-
-            <div id="presentation-screen" style="display:none;" onclick="handleAdvance()">
-                <div id="instruction-text">Mouth Completely Closed</div>
-                <div id="image-display">
-                    <img id="main-img" src="phase1.jpg">
+        <div id="scaling-layer">
+            <div id="mirror-layer">
+                
+                <div id="preview-screen">
+                    <h2 style="color: #888; margin: 0;">TMJ STUDY PREVIEW</h2>
+                    <div class="grid-container" id="grid-container"></div>
+                    <button class="btn start-btn" onclick="startPresentation()">START STUDY</button>
                 </div>
-                <div class="nav-hint">CLICK/SPACE: Next | LEFT ARROW: Back</div>
-            </div>
 
+                <div id="presentation-screen" style="display:none;" onclick="handleAdvance()">
+                    <div id="instruction-text">Mouth Completely Closed</div>
+                    <div id="image-display">
+                        <img id="main-img" src="phase1.jpg">
+                    </div>
+                    <div class="nav-hint">CLICK/SPACE: Next | LEFT ARROW: Back</div>
+                </div>
+
+            </div>
         </div>
     </div>
 
@@ -160,25 +172,34 @@
         let activePhases = [];
 
         const body = document.getElementById('main-body');
-        const scalingWrapper = document.getElementById('scaling-wrapper');
+        const mirrorLayer = document.getElementById('mirror-layer');
 
-        // Settings Panel Logic
         function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
 
-        // Mirror Logic (Mutually Exclusive)
         function toggleMirror(type) {
             const cp = document.getElementById('m-p-check');
             const ca = document.getElementById('m-a-check');
+            
             if (type === 'patient') {
-                if (cp.checked) { ca.checked = false; body.classList.remove('mirror-all'); scalingWrapper.classList.add('mirror-patient-only'); }
-                else { scalingWrapper.classList.remove('mirror-patient-only'); }
+                if (cp.checked) {
+                    ca.checked = false;
+                    body.classList.remove('mirror-all');
+                    mirrorLayer.classList.add('mirror-patient-active');
+                } else {
+                    mirrorLayer.classList.remove('mirror-patient-active');
+                }
             } else {
-                if (ca.checked) { cp.checked = false; scalingWrapper.classList.remove('mirror-patient-only'); body.classList.add('mirror-all'); }
-                else { body.classList.remove('mirror-all'); }
+                if (ca.checked) {
+                    cp.checked = false;
+                    mirrorLayer.classList.remove('mirror-patient-active');
+                    body.classList.add('mirror-all');
+                } else {
+                    body.classList.remove('mirror-all');
+                }
             }
         }
 
-        // Generate Preview Grid
+        // Preview Grid Gen
         const grid = document.getElementById('grid-container');
         studyPhases.forEach((phase, i) => {
             const div = document.createElement('div');
@@ -190,7 +211,7 @@
             grid.appendChild(div);
         });
 
-        // Populate Zoom List
+        // Zoom Populator
         const zoomSelect = document.getElementById('zoom-select');
         for (let i = 30; i <= 150; i += 10) {
             let opt = document.createElement('option');
@@ -213,8 +234,6 @@
 
         function updateScale(val) {
             document.documentElement.style.setProperty('--scale-factor', val);
-            document.body.style.overflow = (val > 1) ? 'auto' : 'hidden';
-            if (val <= 1) window.scrollTo(0,0);
         }
 
         function startPresentation() {
@@ -223,9 +242,7 @@
             cbs.forEach(cb => {
                 if(cb.checked) activePhases.push(studyPhases[cb.dataset.index]);
             });
-
             if (activePhases.length === 0) return alert('Select at least one image.');
-
             currentIdx = 0;
             isStarted = true;
             document.getElementById('preview-screen').style.display = 'none';
