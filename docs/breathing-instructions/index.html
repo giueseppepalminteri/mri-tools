@@ -22,7 +22,7 @@
     --tint-green: rgba(74, 222, 128, 0.2);
 
     --scale-factor: 1.0;
-    --accent-teal: #94d2bd; /* Toolbox Accent */
+    --accent-teal: #94d2bd;
   }
 
   * { box-sizing: border-box; }
@@ -69,7 +69,7 @@
   }
 
   #mirror-layer {
-      width: 100%; flex: 1; /* Only flexes to take up remaining space */
+      width: 100%; flex: 1; 
       display: flex; flex-direction: column;
       transition: transform 0.2s ease;
   }
@@ -87,19 +87,22 @@
   #instructionText {
     width: 100%; min-height: 300px; background: rgba(0,0,0,0.3);
     color: white; border: 1px solid #475569; padding: 15px;
-    border-radius: 10px; font-size: 15px; line-height: 1.6;
+    border-radius: 10px; font-size: clamp(12px, 2vmin, 16px); line-height: 1.6;
     white-space: pre-wrap;
   }
   .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
 
-  /* Layout adjustments for wrappers */
-  .app-container { display: flex; flex-direction: column; height: 100%; padding: 30px; padding-top: 60px; position: relative; z-index: 1; }
+  /* App Container & Fluid Layout */
+  .app-container { display: flex; flex-direction: column; height: 100%; padding: 20px 30px; padding-top: 60px; position: relative; z-index: 1; }
 
+  /* Compact Header */
   header {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 15px; border-bottom: 2px solid rgba(255,255,255,0.1);
+    padding: 6px 15px; border-bottom: 2px solid rgba(255,255,255,0.1);
     background: rgba(0,0,0,0.5); border-radius: 8px;
   }
+  header h1 { margin: 0; font-size: clamp(1rem, 2vw, 1.4rem); }
+  #cycleInfo { font-size: clamp(0.9rem, 1.5vw, 1.2rem); font-weight: bold; }
 
   .display { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%;}
 
@@ -111,22 +114,24 @@
     transition: background-color 0.5s ease; backdrop-filter: blur(2px);
   }
 
-  .step { font-size: clamp(35px, 10vw, 85px); font-weight: 900; margin-bottom: 20px; text-shadow: 2px 2px 15px #000; }
-  .countdown { font-size: clamp(60px, 15vw, 130px); font-weight: 200; font-variant-numeric: tabular-nums; }
+  /* Core scaling for main display text */
+  .step { font-size: clamp(30px, 8vmin, 85px); font-weight: 900; margin-bottom: 1vh; text-shadow: 2px 2px 15px #000; }
+  .countdown { font-size: clamp(50px, 15vmin, 130px); font-weight: 200; font-variant-numeric: tabular-nums; }
 
-  .progress { height: 40px; background: rgba(0,0,0,0.6); border-radius: 20px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); margin-bottom: 20px;}
+  .progress { height: clamp(20px, 4vh, 40px); background: rgba(0,0,0,0.6); border-radius: 20px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); margin-bottom: 20px;}
   .progress > i { display: block; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.1s linear;}
 
-  .bottom-shelf { background: var(--panel-bg); padding: 20px; border-radius: 20px; border: 2px solid #475569; }
-  .controls-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: center; margin-bottom: 15px; }
+  /* Scalable Bottom Controls */
+  .bottom-shelf { background: var(--panel-bg); padding: 15px; border-radius: 20px; border: 2px solid #475569; }
+  .controls-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: center; margin-bottom: 5px; }
   .input-group { display: flex; flex-direction: column; gap: 4px; }
-  .input-group label { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+  .input-group label { font-size: clamp(9px, 1.2vmin, 12px); color: var(--muted); text-transform: uppercase; }
 
-  input, select { background: #000; border: 1px solid #475569; color: #fff; padding: 8px; border-radius: 6px; width: 80px; }
-  select { width: 100px; }
+  input, select { background: #000; border: 1px solid #475569; color: #fff; padding: 6px; border-radius: 6px; width: clamp(60px, 8vw, 80px); font-size: clamp(12px, 1.5vmin, 16px); }
+  select { width: clamp(80px, 10vw, 100px); }
 
-  button { padding: 12px 20px; border-radius: 10px; border: 0; font-weight: 800; cursor: pointer; font-size: 13px; }
-  .btn-help { background: #475569; color: white; }
+  button { padding: 10px 16px; border-radius: 8px; border: 0; font-weight: 800; cursor: pointer; font-size: clamp(11px, 1.5vmin, 14px); }
+  .btn-help { background: #475569; color: white; padding: 6px 12px; }
   .btn-attention { background: var(--warning); color: #000; }
   .btn-start { background: var(--accent); color: #000; }
   .btn-stop { background: var(--danger); color: #fff; }
@@ -172,7 +177,7 @@
       <h1>MRI Breathe Instruction</h1>
       <div style="display:flex; gap:15px; align-items:center">
           <button id="openHelpBtn" class="btn-help">HELP</button>
-          <div id="cycleInfo" style="font-weight:bold">Cycle 0/0</div>
+          <div id="cycleInfo">Cycle 0/0</div>
       </div>
     </header>
 
@@ -200,7 +205,7 @@
           </select>
         </div>
 
-        <div class="actions">
+        <div class="actions" style="display:flex; gap: 8px; margin-left: 10px;">
           <button id="attnBtn" class="btn-attention">ATTENTION</button>
           <button id="startBtn" class="btn-start">START</button>
           <button id="stopBtn" class="btn-stop" disabled>STOP</button>
@@ -299,7 +304,15 @@ RECOMMENDED APP SETTINGS:
     if (!state.running) stopBtn.disabled = true;
   };
 
-  attnBtn.onclick = () => { body.classList.add('attending'); stopBtn.disabled = false; };
+  // ATTENTION BUTTON TOGGLE LOGIC
+  attnBtn.onclick = () => { 
+    const isAttending = body.classList.toggle('attending'); 
+    if (isAttending) {
+        stopBtn.disabled = false;
+    } else {
+        if (!state.running) stopBtn.disabled = true;
+    }
+  };
 
   // Modal Logic
   openHelpBtn.onclick = () => helpModal.style.display = 'flex';
