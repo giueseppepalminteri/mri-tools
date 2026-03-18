@@ -274,6 +274,17 @@
             });
         });
 
+        // Add event listeners to images to toggle checkboxes
+        const previewItems = document.querySelectorAll('.preview-item');
+        previewItems.forEach(item => {
+            const img = item.querySelector('img');
+            const checkbox = item.querySelector('.phase-checkbox');
+            img.addEventListener('click', () => {
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
+            });
+        });
+
         function getSelectedPhases() {
             return phaseCheckboxes
                 .filter(cb => cb.checked)
