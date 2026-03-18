@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRI Patient Instruction Hub</title>
+    <title>MRI Patient Hub - Keyboard Input</title>
     <style>
         :root {
             --scale-factor: 1.0;
-            --breath-speed: 5s; /* Default cycle */
-            --bg-color: #001219;
+            --breath-speed: 5s; /* Frequency */
+            --bg-base: #001219;
+            --bg-pulse: #002b36;
             --accent-teal: #94d2bd;
-            --relax-blue: #005f73;
         }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-base);
             color: #ffffff;
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
@@ -24,6 +24,13 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            /* The whole screen pulses in intensity */
+            animation: bgPulse var(--breath-speed) ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { background-color: var(--bg-base); }
+            50% { background-color: var(--bg-pulse); }
         }
 
         /* Top Left Scale */
@@ -35,10 +42,10 @@
             background: rgba(0, 0, 0, 0.6);
             padding: 8px;
             border-radius: 8px;
-            border: 1px solid #333;
+            border: 1px solid #444;
         }
 
-        /* Top Center Status (Timer/Countdown) */
+        /* Top Center Status (Hidden by default) */
         #top-status {
             position: fixed;
             top: 15px;
@@ -46,23 +53,27 @@
             transform: translateX(-50%);
             z-index: 2000;
             text-align: center;
-            min-width: 250px;
+            min-width: 300px;
+            display: none; /* Removed when not in use */
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 15px;
         }
 
         #status-text {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: bold;
-            font-family: monospace;
+            font-family: 'Courier New', Courier, monospace;
             color: var(--accent-teal);
-            text-shadow: 0 0 20px rgba(148, 210, 189, 0.5);
+            text-shadow: 0 0 15px rgba(148, 210, 189, 0.6);
         }
 
         #progress-bar-container {
             width: 100%;
-            height: 8px;
+            height: 10px;
             background: #111;
-            border-radius: 4px;
-            margin-top: 5px;
+            border-radius: 5px;
+            margin-top: 10px;
             display: none;
             overflow: hidden;
         }
@@ -92,59 +103,57 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            position: relative;
+            transition: transform 0.1s ease-out;
         }
 
-        /* Breathing Pulse */
-        #breathing-container {
-            position: absolute;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
+        /* Breathing Circle */
         #pulse-circle {
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, var(--accent-teal) 0%, transparent 70%);
-            border-radius: 50%;
-            opacity: 0.3;
-            animation: breathe var(--breath-speed) ease-in-out infinite;
-        }
-
-        #breath-label {
-            font-size: 2.5rem;
-            margin-top: 20px;
-            font-weight: 300;
-            letter-spacing: 5px;
-            color: var(--accent-teal);
-        }
-
-        @keyframes breathe {
-            0%, 100% { transform: scale(0.8); opacity: 0.2; }
-            50% { transform: scale(1.2); opacity: 0.6; }
-        }
-
-        /* Canvas for Drawing */
-        #drawing-canvas {
             position: absolute;
-            top: 0;
-            left: 0;
+            width: 40vh;
+            height: 40vh;
+            background: radial-gradient(circle, var(--accent-teal) 0%, transparent 75%);
+            border-radius: 50%;
+            z-index: 1;
+            animation: circleBreathe var(--breath-speed) ease-in-out infinite;
+        }
+
+        @keyframes circleBreathe {
+            0%, 100% { transform: scale(0.7); opacity: 0.1; }
+            50% { transform: scale(1.1); opacity: 0.4; }
+        }
+
+        /* Interactive Text Area */
+        #instruction-input {
+            position: relative;
             z-index: 10;
-            cursor: crosshair;
-            touch-action: none;
+            width: 80%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: clamp(2rem, 8vh, 5rem);
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+            outline: none;
+            cursor: text;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+            resize: none;
+            overflow: hidden;
+        }
+
+        #instruction-input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
         }
 
         /* Bottom Toolbar */
         #bottom-toolbar {
-            background: #0a0a0a;
+            background: #050505;
             padding: 15px;
             display: flex;
             gap: 20px;
             justify-content: center;
             align-items: center;
-            border-top: 1px solid #333;
+            border-top: 1px solid #222;
             z-index: 2001;
             flex-wrap: wrap;
         }
@@ -161,15 +170,17 @@
             background: #222;
             color: white;
             border: 1px solid #444;
-            padding: 8px 12px;
-            border-radius: 4px;
+            padding: 8px 15px;
+            border-radius: 5px;
             cursor: pointer;
+            font-weight: bold;
         }
 
-        button:hover { background: #333; }
-        input[type="number"] { width: 50px; background: #222; color: #fff; border: 1px solid #444; padding: 5px; }
+        button:hover { background: #333; border-color: var(--accent-teal); }
+        input { background: #111; color: #fff; border: 1px solid #444; padding: 6px; border-radius: 4px; }
         
-        .active-btn { background: var(--relax-blue); border-color: var(--accent-teal); }
+        .active-timer { color: var(--accent-teal); border-color: var(--accent-teal); box-shadow: 0 0 10px rgba(148, 210, 189, 0.3); }
+        .stop-btn { color: #ff5f5f; border-color: #444; }
     </style>
 </head>
 <body>
@@ -188,34 +199,32 @@
 
     <div id="main-viewport">
         <div id="scaling-wrapper">
-            <div id="breathing-container">
-                <div id="pulse-circle"></div>
-                <div id="breath-label">BREATHE</div>
-            </div>
-            <canvas id="drawing-canvas"></canvas>
+            <div id="pulse-circle"></div>
+            <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="2"></textarea>
         </div>
     </div>
 
     <div id="bottom-toolbar">
         <div class="tool-group">
-            <button onclick="clearCanvas()">Clear Screen</button>
-        </div>
-
-        <div class="tool-group">
-            <span>Timer:</span>
-            <button id="timer-btn" onclick="toggleTimer()">Start</button>
-            <button onclick="resetTimer()">Reset</button>
+            <span>Timer (Up):</span>
+            <button id="timer-start" onclick="startTimer()">Start</button>
+            <button class="stop-btn" onclick="stopAllTimers()">Stop & Hide</button>
         </div>
 
         <div class="tool-group">
             <span>Countdown:</span>
-            <input type="number" id="cd-seconds" value="30">
-            <button id="cd-btn" onclick="startCountdown()">Start</button>
+            <input type="number" id="cd-input" value="60" style="width: 60px;">
+            <button id="cd-start" onclick="startCountdown()">Start</button>
+            <button class="stop-btn" onclick="stopAllTimers()">Stop & Hide</button>
         </div>
 
         <div class="tool-group">
-            <span>Breath (sec):</span>
-            <input type="number" id="breath-val" value="5" step="0.5" onchange="updateBreath(this.value)">
+            <span>Breath Cycle (s):</span>
+            <input type="number" id="breath-val" value="5" step="0.5" onchange="updateBreath(this.value)" style="width: 50px;">
+        </div>
+
+        <div class="tool-group" style="border:none;">
+            <button onclick="document.getElementById('instruction-input').value = ''">Clear Text</button>
         </div>
     </div>
 
@@ -236,96 +245,63 @@
             if (val <= 1) window.scrollTo(0,0);
         }
 
-        // --- DRAWING LOGIC ---
-        const canvas = document.getElementById('drawing-canvas');
-        const ctx = canvas.getContext('2d');
-        let drawing = false;
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            ctx.strokeStyle = '#94d2bd';
-            ctx.lineWidth = 4;
-            ctx.lineCap = 'round';
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        canvas.addEventListener('mousedown', () => drawing = true);
-        canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
-        canvas.addEventListener('mousemove', draw);
-
-        function draw(e) {
-            if (!drawing) return;
-            // Adjust for scale factor
-            const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scale-factor'));
-            ctx.lineTo(e.clientX / scale, e.clientY / scale);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(e.clientX / scale, e.clientY / scale);
-        }
-
-        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-
-        // --- TIMER / COUNTDOWN LOGIC ---
-        let timerInterval;
-        let timerSeconds = 0;
-        let isTimerRunning = false;
+        // --- TIMER & COUNTDOWN LOGIC ---
+        let globalInterval;
+        let secondsCounter = 0;
+        const topDisplay = document.getElementById('top-status');
         const statusText = document.getElementById('status-text');
+        const progressContainer = document.getElementById('progress-bar-container');
+        const progressFill = document.getElementById('progress-bar-fill');
 
         function formatTime(s) {
-            const mins = Math.floor(s / 60).toString().padStart(2, '0');
-            const secs = (s % 60).toString().padStart(2, '0');
-            return `${mins}:${secs}`;
+            const m = Math.floor(s / 60).toString().padStart(2, '0');
+            const sec = (s % 60).toString().padStart(2, '0');
+            return `${m}:${sec}`;
         }
 
-        function toggleTimer() {
-            const btn = document.getElementById('timer-btn');
-            if (!isTimerRunning) {
-                isTimerRunning = true;
-                btn.innerText = "Stop";
-                btn.classList.add('active-btn');
-                timerInterval = setInterval(() => {
-                    timerSeconds++;
-                    statusText.innerText = formatTime(timerSeconds);
-                }, 1000);
-            } else {
-                clearInterval(timerInterval);
-                isTimerRunning = false;
-                btn.innerText = "Start";
-                btn.classList.remove('active-btn');
-            }
+        function stopAllTimers() {
+            clearInterval(globalInterval);
+            topDisplay.style.display = 'none';
+            progressContainer.style.display = 'none';
+            document.getElementById('timer-start').classList.remove('active-timer');
+            document.getElementById('cd-start').classList.remove('active-timer');
         }
 
-        function resetTimer() {
-            clearInterval(timerInterval);
-            timerSeconds = 0;
-            isTimerRunning = false;
+        function startTimer() {
+            stopAllTimers();
+            secondsCounter = 0;
+            topDisplay.style.display = 'block';
             statusText.innerText = "00:00";
-            document.getElementById('timer-btn').innerText = "Start";
-            document.getElementById('timer-btn').classList.remove('active-btn');
+            document.getElementById('timer-start').classList.add('active-timer');
+
+            globalInterval = setInterval(() => {
+                secondsCounter++;
+                statusText.innerText = formatTime(secondsCounter);
+            }, 1000);
         }
 
         function startCountdown() {
-            clearInterval(timerInterval);
-            let duration = parseInt(document.getElementById('cd-seconds').value);
+            stopAllTimers();
+            let duration = parseInt(document.getElementById('cd-input').value);
             let timeLeft = duration;
-            const bar = document.getElementById('progress-bar-container');
-            const fill = document.getElementById('progress-bar-fill');
             
-            bar.style.display = 'block';
+            topDisplay.style.display = 'block';
+            progressContainer.style.display = 'block';
             statusText.innerText = formatTime(timeLeft);
-            
-            timerInterval = setInterval(() => {
+            progressFill.style.width = '0%';
+            document.getElementById('cd-start').classList.add('active-timer');
+
+            globalInterval = setInterval(() => {
                 timeLeft--;
                 statusText.innerText = formatTime(timeLeft);
                 let percent = ((duration - timeLeft) / duration) * 100;
-                fill.style.width = percent + '%';
+                progressFill.style.width = percent + '%';
 
                 if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    statusText.innerText = "DONE";
-                    setTimeout(() => bar.style.display = 'none', 3000);
+                    stopAllTimers();
+                    topDisplay.style.display = 'block';
+                    statusText.innerText = "COMPLETE";
+                    setTimeout(() => { topDisplay.style.display = 'none'; }, 3000);
                 }
             }, 1000);
         }
@@ -333,19 +309,15 @@
         // --- BREATHING LOGIC ---
         function updateBreath(val) {
             document.documentElement.style.setProperty('--breath-speed', val + 's');
-            const label = document.getElementById('breath-label');
-            
-            // Sync text with animation
-            clearInterval(window.breathTextInterval);
-            label.innerText = "BREATHE IN";
-            window.breathTextInterval = setInterval(() => {
-                label.innerText = (label.innerText === "BREATHE IN") ? "BREATHE OUT" : "BREATHE IN";
-            }, (val * 1000) / 2);
         }
-        
-        // Init breath text
-        updateBreath(5);
 
+        // --- TEXTAREA AUTO-RESIZE ---
+        const tx = document.getElementById('instruction-input');
+        tx.addEventListener("input", OnInput, false);
+        function OnInput() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + "px";
+        }
     </script>
 </body>
 </html>
