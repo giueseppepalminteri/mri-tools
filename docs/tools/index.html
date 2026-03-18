@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRI Patient Hub - Final Refinement</title>
+    <title>MRI Patient Hub - Pro Control</title>
     <style>
         :root {
             --scale-factor: 1.0;
@@ -17,21 +17,17 @@
             background-color: var(--bg-base);
             color: #ffffff;
             font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
+            margin: 0; padding: 0;
+            height: 100vh; width: 100vw;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s ease;
+            display: flex; flex-direction: column;
         }
 
-        /* Mutual Exclusive Mirroring */
+        /* Mirroring States */
         .mirror-all { transform: scaleX(-1); }
         .mirror-patient-only { transform: scaleX(-1); }
 
-        /* Background Pulse */
+        /* Background Pulse Animation */
         .pulse-active {
             animation: bgPulse var(--breath-speed) ease-in-out infinite;
         }
@@ -41,44 +37,59 @@
             50% { background-color: var(--bg-pulse); }
         }
 
-        /* Top Left Controls */
-        #top-left-controls {
+        /* Collapsible Settings Panel */
+        #settings-panel {
             position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 2000;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            border-radius: 8px;
+            top: 15px; left: 15px;
+            z-index: 3000;
+            background: rgba(0, 0, 0, 0.9);
             border: 1px solid #444;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            font-size: 0.85rem;
+            border-radius: 8px;
+            padding: 10px;
+            transition: all 0.3s ease;
+            max-width: 200px;
         }
 
-        .control-row { display: flex; align-items: center; gap: 8px; }
+        #settings-panel.collapsed {
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
 
-        /* Top Center Timer Display */
+        #settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .collapsed #settings-content { display: none; }
+
+        #settings-toggle {
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--accent-teal);
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        #settings-toggle:hover { transform: rotate(45deg); }
+
+        /* Timer UI */
         #top-status {
             position: fixed;
-            top: 15px;
-            left: 50%;
+            top: 15px; left: 50%;
             transform: translateX(-50%);
             z-index: 2000;
             text-align: center;
             min-width: 300px;
             display: none;
             background: rgba(0, 0, 0, 0.4);
-            padding: 10px;
-            border-radius: 15px;
+            padding: 10px; border-radius: 15px;
         }
 
         #status-text {
-            font-size: 3.5rem;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            color: var(--accent-teal);
+            font-size: 3.5rem; font-weight: bold; font-family: monospace; color: var(--accent-teal);
         }
 
         #progress-bar-container {
@@ -87,13 +98,9 @@
 
         #progress-bar-fill { height: 100%; width: 0%; background: var(--accent-teal); transition: width 1s linear; }
 
-        /* Main Area */
+        /* Main Workspace */
         #main-viewport {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            flex: 1; display: flex; justify-content: center; align-items: center; overflow: hidden;
         }
 
         #scaling-wrapper {
@@ -103,16 +110,17 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
 
-        /* Content for Patient (Flips via Mirror Patient Only) */
         #patient-content-wrapper {
             width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: transform 0.3s ease;
+            position: relative;
         }
 
+        /* Breathing Pulse & Text */
         #pulse-circle {
             position: absolute;
-            display: none; /* Initially hidden */
+            display: none;
             width: 45vh; height: 45vh;
             background: radial-gradient(circle, var(--accent-teal) 0%, transparent 75%);
             border-radius: 50%;
@@ -120,51 +128,47 @@
             animation: circleBreathe var(--breath-speed) ease-in-out infinite;
         }
 
+        #breath-text-display {
+            position: absolute;
+            bottom: 20%;
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: 10px;
+            color: var(--accent-teal);
+            opacity: 0.6;
+            z-index: 2;
+            display: none;
+            pointer-events: none;
+        }
+
         @keyframes circleBreathe {
             0%, 100% { transform: scale(0.75); opacity: 0.1; }
             50% { transform: scale(1.15); opacity: 0.4; }
         }
 
-        /* Instruction Input */
+        /* Instruction Area */
         #instruction-input {
-            position: relative;
-            z-index: 10;
-            width: 85%;
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-size: clamp(2rem, 8vh, 5rem);
-            font-weight: 800;
-            text-align: center;
-            text-transform: uppercase;
-            outline: none;
-            resize: none;
-            overflow: hidden;
-            transition: opacity 0.3s ease;
+            z-index: 10; width: 85%; background: transparent; border: none;
+            color: #fff; font-size: clamp(2rem, 8vh, 5rem); font-weight: 800;
+            text-align: center; text-transform: uppercase; outline: none;
+            resize: none; overflow: hidden;
         }
 
-        /* Placeholder Logic */
         #instruction-input::placeholder {
-            color: var(--accent-teal);
-            transition: color 1s ease;
+            color: var(--accent-teal); transition: color 1s ease;
         }
 
         #instruction-input.faint::placeholder {
-            color: rgba(255, 255, 255, 0.03); /* Barely visible */
+            color: rgba(255, 255, 255, 0.03);
         }
 
         #instruction-input.faint:hover::placeholder {
-            color: rgba(255, 255, 255, 0.3); /* Brighter on hover */
-        }
-
-        #instruction-input:not(:placeholder-shown) {
-            text-shadow: 0 0 20px rgba(148, 210, 189, 0.5);
+            color: rgba(255, 255, 255, 0.3);
         }
 
         /* Bottom Toolbar */
         #bottom-toolbar {
-            background: #050505;
-            padding: 12px;
+            background: #050505; padding: 12px;
             display: flex; gap: 20px; justify-content: center; align-items: center;
             border-top: 1px solid #222; z-index: 2001; flex-wrap: wrap;
         }
@@ -173,38 +177,42 @@
         .tool-group:last-child { border: none; }
         
         button { background: #222; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #333; border-color: var(--accent-teal); }
         input[type="number"] { background: #111; color: #fff; border: 1px solid #444; padding: 5px; border-radius: 4px; }
+        label { font-size: 0.9rem; }
     </style>
 </head>
 <body id="main-body">
 
-    <div id="top-left-controls">
-        <div class="control-row">
-            <label>Zoom:</label>
-            <select id="zoom-select" onchange="updateScale(this.value)"></select>
-        </div>
-        <div class="control-row">
-            <input type="checkbox" id="mirror-patient-check" onchange="toggleMirror('patient')">
-            <label for="mirror-patient-check">Mirror Patient Only</label>
-        </div>
-        <div class="control-row">
-            <input type="checkbox" id="mirror-all-check" onchange="toggleMirror('all')">
-            <label for="mirror-all-check">Mirror Everything</label>
+    <div id="settings-panel" class="collapsed">
+        <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>
+        <div id="settings-content">
+            <div style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">VIEW SETTINGS</div>
+            <div class="control-row">
+                <label>Zoom:</label>
+                <select id="zoom-select" onchange="updateScale(this.value)"></select>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #333; width: 100%;">
+            <div class="control-row">
+                <input type="checkbox" id="mirror-p-check" onchange="toggleMirror('patient')">
+                <label for="mirror-p-check">Mirror Patient Only</label>
+            </div>
+            <div class="control-row">
+                <input type="checkbox" id="mirror-a-check" onchange="toggleMirror('all')">
+                <label for="mirror-a-check">Mirror Everything</label>
+            </div>
         </div>
     </div>
 
     <div id="top-status">
         <div id="status-text">00:00</div>
-        <div id="progress-bar-container">
-            <div id="progress-bar-fill"></div>
-        </div>
+        <div id="progress-bar-container"><div id="progress-bar-fill"></div></div>
     </div>
 
     <div id="main-viewport">
         <div id="scaling-wrapper">
             <div id="patient-content-wrapper">
                 <div id="pulse-circle"></div>
+                <div id="breath-text-display">BREATHE IN</div>
                 <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="2"></textarea>
             </div>
         </div>
@@ -231,6 +239,10 @@
         <div class="tool-group">
             <input type="checkbox" id="pulse-toggle" onchange="updatePulseVisibility(this.checked)">
             <label for="pulse-toggle">Pulse</label>
+            
+            <input type="checkbox" id="text-toggle" onchange="updateTextVisibility(this.checked)">
+            <label for="text-toggle">Text</label>
+
             <input type="number" id="breath-val" value="5" step="0.5" onchange="updateBreathSpeed(this.value)" style="width: 45px;">
             <span>Cycle (s)</span>
         </div>
@@ -240,28 +252,29 @@
         const inputArea = document.getElementById('instruction-input');
         const body = document.getElementById('main-body');
         const patientWrapper = document.getElementById('patient-content-wrapper');
+        const breathText = document.getElementById('breath-text-display');
+        let breathInterval;
 
-        // --- 1. INSTRUCTION TEXT LOGIC ---
-        // Initially bright, faint after 3 seconds
-        setTimeout(() => {
-            inputArea.classList.add('faint');
-        }, 3000);
+        // --- 1. SETTINGS PANEL LOGIC ---
+        function toggleSettingsPanel() {
+            document.getElementById('settings-panel').classList.toggle('collapsed');
+        }
 
+        // --- 2. INSTRUCTION TEXT LOGIC ---
+        setTimeout(() => { inputArea.classList.add('faint'); }, 3000);
         inputArea.addEventListener("input", function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + "px";
+            this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px";
         });
 
-        // --- 2. MIRROR LOGIC (MUTUALLY EXCLUSIVE) ---
+        // --- 3. MIRROR LOGIC (MUTUALLY EXCLUSIVE) ---
         function toggleMirror(type) {
-            const checkPatient = document.getElementById('mirror-patient-check');
-            const checkAll = document.getElementById('mirror-all-check');
+            const checkP = document.getElementById('mirror-p-check');
+            const checkA = document.getElementById('mirror-a-check');
             const statusBox = document.getElementById('top-status');
 
             if (type === 'patient') {
-                if (checkPatient.checked) {
-                    checkAll.checked = false;
-                    body.classList.remove('mirror-all');
+                if (checkP.checked) {
+                    checkA.checked = false; body.classList.remove('mirror-all');
                     patientWrapper.classList.add('mirror-patient-only');
                     statusBox.classList.add('mirror-patient-only');
                 } else {
@@ -269,8 +282,8 @@
                     statusBox.classList.remove('mirror-patient-only');
                 }
             } else {
-                if (checkAll.checked) {
-                    checkPatient.checked = false;
+                if (checkA.checked) {
+                    checkP.checked = false;
                     patientWrapper.classList.remove('mirror-patient-only');
                     statusBox.classList.remove('mirror-patient-only');
                     body.classList.add('mirror-all');
@@ -280,38 +293,53 @@
             }
         }
 
-        // --- 3. PULSE & BREATH LOGIC ---
-        function updatePulseVisibility(isVisible) {
-            document.getElementById('pulse-circle').style.display = isVisible ? 'block' : 'none';
-            body.classList.toggle('pulse-active', isVisible);
+        // --- 4. PULSE & BREATH SYNC ---
+        function updatePulseVisibility(v) {
+            document.getElementById('pulse-circle').style.display = v ? 'block' : 'none';
+            body.classList.toggle('pulse-active', v);
+        }
+
+        function updateTextVisibility(v) {
+            breathText.style.display = v ? 'block' : 'none';
+            if (v) syncBreathText();
+            else clearInterval(breathInterval);
+        }
+
+        function syncBreathText() {
+            clearInterval(breathInterval);
+            const speed = parseFloat(document.getElementById('breath-val').value) * 1000;
+            const halfSpeed = speed / 2;
+            
+            breathText.innerText = "BREATHE IN";
+            // Set interval to toggle text at exactly the halfway point of the animation
+            breathInterval = setInterval(() => {
+                breathText.innerText = (breathText.innerText === "BREATHE IN") ? "BREATHE OUT" : "BREATHE IN";
+            }, halfSpeed);
         }
 
         function updateBreathSpeed(val) {
             document.documentElement.style.setProperty('--breath-speed', val + 's');
+            if (document.getElementById('text-toggle').checked) syncBreathText();
         }
 
-        // --- 4. TIMER & COUNTDOWN ---
+        // --- 5. TIMERS ---
         let globalInt;
         let elapsed = 0;
         const topUI = document.getElementById('top-status');
         const timeText = document.getElementById('status-text');
-        const progContainer = document.getElementById('progress-bar-container');
         const progFill = document.getElementById('progress-bar-fill');
 
         function stopAllTimers() {
-            clearInterval(globalInt);
-            topUI.style.display = 'none';
-            progContainer.style.display = 'none';
+            clearInterval(globalInt); topUI.style.display = 'none';
+            document.getElementById('progress-bar-container').style.display = 'none';
         }
 
         function startTimer() {
-            stopAllTimers();
-            elapsed = 0;
-            topUI.style.display = 'block';
+            stopAllTimers(); elapsed = 0; topUI.style.display = 'block';
             globalInt = setInterval(() => {
                 elapsed++;
-                let m = Math.floor(elapsed / 60).toString().padStart(2, '0');
-                let s = (elapsed % 60).toString().padStart(2, '0');
+                let m = Math.floor(elapsed/60).toString().padStart(2,'0');
+                let s = (elapsed%60).toString().padStart(2,'0');
                 timeText.innerText = `${m}:${s}`;
             }, 1000);
         }
@@ -319,30 +347,27 @@
         function startCountdown() {
             stopAllTimers();
             let total = parseInt(document.getElementById('cd-val').value);
-            let remaining = total;
+            let rem = total;
             topUI.style.display = 'block';
-            progContainer.style.display = 'block';
-            
+            document.getElementById('progress-bar-container').style.display = 'block';
             globalInt = setInterval(() => {
-                remaining--;
-                let m = Math.floor(remaining / 60).toString().padStart(2, '0');
-                let s = (remaining % 60).toString().padStart(2, '0');
+                rem--;
+                let m = Math.floor(rem/60).toString().padStart(2,'0');
+                let s = (rem%60).toString().padStart(2,'0');
                 timeText.innerText = `${m}:${s}`;
-                progFill.style.width = ((total - remaining) / total * 100) + '%';
-                if (remaining <= 0) stopAllTimers();
+                progFill.style.width = ((total-rem)/total*100)+'%';
+                if(rem <= 0) stopAllTimers();
             }, 1000);
         }
 
-        // --- 5. SCALE LOGIC ---
+        // --- 6. ZOOM LOGIC ---
         const zoomSel = document.getElementById('zoom-select');
         for (let i = 30; i <= 150; i += 10) {
             let opt = document.createElement('option');
-            opt.value = i / 100;
-            opt.innerText = i + '%';
+            opt.value = i / 100; opt.innerText = i + '%';
             if (i === 100) opt.selected = true;
             zoomSel.appendChild(opt);
         }
-
         function updateScale(val) {
             document.documentElement.style.setProperty('--scale-factor', val);
             document.body.style.overflow = (val > 1) ? 'auto' : 'hidden';
