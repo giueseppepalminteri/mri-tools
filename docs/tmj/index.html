@@ -97,13 +97,16 @@
 
         .grid-container {
             display: flex;
+            flex-wrap: wrap;
             gap: 1vw;
             justify-content: center;
             margin: 20px 0;
         }
 
         .preview-item {
-            width: 10vw; /* Reduced from 14vw */
+            width: calc(10vw - 1vw); /* Adjusted for gap */
+            min-width: 120px; /* Minimum size to prevent too small */
+            max-width: 200px; /* Maximum size to prevent too large */
             background: #111;
             padding: 5px;
             border: 1px solid #333;
@@ -306,8 +309,10 @@
             // If scale is > 100%, align to top to ensure scrolling works correctly
             if (val > 1) {
                 mainViewport.style.justifyContent = 'flex-start';
+                document.body.style.overflow = 'auto';
             } else {
                 mainViewport.style.justifyContent = 'center';
+                document.body.style.overflow = 'hidden';
             }
         }
 
