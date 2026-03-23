@@ -30,24 +30,21 @@
 
         /* --- TOOLBOX STYLES --- */
         #settings-panel {
-            position: fixed; top: 15px; left: 15px; z-index: 3000;
+            position: fixed; top: 70px; right: 15px; z-index: 3000;
             background: rgba(0, 0, 0, 0.9); border: 1px solid #444;
             border-radius: 8px; padding: 10px; transition: all 0.3s ease;
         }
         #settings-panel.collapsed { background: transparent; border: none; padding: 0; }
         #settings-content { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; font-size: 0.8rem; }
         .collapsed #settings-content { display: none; }
-        #settings-toggle { cursor: pointer; font-size: 24px; color: var(--accent-teal); display: inline-block; }
+        #settings-toggle { display: none; }
         
         .control-row { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
         select { background: #222; color: white; border: 1px solid #666; padding: 4px; border-radius: 4px; }
         
         /* --- UI ELEMENTS --- */
         #exit-domain-btn {
-            position: fixed; top: 10px; right: 10px; z-index: 1001;
-            background: #700; color: white; border: 1px solid #a00;
-            padding: 8px 15px; cursor: pointer; border-radius: 8px;
-            text-decoration: none; font-size: 0.8rem; font-weight: bold;
+            display: none;
         }
 
         #main-viewport {
@@ -109,8 +106,10 @@
         .btn { background: #333; color: white; border: 1px solid #555; padding: 10px 20px; cursor: pointer; border-radius: 6px; }
         .start-btn { color: #00ff00; border-color: #00ff00; font-weight: bold; }
     </style>
+    <script src="../header.js"></script>
 </head>
 <body id="main-body">
+    <mri-header root="../"></mri-header>
 
     <div id="settings-panel" class="collapsed">
         <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>

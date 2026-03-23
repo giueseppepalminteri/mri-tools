@@ -48,14 +48,14 @@
 
   /* --- TOOLBOX STYLES --- */
   #settings-panel {
-      position: fixed; top: 15px; left: 15px; z-index: 3000;
+      position: fixed; top: 70px; right: 15px; z-index: 3000;
       background: rgba(0, 0, 0, 0.9); border: 1px solid #444;
       border-radius: 8px; padding: 10px; transition: all 0.3s ease;
   }
   #settings-panel.collapsed { background: transparent; border: none; padding: 0; }
   #settings-content { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; font-size: 0.8rem; }
   .collapsed #settings-content { display: none; }
-  #settings-toggle { cursor: pointer; font-size: 24px; color: var(--accent-teal); display: inline-block; }
+  #settings-toggle { display: none; }
   
   .control-row { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
   .control-row select { background: #222; color: white; border: 1px solid #666; padding: 4px; border-radius: 4px; width: auto;}
@@ -137,8 +137,10 @@
   .btn-stop { background: var(--danger); color: #fff; }
   button:disabled { opacity: 0.1; }
 </style>
+<script src="../header.js"></script>
 </head>
 <body id="mainBody">
+<mri-header root="../"></mri-header>
 
 <div id="settings-panel" class="collapsed">
     <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>
