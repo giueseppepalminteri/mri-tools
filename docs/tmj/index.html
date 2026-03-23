@@ -38,8 +38,10 @@
         /* --- TOOLBOX STYLES --- */
         #settings-panel {
             position: fixed;
-            top: 75px;
-            left: 15px;
+            top: 70px;
+            right: 15px;
+            max-height: calc(100vh - 85px);
+            overflow-y: auto;
             z-index: 3000;
             background: rgba(0, 0, 0, 0.9);
             border: 1px solid #444;
@@ -229,7 +231,6 @@
     <mri-header root="../"></mri-header>
 
     <div id="settings-panel" class="collapsed">
-        <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>
         <div id="settings-content">
             <div class="control-row">
                 <label>Zoom: </label>

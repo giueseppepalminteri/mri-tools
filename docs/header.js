@@ -55,7 +55,12 @@ class MriHeader extends HTMLElement {
                 }
             </style>
             <a href="${root}index.html" class="mri-logo" title="Back to Home">
-                <span style="font-size: 24px;">🧠</span> MRI Tools
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94d2bd" stroke-width="2" style="margin-right: 5px;">
+                    <circle cx="12" cy="12" r="2.5" fill="#fff" stroke="none"/>
+                    <circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>
+                    <circle cx="12" cy="3" r="1.5" fill="#94d2bd" stroke="none"/>
+                </svg>
+                MRI Tools
             </a>
             <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
         `;
