@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,120 +13,301 @@
             --bg-base: #001219;
             --bg-pulse: #002b36;
             --accent-teal: #94d2bd;
-            --color-in: #00ff88;  /* Vibrant Green */
-            --color-out: #00d1ff; /* Electric Blue */
+            --color-in: #00ff88;
+            /* Vibrant Green */
+            --color-out: #00d1ff;
+            /* Electric Blue */
         }
 
         body {
             background-color: var(--bg-base);
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, sans-serif;
-            margin: 0; padding: 0;
-            height: 100vh; width: 100vw;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
             overflow: hidden;
-            display: flex; flex-direction: column;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Mirroring Logic */
-        .mirror-all { transform: scaleX(-1); }
-        .mirror-patient-only { transform: scaleX(-1); }
+        .mirror-all {
+            transform: scaleX(-1);
+        }
+
+        .mirror-patient-only {
+            transform: scaleX(-1);
+        }
 
         /* Settings Panel */
         #settings-panel {
-            position: fixed; top: 70px; right: 15px; z-index: 3000;
-            background: rgba(0, 0, 0, 0.9); border: 1px solid #444;
-            border-radius: 8px; padding: 10px; transition: all 0.3s ease;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 3000;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 10px;
+            transition: all 0.3s ease;
         }
-        #settings-panel.collapsed { background: transparent; border: none; padding: 0; }
-        #settings-content { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-        .collapsed #settings-content { display: none; }
-        #settings-toggle { display: none; }
+
+        #settings-panel.collapsed {
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+
+        #settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .collapsed #settings-content {
+            display: none;
+        }
+
+        #settings-toggle {
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--accent-teal);
+            display: inline-block;
+        }
 
         /* Timer HUD */
         #top-status {
-            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
-            z-index: 2000; text-align: center; min-width: 300px;
-            display: none; background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 15px;
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            text-align: center;
+            min-width: 300px;
+            display: none;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 15px;
         }
-        #status-text { font-size: 3.5rem; font-weight: bold; font-family: monospace; color: var(--accent-teal); }
-        #progress-bar-container { width: 100%; height: 8px; background: #111; border-radius: 4px; margin-top: 10px; overflow: hidden; display: none; }
-        #progress-bar-fill { height: 100%; width: 0%; background: var(--accent-teal); transition: width 1s linear; }
+
+        #status-text {
+            font-size: 3.5rem;
+            font-weight: bold;
+            font-family: monospace;
+            color: var(--accent-teal);
+        }
+
+        #progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #111;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        #progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-teal);
+            transition: width 1s linear;
+        }
 
         /* Main Viewport */
-        #main-viewport { flex: 1; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; }
-        
-        #pulse-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0; pointer-events: none;
+        #main-viewport {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
         }
-        .animating #pulse-bg { animation: bgPulse var(--total-cycle) linear infinite; }
+
+        #pulse-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .animating #pulse-bg {
+            animation: bgPulse var(--total-cycle) linear infinite;
+        }
 
         #scaling-wrapper {
-            transform: scale(var(--scale-factor)); transform-origin: top center;
-            width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transform: scale(var(--scale-factor));
+            transform-origin: top center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             z-index: 1;
         }
+
         #patient-content-wrapper {
-            width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
         }
 
         /* Breathing Circle */
         #pulse-circle {
-            position: absolute; display: none; width: 55vh; height: 55vh;
+            position: absolute;
+            display: none;
+            width: 55vh;
+            height: 55vh;
             background: radial-gradient(circle, var(--accent-teal) 0%, transparent 75%);
-            border-radius: 50%; z-index: 1; pointer-events: none;
+            border-radius: 50%;
+            z-index: 1;
+            pointer-events: none;
         }
-        .animating #pulse-circle { animation: circleBreathe var(--total-cycle) linear infinite; }
+
+        .animating #pulse-circle {
+            animation: circleBreathe var(--total-cycle) linear infinite;
+        }
 
         /* Breathe In/Out Text */
         #breath-text-display {
-            position: absolute; bottom: 12%; font-size: 5.5rem; font-weight: 900;
-            z-index: 5; display: none; pointer-events: none; text-align: center; width: 100%;
+            position: absolute;
+            bottom: 12%;
+            font-size: 5.5rem;
+            font-weight: 900;
+            z-index: 5;
+            display: none;
+            pointer-events: none;
+            text-align: center;
+            width: 100%;
         }
-        #breath-text-display.inhale { color: var(--color-in); text-shadow: 0 0 30px rgba(0, 255, 136, 0.5); }
-        #breath-text-display.exhale { color: var(--color-out); text-shadow: 0 0 30px rgba(0, 209, 255, 0.5); }
+
+        #breath-text-display.inhale {
+            color: var(--color-in);
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+        }
+
+        #breath-text-display.exhale {
+            color: var(--color-out);
+            text-shadow: 0 0 30px rgba(0, 209, 255, 0.5);
+        }
 
         /* Instruction Area */
         #instruction-input {
-            z-index: 10; width: 90%; background: transparent; border: none;
-            color: #fff; font-size: clamp(2rem, 8vh, 5.5rem); font-weight: 800;
-            text-align: center; text-transform: uppercase; outline: none; resize: none; overflow: hidden;
+            z-index: 10;
+            width: 90%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: clamp(2rem, 8vh, 5.5rem);
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+            outline: none;
+            resize: none;
+            overflow: hidden;
         }
-        #instruction-input::placeholder { color: var(--accent-teal); transition: color 0.5s ease; }
-        #instruction-input.faint::placeholder { color: rgba(255, 255, 255, 0.05); }
+
+        #instruction-input::placeholder {
+            color: var(--accent-teal);
+            transition: color 0.5s ease;
+        }
+
+        #instruction-input.faint::placeholder {
+            color: rgba(255, 255, 255, 0.05);
+        }
 
         /* Toolbar */
         #bottom-toolbar {
-            background: #050505; border-top: 1px solid #222; z-index: 2001;
-            display: flex; flex-direction: column; padding: 10px; gap: 10px;
+            background: #050505;
+            border-top: 1px solid #222;
+            z-index: 2001;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 10px;
         }
-        .toolbar-row { display: flex; justify-content: center; align-items: center; gap: 20px; }
-        .tool-group { display: flex; align-items: center; gap: 8px; }
-        
-        button { background: #222; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        input[type="number"] { background: #111; color: var(--accent-teal); border: 1px solid #444; padding: 5px; border-radius: 4px; font-weight: bold; text-align: center; width: 55px; }
-        input:disabled { opacity: 0.4; cursor: not-allowed; }
-        .val-label { font-size: 0.7rem; color: #777; text-transform: uppercase; letter-spacing: 1px; }
+
+        .toolbar-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button {
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        input[type="number"] {
+            background: #111;
+            color: var(--accent-teal);
+            border: 1px solid #444;
+            padding: 5px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+            width: 55px;
+        }
+
+        input:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .val-label {
+            font-size: 0.7rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
     </style>
     <style id="dynamic-animations"></style>
     <script src="../header.js"></script>
 </head>
+
 <body id="main-body">
-    <mri-header root="../"></mri-header>
 
     <div id="settings-panel" class="collapsed">
         <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>
         <div id="settings-content">
-            <div class="control-row"><label>Zoom: </label><select id="zoom-select" onchange="updateScale(this.value)"></select></div>
+            <div class="control-row"><label>Zoom: </label><select id="zoom-select"
+                    onchange="updateScale(this.value)"></select></div>
             <hr style="border:0; border-top:1px solid #333">
-            <div class="control-row"><input type="checkbox" id="m-p-check" onchange="toggleMirror('patient')"><label for="m-p-check">Mirror Patient Only</label></div>
-            <div class="control-row"><input type="checkbox" id="m-a-check" onchange="toggleMirror('all')"><label for="m-a-check">Mirror Everything</label></div>
+            <div class="control-row"><input type="checkbox" id="m-p-check" onchange="toggleMirror('patient')"><label
+                    for="m-p-check">Mirror Patient Only</label></div>
+            <div class="control-row"><input type="checkbox" id="m-a-check" onchange="toggleMirror('all')"><label
+                    for="m-a-check">Mirror Everything</label></div>
         </div>
     </div>
 
     <div id="top-status">
         <div id="status-text">00:00</div>
-        <div id="progress-bar-container"><div id="progress-bar-fill"></div></div>
+        <div id="progress-bar-container">
+            <div id="progress-bar-fill"></div>
+        </div>
     </div>
 
     <div id="main-viewport" class="animating">
@@ -141,7 +323,8 @@
 
     <div id="bottom-toolbar">
         <div class="toolbar-row">
-            <div class="tool-group"><button onclick="document.getElementById('instruction-input').value = ''">Clear Text</button></div>
+            <div class="tool-group"><button onclick="document.getElementById('instruction-input').value = ''">Clear
+                    Text</button></div>
             <div class="tool-group">
                 <span class="val-label">Timer:</span>
                 <button onclick="startTimer()">Start</button>
@@ -159,7 +342,7 @@
             <div class="tool-group">
                 <span class="val-label">BPM:</span>
                 <input type="number" id="bpm-val" value="6" min="1" step="0.5" onchange="calcBreathing('bpm')">
-                
+
                 <span style="width:10px"></span>
 
                 <input type="checkbox" id="lock-check" checked onchange="toggleLock(this.checked)">
@@ -167,7 +350,7 @@
 
                 <span class="val-label">In (s):</span>
                 <input type="number" id="in-val" value="5.0" step="0.5" min="0.5" onchange="calcBreathing('in')">
-                
+
                 <span class="val-label">Out (s):</span>
                 <input type="number" id="out-val" value="5.0" step="0.5" min="0.5" onchange="calcBreathing('out')">
             </div>
@@ -175,7 +358,7 @@
             <div class="tool-group">
                 <input type="checkbox" id="pulse-toggle" checked onchange="updatePulseVisibility(this.checked)">
                 <label for="pulse-toggle">Pulse</label>
-                
+
                 <input type="checkbox" id="text-toggle" onchange="updateTextVisibility(this.checked)">
                 <label for="text-toggle">Text</label>
             </div>
@@ -193,7 +376,7 @@
 
         function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
         setTimeout(() => { inputArea.classList.add('faint'); }, 3000);
-        inputArea.addEventListener("input", function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; });
+        inputArea.addEventListener("input", function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; });
 
         function toggleMirror(type) {
             const cp = document.getElementById('m-p-check');
@@ -248,9 +431,9 @@
         function applySync(bpm, inSec, outSec) {
             const total = 60 / bpm;
             const peakPercent = (inSec / total) * 100;
-            
+
             document.documentElement.style.setProperty('--total-cycle', total + 's');
-            
+
             document.getElementById('dynamic-animations').innerText = `
                 @keyframes circleBreathe {
                     0%, 100% { transform: scale(0.6); opacity: 0; }
@@ -264,7 +447,7 @@
 
             // Reset CSS Timelines
             viewport.classList.remove('animating');
-            void viewport.offsetWidth; 
+            void viewport.offsetWidth;
             viewport.classList.add('animating');
 
             // Reset Text Cycle
@@ -312,21 +495,22 @@
         function stopAllTimers() { clearInterval(globalInt); topUI.style.display = 'none'; document.getElementById('progress-bar-container').style.display = 'none'; }
         function startTimer() {
             stopAllTimers(); elapsed = 0; topUI.style.display = 'block';
-            globalInt = setInterval(() => { elapsed++; let m = Math.floor(elapsed/60).toString().padStart(2,'0'); let s = (elapsed%60).toString().padStart(2,'0'); timeText.innerText = `${m}:${s}`; }, 1000);
+            globalInt = setInterval(() => { elapsed++; let m = Math.floor(elapsed / 60).toString().padStart(2, '0'); let s = (elapsed % 60).toString().padStart(2, '0'); timeText.innerText = `${m}:${s}`; }, 1000);
         }
         function startCountdown() {
             stopAllTimers(); let total = parseInt(document.getElementById('cd-val').value); let rem = total;
             topUI.style.display = 'block'; document.getElementById('progress-bar-container').style.display = 'block';
-            globalInt = setInterval(() => { rem--; let m = Math.floor(rem/60).toString().padStart(2,'0'); let s = (rem%60).toString().padStart(2,'0'); timeText.innerText = `${m}:${s}`; progFill.style.width = ((total-rem)/total*100)+'%'; if(rem <= 0) stopAllTimers(); }, 1000);
+            globalInt = setInterval(() => { rem--; let m = Math.floor(rem / 60).toString().padStart(2, '0'); let s = (rem % 60).toString().padStart(2, '0'); timeText.innerText = `${m}:${s}`; progFill.style.width = ((total - rem) / total * 100) + '%'; if (rem <= 0) stopAllTimers(); }, 1000);
         }
 
         const zs = document.getElementById('zoom-select');
-        for(let i=30; i<=150; i+=10){ let o=document.createElement('option'); o.value=i/100; o.innerText=i+'%'; if(i==100)o.selected=true; zs.appendChild(o); }
-        function updateScale(v) { document.documentElement.style.setProperty('--scale-factor', v); document.body.style.overflow = (v > 1) ? 'auto' : 'hidden'; if (v <= 1) window.scrollTo(0,0); }
+        for (let i = 30; i <= 150; i += 10) { let o = document.createElement('option'); o.value = i / 100; o.innerText = i + '%'; if (i == 100) o.selected = true; zs.appendChild(o); }
+        function updateScale(v) { document.documentElement.style.setProperty('--scale-factor', v); document.body.style.overflow = (v > 1) ? 'auto' : 'hidden'; if (v <= 1) window.scrollTo(0, 0); }
 
         // Initialize at 50/50 lock
         toggleLock(true);
         updatePulseVisibility(true);
     </script>
 </body>
+
 </html>

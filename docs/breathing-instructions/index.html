@@ -1,245 +1,461 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>MRI Breathing Instructions</title>
-<style>
-  :root {
-    --bg: #000000; 
-    --accent: #60a5fa;
-    --muted: #94a3b8;
-    --text: #ffffff;
-    --danger: #fb7185;
-    --warning: #facc15;
-    --success: #4ade80;
-    --panel-bg: #1e293b;
-    --flash-duration: 2s;
-    
-    --tint-none: rgba(0,0,0,0);
-    --tint-yellow: rgba(250, 204, 21, 0.15);
-    --tint-red: rgba(251, 113, 133, 0.2);
-    --tint-green: rgba(74, 222, 128, 0.2);
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MRI Breathing Instructions</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --accent: #60a5fa;
+      --muted: #94a3b8;
+      --text: #ffffff;
+      --danger: #fb7185;
+      --warning: #facc15;
+      --success: #4ade80;
+      --panel-bg: #1e293b;
+      --flash-duration: 2s;
 
-    --scale-factor: 1.0;
-    --accent-teal: #94d2bd;
-  }
+      --tint-none: rgba(0, 0, 0, 0);
+      --tint-yellow: rgba(250, 204, 21, 0.15);
+      --tint-red: rgba(251, 113, 133, 0.2);
+      --tint-green: rgba(74, 222, 128, 0.2);
 
-  * { box-sizing: border-box; }
-  
-  html, body { 
-    height: 100%; margin: 0; 
-    font-family: system-ui, -apple-system, sans-serif;
-    background: var(--bg); color: var(--text); overflow: hidden; 
-  }
+      --scale-factor: 1.0;
+      --accent-teal: #94d2bd;
+    }
 
-  /* Flash Alert */
-  @keyframes attentionFlash {
-    0% { background-color: #ffffff; }
-    33% { background-color: #ff0000; }
-    66% { background-color: #000000; }
-    100% { background-color: #ffffff; }
-  }
-  body.attending { animation: attentionFlash var(--flash-duration) infinite; }
+    * {
+      box-sizing: border-box;
+    }
 
-  /* --- MIRRORING ENGINE --- */
-  .mirror-all { transform: scaleX(-1); }
-  .mirror-patient-active { transform: scaleX(-1); }
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
 
-  /* --- TOOLBOX STYLES --- */
-  #settings-panel {
-      position: fixed; top: 70px; right: 15px; z-index: 3000;
-      background: rgba(0, 0, 0, 0.9); border: 1px solid #444;
-      border-radius: 8px; padding: 10px; transition: all 0.3s ease;
-  }
-  #settings-panel.collapsed { background: transparent; border: none; padding: 0; }
-  #settings-content { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; font-size: 0.8rem; }
-  .collapsed #settings-content { display: none; }
-  #settings-toggle { display: none; }
-  
-  .control-row { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-  .control-row select { background: #222; color: white; border: 1px solid #666; padding: 4px; border-radius: 4px; width: auto;}
+    /* Flash Alert */
+    @keyframes attentionFlash {
+      0% {
+        background-color: #ffffff;
+      }
 
-  /* --- WRAPPERS FOR SCALE/MIRROR --- */
-  #scaling-layer {
+      33% {
+        background-color: #ff0000;
+      }
+
+      66% {
+        background-color: #000000;
+      }
+
+      100% {
+        background-color: #ffffff;
+      }
+    }
+
+    body.attending {
+      animation: attentionFlash var(--flash-duration) infinite;
+    }
+
+    /* --- MIRRORING ENGINE --- */
+    .mirror-all {
+      transform: scaleX(-1);
+    }
+
+    .mirror-patient-active {
+      transform: scaleX(-1);
+    }
+
+    /* --- TOOLBOX STYLES --- */
+    #settings-panel {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 3000;
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 10px;
+      transition: all 0.3s ease;
+    }
+
+    #settings-panel.collapsed {
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+
+    #settings-content {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+      font-size: 0.8rem;
+    }
+
+    .collapsed #settings-content {
+      display: none;
+    }
+
+    #settings-toggle {
+      cursor: pointer;
+      font-size: 24px;
+      color: var(--accent-teal);
+      display: inline-block;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .control-row select {
+      background: #222;
+      color: white;
+      border: 1px solid #666;
+      padding: 4px;
+      border-radius: 4px;
+      width: auto;
+    }
+
+    /* --- WRAPPERS FOR SCALE/MIRROR --- */
+    #scaling-layer {
       transform: scale(var(--scale-factor));
-      transform-origin: top center; 
-      width: 100%; height: 100%;
-      display: flex; flex-direction: column;
-  }
+      transform-origin: top center;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
 
-  #mirror-layer {
-      width: 100%; flex: 1; 
-      display: flex; flex-direction: column;
+    #mirror-layer {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       transition: transform 0.2s ease;
-  }
+    }
 
-  /* Modal Styles */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-    display: none; justify-content: center; align-items: center; z-index: 100;
-  }
-  .modal-content {
-    background: var(--panel-bg); width: 90%; max-width: 600px;
-    padding: 30px; border-radius: 20px; border: 2px solid var(--accent);
-    position: relative; box-shadow: 0 0 50px rgba(0,0,0,1);
-  }
-  #instructionText {
-    width: 100%; min-height: 300px; background: rgba(0,0,0,0.3);
-    color: white; border: 1px solid #475569; padding: 15px;
-    border-radius: 10px; font-size: clamp(12px, 2vmin, 16px); line-height: 1.6;
-    white-space: pre-wrap;
-  }
-  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
 
-  /* App Container & Fluid Layout */
-  .app-container { display: flex; flex-direction: column; height: 100%; padding: 20px 30px; padding-top: 60px; position: relative; z-index: 1; }
+    .modal-content {
+      background: var(--panel-bg);
+      width: 90%;
+      max-width: 600px;
+      padding: 30px;
+      border-radius: 20px;
+      border: 2px solid var(--accent);
+      position: relative;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 1);
+    }
 
-  /* Compact Header */
-  header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 6px 15px; border-bottom: 2px solid rgba(255,255,255,0.1);
-    background: rgba(0,0,0,0.5); border-radius: 8px;
-  }
-  header h1 { margin: 0; font-size: clamp(1rem, 2vw, 1.4rem); }
-  #cycleInfo { font-size: clamp(0.9rem, 1.5vw, 1.2rem); font-weight: bold; }
+    #instructionText {
+      width: 100%;
+      min-height: 300px;
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      border: 1px solid #475569;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: clamp(12px, 2vmin, 16px);
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
 
-  .display { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%;}
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
 
-  .phase-square {
-    width: 80vh; height: 80vh; max-width: 90vw; max-height: 55vh;
-    background: var(--tint-none); border: 2px solid rgba(255,255,255,0.1);
-    border-radius: 40px; display: flex; flex-direction: column;
-    justify-content: center; align-items: center; text-align: center;
-    transition: background-color 0.5s ease; backdrop-filter: blur(2px);
-  }
+    /* App Container & Fluid Layout */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 20px 30px;
+      padding-top: 60px;
+      position: relative;
+      z-index: 1;
+    }
 
-  /* Core scaling for main display text */
-  .step { font-size: clamp(30px, 8vmin, 85px); font-weight: 900; margin-bottom: 1vh; text-shadow: 2px 2px 15px #000; }
-  .countdown { font-size: clamp(50px, 15vmin, 130px); font-weight: 200; font-variant-numeric: tabular-nums; }
+    /* Compact Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 15px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+    }
 
-  .progress { height: clamp(20px, 4vh, 40px); background: rgba(0,0,0,0.6); border-radius: 20px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); margin-bottom: 20px;}
-  .progress > i { display: block; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.1s linear;}
+    header h1 {
+      margin: 0;
+      font-size: clamp(1rem, 2vw, 1.4rem);
+    }
 
-  /* Scalable Bottom Controls */
-  .bottom-shelf { background: var(--panel-bg); padding: 15px; border-radius: 20px; border: 2px solid #475569; }
-  .controls-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: center; margin-bottom: 5px; }
-  .input-group { display: flex; flex-direction: column; gap: 4px; }
-  .input-group label { font-size: clamp(9px, 1.2vmin, 12px); color: var(--muted); text-transform: uppercase; }
+    #cycleInfo {
+      font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+      font-weight: bold;
+    }
 
-  input, select { background: #000; border: 1px solid #475569; color: #fff; padding: 6px; border-radius: 6px; width: clamp(60px, 8vw, 80px); font-size: clamp(12px, 1.5vmin, 16px); }
-  select { width: clamp(80px, 10vw, 100px); }
+    .display {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      width: 100%;
+    }
 
-  button { padding: 10px 16px; border-radius: 8px; border: 0; font-weight: 800; cursor: pointer; font-size: clamp(11px, 1.5vmin, 14px); }
-  .btn-help { background: #475569; color: white; padding: 6px 12px; }
-  .btn-attention { background: var(--warning); color: #000; }
-  .btn-start { background: var(--accent); color: #000; }
-  .btn-stop { background: var(--danger); color: #fff; }
-  button:disabled { opacity: 0.1; }
-</style>
-<script src="../header.js"></script>
+    .phase-square {
+      width: 80vh;
+      height: 80vh;
+      max-width: 90vw;
+      max-height: 55vh;
+      background: var(--tint-none);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      transition: background-color 0.5s ease;
+      backdrop-filter: blur(2px);
+    }
+
+    /* Core scaling for main display text */
+    .step {
+      font-size: clamp(30px, 8vmin, 85px);
+      font-weight: 900;
+      margin-bottom: 1vh;
+      text-shadow: 2px 2px 15px #000;
+    }
+
+    .countdown {
+      font-size: clamp(50px, 15vmin, 130px);
+      font-weight: 200;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress {
+      height: clamp(20px, 4vh, 40px);
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      margin-bottom: 20px;
+    }
+
+    .progress>i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* Scalable Bottom Controls */
+    .bottom-shelf {
+      background: var(--panel-bg);
+      padding: 15px;
+      border-radius: 20px;
+      border: 2px solid #475569;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+      justify-content: center;
+      margin-bottom: 5px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .input-group label {
+      font-size: clamp(9px, 1.2vmin, 12px);
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    input,
+    select {
+      background: #000;
+      border: 1px solid #475569;
+      color: #fff;
+      padding: 6px;
+      border-radius: 6px;
+      width: clamp(60px, 8vw, 80px);
+      font-size: clamp(12px, 1.5vmin, 16px);
+    }
+
+    select {
+      width: clamp(80px, 10vw, 100px);
+    }
+
+    button {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 0;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: clamp(11px, 1.5vmin, 14px);
+    }
+
+    .btn-help {
+      background: #475569;
+      color: white;
+      padding: 6px 12px;
+    }
+
+    .btn-attention {
+      background: var(--warning);
+      color: #000;
+    }
+
+    .btn-start {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .btn-stop {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    button:disabled {
+      opacity: 0.1;
+    }
+  </style>
 </head>
-<body id="mainBody">
-<mri-header root="../"></mri-header>
 
-<div id="settings-panel" class="collapsed">
+<body id="mainBody">
+  <mri-header root="../"></mri-header>
+
+  <div id="settings-panel" class="collapsed">
     <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>
     <div id="settings-content">
-        <div class="control-row">
-            <label>Zoom: </label>
-            <select id="zoom-select" onchange="updateScale(this.value)"></select>
-        </div>
-        <hr style="border:0; border-top:1px solid #333">
-        <div class="control-row">
-            <input type="checkbox" id="m-p-check" onchange="toggleMirror('patient')">
-            <label for="m-p-check">Mirror Patient Only</label>
-        </div>
-        <div class="control-row">
-            <input type="checkbox" id="m-a-check" onchange="toggleMirror('all')">
-            <label for="m-a-check">Mirror Everything</label>
-        </div>
-    </div>
-</div>
-
-<div id="helpModal" class="modal-overlay">
-  <div class="modal-content">
-    <h2 style="margin-top:0; color:var(--accent)">Instructions</h2>
-    <div id="instructionText" contenteditable="false"></div>
-    <div class="modal-actions">
-      <button id="editHelpBtn" style="background:var(--warning); color:black">EDIT</button>
-      <button id="closeHelpBtn" style="background:var(--accent); color:black">CLOSE</button>
+      <div class="control-row">
+        <label>Zoom: </label>
+        <select id="zoom-select" onchange="updateScale(this.value)"></select>
+      </div>
+      <hr style="border:0; border-top:1px solid #333">
+      <div class="control-row">
+        <input type="checkbox" id="m-p-check" onchange="toggleMirror('patient')">
+        <label for="m-p-check">Mirror Patient Only</label>
+      </div>
+      <div class="control-row">
+        <input type="checkbox" id="m-a-check" onchange="toggleMirror('all')">
+        <label for="m-a-check">Mirror Everything</label>
+      </div>
     </div>
   </div>
-</div>
 
-<div id="scaling-layer">
-  <div class="app-container">
-    
-    <header>
-      <h1>MRI Breathe Instruction</h1>
-      <div style="display:flex; gap:15px; align-items:center">
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="margin-top:0; color:var(--accent)">Instructions</h2>
+      <div id="instructionText" contenteditable="false"></div>
+      <div class="modal-actions">
+        <button id="editHelpBtn" style="background:var(--warning); color:black">EDIT</button>
+        <button id="closeHelpBtn" style="background:var(--accent); color:black">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="scaling-layer">
+    <div class="app-container">
+
+      <header>
+        <h1>MRI Breathe Instruction</h1>
+        <div style="display:flex; gap:15px; align-items:center">
           <button id="openHelpBtn" class="btn-help">HELP</button>
           <div id="cycleInfo">Cycle 0/0</div>
-      </div>
-    </header>
+        </div>
+      </header>
 
-    <main id="mirror-layer" class="display">
-      <div id="phaseSquare" class="phase-square">
+      <main id="mirror-layer" class="display">
+        <div id="phaseSquare" class="phase-square">
           <div id="stepText" class="step">Ready</div>
           <div id="countdown" class="countdown">00s</div>
-      </div>
-    </main>
+        </div>
+      </main>
 
-    <div class="progress"><i id="progressBar"></i></div>
+      <div class="progress"><i id="progressBar"></i></div>
 
-    <footer class="bottom-shelf">
-      <form class="controls-row" onsubmit="return false">
-        <div class="input-group"><label>Reps</label><input id="reps" type="number" value="1" /></div>
-        <div class="input-group"><label>Inhale</label><input id="inhale" type="number" value="2" /></div>
-        <div class="input-group"><label>Hold</label><input id="hold" type="number" value="20" /></div>
-        <div class="input-group"><label>Recovery</label><input id="recovery" type="number" value="18" /></div>
-        <div class="input-group">
-          <label>Alert</label>
-          <select id="alertSpeed">
+      <footer class="bottom-shelf">
+        <form class="controls-row" onsubmit="return false">
+          <div class="input-group"><label>Reps</label><input id="reps" type="number" value="1" /></div>
+          <div class="input-group"><label>Inhale</label><input id="inhale" type="number" value="2" /></div>
+          <div class="input-group"><label>Hold</label><input id="hold" type="number" value="20" /></div>
+          <div class="input-group"><label>Recovery</label><input id="recovery" type="number" value="18" /></div>
+          <div class="input-group">
+            <label>Alert</label>
+            <select id="alertSpeed">
               <option value="2">Slow</option>
               <option value="1">Medium</option>
               <option value="0.4">Fast</option>
-          </select>
-        </div>
+            </select>
+          </div>
 
-        <div class="actions" style="display:flex; gap: 8px; margin-left: 10px;">
-          <button id="attnBtn" class="btn-attention">ATTENTION</button>
-          <button id="startBtn" class="btn-start">START</button>
-          <button id="stopBtn" class="btn-stop" disabled>STOP</button>
-        </div>
-      </form>
-    </footer>
+          <div class="actions" style="display:flex; gap: 8px; margin-left: 10px;">
+            <button id="attnBtn" class="btn-attention">ATTENTION</button>
+            <button id="startBtn" class="btn-start">START</button>
+            <button id="stopBtn" class="btn-stop" disabled>STOP</button>
+          </div>
+        </form>
+      </footer>
 
+    </div>
   </div>
-</div>
 
-<script>
-(function(){
-  const body = document.getElementById('mainBody');
-  const phaseSquare = document.getElementById('phaseSquare');
-  const stepText = document.getElementById('stepText');
-  const countdown = document.getElementById('countdown');
-  const progressBar = document.getElementById('progressBar');
-  const cycleInfo = document.getElementById('cycleInfo');
-  
-  // UI Controls
-  const attnBtn = document.getElementById('attnBtn');
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
-  
-  // Modal Elements
-  const helpModal = document.getElementById('helpModal');
-  const helpDisplay = document.getElementById('instructionText');
-  const openHelpBtn = document.getElementById('openHelpBtn');
-  const editHelpBtn = document.getElementById('editHelpBtn');
-  const closeHelpBtn = document.getElementById('closeHelpBtn');
+  <script>
+    (function () {
+      const body = document.getElementById('mainBody');
+      const phaseSquare = document.getElementById('phaseSquare');
+      const stepText = document.getElementById('stepText');
+      const countdown = document.getElementById('countdown');
+      const progressBar = document.getElementById('progressBar');
+      const cycleInfo = document.getElementById('cycleInfo');
 
-  const defaultInstructions = `ON THE MRI SCANNER:
+      // UI Controls
+      const attnBtn = document.getElementById('attnBtn');
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+
+      // Modal Elements
+      const helpModal = document.getElementById('helpModal');
+      const helpDisplay = document.getElementById('instructionText');
+      const openHelpBtn = document.getElementById('openHelpBtn');
+      const editHelpBtn = document.getElementById('editHelpBtn');
+      const closeHelpBtn = document.getElementById('closeHelpBtn');
+
+      const defaultInstructions = `ON THE MRI SCANNER:
 1. Right-click on all breath-hold sequences.
 2. Select "Edit properties".
 3. Navigate to "Voice commands" and select "Short hold breath".
@@ -250,140 +466,141 @@ RECOMMENDED APP SETTINGS:
 - Inhale time: 2 seconds.
 - Recovery time: Add 3 seconds for sequences with multiple breath holds (e.g., if the scanner pause is 15s, use 18s).`;
 
-  let state = { running: false, stopRequested: false };
-  let isEditing = false;
+      let state = { running: false, stopRequested: false };
+      let isEditing = false;
 
-  // Initialize Help
-  const savedHelp = localStorage.getItem('mri_help_text');
-  helpDisplay.innerText = savedHelp || defaultInstructions;
+      // Initialize Help
+      const savedHelp = localStorage.getItem('mri_help_text');
+      helpDisplay.innerText = savedHelp || defaultInstructions;
 
-  function setTint(color) {
-    const colors = { yellow: 'rgba(250, 204, 21, 0.15)', red: 'rgba(251, 113, 133, 0.2)', green: 'rgba(74, 222, 128, 0.2)', none: 'rgba(0,0,0,0)' };
-    phaseSquare.style.backgroundColor = colors[color];
-  }
+      function setTint(color) {
+        const colors = { yellow: 'rgba(250, 204, 21, 0.15)', red: 'rgba(251, 113, 133, 0.2)', green: 'rgba(74, 222, 128, 0.2)', none: 'rgba(0,0,0,0)' };
+        phaseSquare.style.backgroundColor = colors[color];
+      }
 
-  async function runTimer(duration, label, tint) {
-    let remaining = duration;
-    setTint(tint);
-    while (remaining > 0 && !state.stopRequested) {
-      stepText.textContent = label;
-      countdown.textContent = `${Math.ceil(remaining)}s`;
-      progressBar.style.width = `${(1 - remaining/duration) * 100}%`;
-      remaining -= 0.1;
-      await new Promise(r => setTimeout(r, 100));
-    }
-  }
+      async function runTimer(duration, label, tint) {
+        let remaining = duration;
+        setTint(tint);
+        while (remaining > 0 && !state.stopRequested) {
+          stepText.textContent = label;
+          countdown.textContent = `${Math.ceil(remaining)}s`;
+          progressBar.style.width = `${(1 - remaining / duration) * 100}%`;
+          remaining -= 0.1;
+          await new Promise(r => setTimeout(r, 100));
+        }
+      }
 
-  startBtn.onclick = async () => {
-    state.running = true; state.stopRequested = false;
-    const reps = +document.getElementById('reps').value;
-    const inhale = +document.getElementById('inhale').value;
-    const hold = +document.getElementById('hold').value;
-    const recovery = +document.getElementById('recovery').value;
-    
-    startBtn.disabled = true; stopBtn.disabled = false;
-    body.classList.remove('attending');
+      startBtn.onclick = async () => {
+        state.running = true; state.stopRequested = false;
+        const reps = +document.getElementById('reps').value;
+        const inhale = +document.getElementById('inhale').value;
+        const hold = +document.getElementById('hold').value;
+        const recovery = +document.getElementById('recovery').value;
 
-    for (let i = 1; i <= reps; i++) {
-      if (state.stopRequested) break;
-      cycleInfo.textContent = `Cycle ${i}/${reps}`;
-      await runTimer(inhale, "Inhale", 'yellow');
-      await runTimer(hold, "Hold Breath", 'red');
-      if (i < reps) await runTimer(recovery, "Prepare for next breath hold", 'yellow');
-    }
-    
-    state.running = false;
-    startBtn.disabled = false; stopBtn.disabled = true;
-    stepText.textContent = "Breathe normally";
-    setTint('green');
-    countdown.textContent = "00s";
-    progressBar.style.width = "0%";
-  };
+        startBtn.disabled = true; stopBtn.disabled = false;
+        body.classList.remove('attending');
 
-  stopBtn.onclick = () => {
-    state.stopRequested = true;
-    body.classList.remove('attending');
-    if (!state.running) stopBtn.disabled = true;
-  };
+        for (let i = 1; i <= reps; i++) {
+          if (state.stopRequested) break;
+          cycleInfo.textContent = `Cycle ${i}/${reps}`;
+          await runTimer(inhale, "Inhale", 'yellow');
+          await runTimer(hold, "Hold Breath", 'red');
+          if (i < reps) await runTimer(recovery, "Prepare for next breath hold", 'yellow');
+        }
 
-  // ATTENTION BUTTON TOGGLE LOGIC
-  attnBtn.onclick = () => { 
-    const isAttending = body.classList.toggle('attending'); 
-    if (isAttending) {
-        stopBtn.disabled = false;
-    } else {
+        state.running = false;
+        startBtn.disabled = false; stopBtn.disabled = true;
+        stepText.textContent = "Breathe normally";
+        setTint('green');
+        countdown.textContent = "00s";
+        progressBar.style.width = "0%";
+      };
+
+      stopBtn.onclick = () => {
+        state.stopRequested = true;
+        body.classList.remove('attending');
         if (!state.running) stopBtn.disabled = true;
-    }
-  };
+      };
 
-  // Modal Logic
-  openHelpBtn.onclick = () => helpModal.style.display = 'flex';
-  closeHelpBtn.onclick = () => {
-    helpModal.style.display = 'none';
-    if(isEditing) toggleEdit();
-  };
+      // ATTENTION BUTTON TOGGLE LOGIC
+      attnBtn.onclick = () => {
+        const isAttending = body.classList.toggle('attending');
+        if (isAttending) {
+          stopBtn.disabled = false;
+        } else {
+          if (!state.running) stopBtn.disabled = true;
+        }
+      };
 
-  function toggleEdit() {
-    isEditing = !isEditing;
-    helpDisplay.contentEditable = isEditing;
-    editHelpBtn.innerText = isEditing ? "SAVE" : "EDIT";
-    if (!isEditing) {
-      localStorage.setItem('mri_help_text', helpDisplay.innerText);
-    }
-    helpDisplay.style.background = isEditing ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.3)";
-  }
+      // Modal Logic
+      openHelpBtn.onclick = () => helpModal.style.display = 'flex';
+      closeHelpBtn.onclick = () => {
+        helpModal.style.display = 'none';
+        if (isEditing) toggleEdit();
+      };
 
-  editHelpBtn.onclick = toggleEdit;
+      function toggleEdit() {
+        isEditing = !isEditing;
+        helpDisplay.contentEditable = isEditing;
+        editHelpBtn.innerText = isEditing ? "SAVE" : "EDIT";
+        if (!isEditing) {
+          localStorage.setItem('mri_help_text', helpDisplay.innerText);
+        }
+        helpDisplay.style.background = isEditing ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.3)";
+      }
 
-  document.getElementById('alertSpeed').onchange = (e) => {
-    document.documentElement.style.setProperty('--flash-duration', e.target.value + 's');
-  };
-})();
+      editHelpBtn.onclick = toggleEdit;
 
-// --- TOOLBOX LOGIC ---
-const scalingLayer = document.getElementById('scaling-layer');
-const mirrorLayer = document.getElementById('mirror-layer');
-const bodyEl = document.getElementById('mainBody');
+      document.getElementById('alertSpeed').onchange = (e) => {
+        document.documentElement.style.setProperty('--flash-duration', e.target.value + 's');
+      };
+    })();
 
-function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
+    // --- TOOLBOX LOGIC ---
+    const scalingLayer = document.getElementById('scaling-layer');
+    const mirrorLayer = document.getElementById('mirror-layer');
+    const bodyEl = document.getElementById('mainBody');
 
-function toggleMirror(type) {
-    const cp = document.getElementById('m-p-check');
-    const ca = document.getElementById('m-a-check');
-    
-    if (type === 'patient') {
+    function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
+
+    function toggleMirror(type) {
+      const cp = document.getElementById('m-p-check');
+      const ca = document.getElementById('m-a-check');
+
+      if (type === 'patient') {
         if (cp.checked) {
-            ca.checked = false;
-            bodyEl.classList.remove('mirror-all');
-            mirrorLayer.classList.add('mirror-patient-active');
+          ca.checked = false;
+          bodyEl.classList.remove('mirror-all');
+          mirrorLayer.classList.add('mirror-patient-active');
         } else {
-            mirrorLayer.classList.remove('mirror-patient-active');
+          mirrorLayer.classList.remove('mirror-patient-active');
         }
-    } else {
+      } else {
         if (ca.checked) {
-            cp.checked = false;
-            mirrorLayer.classList.remove('mirror-patient-active');
-            bodyEl.classList.add('mirror-all');
+          cp.checked = false;
+          mirrorLayer.classList.remove('mirror-patient-active');
+          bodyEl.classList.add('mirror-all');
         } else {
-            bodyEl.classList.remove('mirror-all');
+          bodyEl.classList.remove('mirror-all');
         }
+      }
     }
-}
 
-// Zoom Populator
-const zoomSelect = document.getElementById('zoom-select');
-for (let i = 30; i <= 150; i += 10) {
-    let opt = document.createElement('option');
-    opt.value = i / 100;
-    opt.innerHTML = i + '%';
-    if (i === 100) opt.selected = true;
-    zoomSelect.appendChild(opt);
-}
+    // Zoom Populator
+    const zoomSelect = document.getElementById('zoom-select');
+    for (let i = 30; i <= 150; i += 10) {
+      let opt = document.createElement('option');
+      opt.value = i / 100;
+      opt.innerHTML = i + '%';
+      if (i === 100) opt.selected = true;
+      zoomSelect.appendChild(opt);
+    }
 
-function updateScale(val) {
-    document.documentElement.style.setProperty('--scale-factor', val);
-}
+    function updateScale(val) {
+      document.documentElement.style.setProperty('--scale-factor', val);
+    }
 
-</script>
+  </script>
 </body>
+
 </html>

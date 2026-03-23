@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMJ Study</title>
     <style>
         :root {
-            --scale-factor: 1.0; 
+            --scale-factor: 1.0;
             --accent-teal: #94d2bd;
         }
 
@@ -14,102 +15,216 @@
             background-color: #000;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 0;
-            height: 100vh; width: 100vw;
-            overflow: hidden; 
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
         /* --- MIRRORING ENGINE --- */
         /* Mirror Everything (The entire body) */
-        .mirror-all { transform: scaleX(-1); }
+        .mirror-all {
+            transform: scaleX(-1);
+        }
 
         /* Mirror Patient Only (Targeted wrapper) */
-        .mirror-patient-active { transform: scaleX(-1); }
+        .mirror-patient-active {
+            transform: scaleX(-1);
+        }
 
         /* --- TOOLBOX STYLES --- */
         #settings-panel {
-            position: fixed; top: 70px; right: 15px; z-index: 3000;
-            background: rgba(0, 0, 0, 0.9); border: 1px solid #444;
-            border-radius: 8px; padding: 10px; transition: all 0.3s ease;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 3000;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 10px;
+            transition: all 0.3s ease;
         }
-        #settings-panel.collapsed { background: transparent; border: none; padding: 0; }
-        #settings-content { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; font-size: 0.8rem; }
-        .collapsed #settings-content { display: none; }
-        #settings-toggle { display: none; }
-        
-        .control-row { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-        select { background: #222; color: white; border: 1px solid #666; padding: 4px; border-radius: 4px; }
-        
-        /* --- UI ELEMENTS --- */
-        #exit-domain-btn {
+
+        #settings-panel.collapsed {
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+
+        #settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+
+        .collapsed #settings-content {
             display: none;
         }
 
+        #settings-toggle {
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--accent-teal);
+            display: inline-block;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        select {
+            background: #222;
+            color: white;
+            border: 1px solid #666;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        /* --- UI ELEMENTS --- */
+        #exit-domain-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+            background: #700;
+            color: white;
+            border: 1px solid #a00;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
         #main-viewport {
-            flex: 1; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            box-sizing: border-box; overflow: hidden;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         /* SCALE WRAPPER: Handles Zoom */
         #scaling-layer {
             transform: scale(var(--scale-factor));
-            transform-origin: top center; 
-            width: 100%; height: 100%;
-            display: flex; flex-direction: column;
+            transform-origin: top center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         /* MIRROR WRAPPER: Handles Patient Flipping */
         #mirror-layer {
-            width: 100%; height: 100%;
-            display: flex; flex-direction: column;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
             transition: transform 0.2s ease;
         }
 
-        #preview-screen, #presentation-screen {
-            width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            text-align: center; box-sizing: border-box; padding: 10px;
+        #preview-screen,
+        #presentation-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 10px;
         }
 
         .grid-container {
-            display: flex; flex-wrap: wrap; gap: 10px;
-            justify-content: center; align-items: center;
-            overflow-y: auto; max-height: 70vh; margin: 10px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+            max-height: 70vh;
+            margin: 10px 0;
         }
 
-        .preview-item { width: clamp(80px, 15vw, 150px); background: #111; border: 1px solid #333; padding: 5px; }
-        .preview-item img { width: 100%; display: block; }
-        .preview-item.unselected img { filter: grayscale(100%); opacity: 0.4; }
+        .preview-item {
+            width: clamp(80px, 15vw, 150px);
+            background: #111;
+            border: 1px solid #333;
+            padding: 5px;
+        }
+
+        .preview-item img {
+            width: 100%;
+            display: block;
+        }
+
+        .preview-item.unselected img {
+            filter: grayscale(100%);
+            opacity: 0.4;
+        }
 
         #instruction-text {
             font-size: clamp(1.2rem, 6vh, 2.5rem);
-            font-weight: 800; color: #ffff00; margin: 15px 0;
+            font-weight: 800;
+            color: #ffff00;
+            margin: 15px 0;
             flex-shrink: 0;
         }
 
         #image-display {
-            flex: 1; width: 100%;
-            display: flex; justify-content: center; align-items: center;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             min-height: 0;
         }
 
         #main-img {
-            max-height: 100%; max-width: 95%;
-            object-fit: contain; border: 3px solid #333;
+            max-height: 100%;
+            max-width: 95%;
+            object-fit: contain;
+            border: 3px solid #333;
         }
 
-        .nav-hint { font-size: clamp(0.7rem, 2vh, 1rem); color: #666; margin: 10px 0; flex-shrink: 0; }
-        .btn { background: #333; color: white; border: 1px solid #555; padding: 10px 20px; cursor: pointer; border-radius: 6px; }
-        .start-btn { color: #00ff00; border-color: #00ff00; font-weight: bold; }
+        .nav-hint {
+            font-size: clamp(0.7rem, 2vh, 1rem);
+            color: #666;
+            margin: 10px 0;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        .start-btn {
+            color: #00ff00;
+            border-color: #00ff00;
+            font-weight: bold;
+        }
     </style>
-    <script src="../header.js"></script>
 </head>
+
 <body id="main-body">
-    <mri-header root="../"></mri-header>
 
     <div id="settings-panel" class="collapsed">
         <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>
@@ -128,7 +243,8 @@
                 <label for="m-a-check">Mirror Everything</label>
             </div>
             <hr style="border:0; border-top:1px solid #333">
-            <button id="home-btn" class="btn" onclick="goHome()" style="display:none; width: 100%; padding: 5px;">🏠 EXIT STUDY</button>
+            <button id="home-btn" class="btn" onclick="goHome()" style="display:none; width: 100%; padding: 5px;">🏠
+                EXIT STUDY</button>
         </div>
     </div>
 
@@ -137,7 +253,7 @@
     <div id="main-viewport">
         <div id="scaling-layer">
             <div id="mirror-layer">
-                
+
                 <div id="preview-screen">
                     <h2 style="color: #888; margin: 0;">TMJ STUDY PREVIEW</h2>
                     <div class="grid-container" id="grid-container"></div>
@@ -178,7 +294,7 @@
         function toggleMirror(type) {
             const cp = document.getElementById('m-p-check');
             const ca = document.getElementById('m-a-check');
-            
+
             if (type === 'patient') {
                 if (cp.checked) {
                     ca.checked = false;
@@ -239,7 +355,7 @@
             const cbs = document.querySelectorAll('.phase-checkbox');
             activePhases = [];
             cbs.forEach(cb => {
-                if(cb.checked) activePhases.push(studyPhases[cb.dataset.index]);
+                if (cb.checked) activePhases.push(studyPhases[cb.dataset.index]);
             });
             if (activePhases.length === 0) return alert('Select at least one image.');
             currentIdx = 0;
@@ -273,10 +389,11 @@
         }
 
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') { e.preventDefault(); if(!isStarted) startPresentation(); else handleAdvance(); }
+            if (e.code === 'Space') { e.preventDefault(); if (!isStarted) startPresentation(); else handleAdvance(); }
             if (e.code === 'ArrowLeft') handleBack();
             if (e.code === 'ArrowRight') handleAdvance();
         });
     </script>
 </body>
+
 </html>
