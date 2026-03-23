@@ -44,7 +44,7 @@
         /* Settings Panel */
         #settings-panel {
             position: fixed;
-            top: 15px;
+            top: 75px;
             left: 15px;
             z-index: 3000;
             background: rgba(0, 0, 0, 0.9);
@@ -292,6 +292,7 @@
     <mri-header root="../"></mri-header>
 
     <div id="settings-panel" class="collapsed">
+        <span id="settings-toggle" onclick="toggleSettingsPanel()">⚙️</span>
         <div id="settings-content">
             <div class="control-row"><label>Zoom: </label><select id="zoom-select"
                     onchange="updateScale(this.value)"></select></div>
