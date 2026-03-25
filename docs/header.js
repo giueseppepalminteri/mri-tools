@@ -58,7 +58,10 @@ class MriHeader extends HTMLElement {
                 <img src="${root}atom_logo.png" style="height: 36px; margin-right: 10px; border-radius: 5px;">
                 MRI Tools
             </a>
-            <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button id="mri-disclaimer-btn" style="background: none; border: 1px solid #94d2bd; color: #94d2bd; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: all 0.2s ease;" title="Review Disclaimer">Disclaimer Accepted</button>
+                <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
+            </div>
         `;
 
         this.shadowRoot.getElementById('mri-global-settings-toggle').addEventListener('click', () => {
@@ -69,6 +72,27 @@ class MriHeader extends HTMLElement {
                 console.warn('MRI Header: Settings panel not found on this page.');
             }
         });
+        this.shadowRoot.getElementById('mri-disclaimer-btn').addEventListener('click', () => {
+            if (typeof window.showMriDisclaimer === 'function') {
+                window.showMriDisclaimer(true);
+            }
+        });
+        
+        // Add hover effect for the disclaimer button
+        const disclaimerBtn = this.shadowRoot.getElementById('mri-disclaimer-btn');
+        disclaimerBtn.addEventListener('mouseover', () => {
+            disclaimerBtn.style.background = '#94d2bd';
+            disclaimerBtn.style.color = '#001219';
+        });
+        disclaimerBtn.addEventListener('mouseout', () => {
+            disclaimerBtn.style.background = 'none';
+            disclaimerBtn.style.color = '#94d2bd';
+        });
+
+        // Hide the button if disclaimer is not accepted yet (so we don't show "Accepted" prematurely)
+        if (typeof window !== 'undefined' && localStorage.getItem('mri_disclaimer_accepted') !== 'true') {
+            disclaimerBtn.style.display = 'none';
+        }
     }
 }
 
@@ -79,12 +103,23 @@ customElements.define('mri-header', MriHeader);
     // Only run this logic if we're actually in a browser environment
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-    if (localStorage.getItem('mri_disclaimer_accepted') === 'true') {
-        return;
-    }
+    window.showMriDisclaimer = function(force = false) {
+        if (!force && localStorage.getItem('mri_disclaimer_accepted') === 'true') {
+            // Un-hide the header button if we are passively returning
+            const headers = document.querySelectorAll('mri-header');
+            headers.forEach(h => {
+                if (h.shadowRoot) {
+                    const btn = h.shadowRoot.getElementById('mri-disclaimer-btn');
+                    if (btn) btn.style.display = 'block';
+                }
+            });
+            return;
+        }
 
-    // Use DOMContentLoaded or execute immediately if already loaded
-    const initDisclaimer = () => {
+        // Remove any existing disclaimer so we don't open multiple
+        const existingContainer = document.getElementById('mri-global-disclaimer-container');
+        if (existingContainer) existingContainer.remove();
+
         const modalHTML = `
             <div id="mri-global-disclaimer" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 2147483647; display: flex; justify-content: center; align-items: flex-start; color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 40px 20px; overflow-y: auto;">
                 <div style="background: #001219; border: 2px solid #94d2bd; border-radius: 12px; padding: 30px; max-width: 800px; width: 100%; box-shadow: 0 0 30px rgba(148, 210, 189, 0.2); position: relative;">
@@ -126,12 +161,22 @@ customElements.define('mri-header', MriHeader);
         `;
 
         const container = document.createElement('div');
+        container.id = 'mri-global-disclaimer-container';
         container.innerHTML = modalHTML;
         document.body.appendChild(container);
 
         document.getElementById('disclaimer-accept').addEventListener('click', () => {
             localStorage.setItem('mri_disclaimer_accepted', 'true');
             container.remove();
+            
+            // Show the header button upon acceptance
+            const headers = document.querySelectorAll('mri-header');
+            headers.forEach(h => {
+                if (h.shadowRoot) {
+                    const btn = h.shadowRoot.getElementById('mri-disclaimer-btn');
+                    if (btn) btn.style.display = 'block';
+                }
+            });
         });
 
         document.getElementById('disclaimer-decline').addEventListener('click', () => {
@@ -149,8 +194,8 @@ customElements.define('mri-header', MriHeader);
     };
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDisclaimer);
+        document.addEventListener('DOMContentLoaded', () => window.showMriDisclaimer(false));
     } else {
-        initDisclaimer();
+        window.showMriDisclaimer(false);
     }
 })();

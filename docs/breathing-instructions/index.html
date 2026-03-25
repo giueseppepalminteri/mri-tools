@@ -427,8 +427,14 @@
 
           <div class="actions" style="display:flex; gap: 8px; margin-left: 10px;">
             <button id="attnBtn" class="btn-attention">ATTENTION</button>
-            <button id="startBtn" class="btn-start">START</button>
-            <button id="stopBtn" class="btn-stop" disabled>STOP</button>
+            <div style="text-align: center;">
+              <button id="startBtn" class="btn-start">START</button>
+              <div style="font-size: 0.6rem; color: var(--muted); margin-top: 2px;">SPACE</div>
+            </div>
+            <div style="text-align: center;">
+              <button id="stopBtn" class="btn-stop" disabled>STOP</button>
+              <div style="font-size: 0.6rem; color: var(--muted); margin-top: 2px;">ESC</div>
+            </div>
           </div>
         </form>
       </footer>
