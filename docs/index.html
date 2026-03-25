@@ -26,18 +26,20 @@
             flex-direction: column;
             gap: 20px;
             text-align: center;
-            align-items: center;
+            width: 300px;
+            max-width: 90vw;
+            margin: 0 auto;
         }
         .main-menu a {
             color: #94d2bd;
             font-size: 1.5rem;
             text-decoration: none;
-            padding: 15px 30px;
+            padding: 15px;
             border: 1px solid #333;
             border-radius: 8px;
             background: rgba(255, 255, 255, 0.05);
             transition: all 0.2s ease;
-            display: inline-block;
+            display: block;
         }
         .main-menu a:hover {
             background: rgba(255, 255, 255, 0.1);
@@ -50,7 +52,6 @@
             position: fixed;
             top: 70px;
             right: 15px;
-            width: max-content;
             max-height: calc(100vh - 85px);
             overflow-y: auto;
             z-index: 3000;
