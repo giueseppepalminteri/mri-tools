@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="styles.css">
     <script src="header.js"></script>
     <style>
+        :root {
+            --scale-factor: 1.0;
+        }
         body {
             background-color: #000;
             color: #ffffff;
@@ -40,14 +43,146 @@
             transform: scale(1.05);
             color: #fff;
         }
+        
+        /* --- TOOLBOX STYLES --- */
+        #settings-panel {
+            position: fixed;
+            top: 70px;
+            right: 15px;
+            max-height: calc(100vh - 85px);
+            overflow-y: auto;
+            z-index: 3000;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 10px;
+            transition: all 0.3s ease;
+        }
+        #settings-panel.collapsed {
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+        #settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+        .collapsed #settings-content {
+            display: none;
+        }
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .control-row select {
+            background: #222;
+            color: white;
+            border: 1px solid #666;
+            padding: 4px;
+            border-radius: 4px;
+            width: auto;
+        }
+
+        /* --- MIRRORING & SCALING --- */
+        .mirror-all {
+            transform: scaleX(-1);
+        }
+        .mirror-patient-active {
+            transform: scaleX(-1);
+        }
+        #scaling-layer {
+            transform: scale(var(--scale-factor));
+            transform-origin: center center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        #mirror-layer {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            transition: transform 0.2s ease;
+        }
     </style>
 </head>
-<body>
+<body id="mainBody">
     <mri-header root="./"></mri-header>
-    <div class="main-menu">
-        <a href="breathing-instructions">Breathing Instructions</a>
-        <a href="tmj">TMJ Study</a>
-        <a href="breathing-pattern">Breathing pattern</a>
+
+    <div id="settings-panel" class="collapsed">
+        <div id="settings-content">
+            <div class="control-row">
+                <label>Zoom: </label>
+                <select id="zoom-select" onchange="updateScale(this.value)"></select>
+            </div>
+            <hr style="border:0; border-top:1px solid #333">
+            <div class="control-row">
+                <input type="checkbox" id="m-p-check" onchange="toggleMirror('patient')">
+                <label for="m-p-check">Mirror Patient Only</label>
+            </div>
+            <div class="control-row">
+                <input type="checkbox" id="m-a-check" onchange="toggleMirror('all')">
+                <label for="m-a-check">Mirror Everything</label>
+            </div>
+        </div>
     </div>
+
+    <div id="scaling-layer">
+        <div id="mirror-layer">
+            <div class="main-menu">
+                <a href="breathing-instructions">Breathing Instructions</a>
+                <a href="tmj">TMJ Study</a>
+                <a href="breathing-pattern">Breathing pattern</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scalingLayer = document.getElementById('scaling-layer');
+        const mirrorLayer = document.getElementById('mirror-layer');
+        const bodyEl = document.getElementById('mainBody');
+
+        function toggleMirror(type) {
+            const cp = document.getElementById('m-p-check');
+            const ca = document.getElementById('m-a-check');
+
+            if (type === 'patient') {
+                if (cp.checked) {
+                    ca.checked = false;
+                    bodyEl.classList.remove('mirror-all');
+                    mirrorLayer.classList.add('mirror-patient-active');
+                } else {
+                    mirrorLayer.classList.remove('mirror-patient-active');
+                }
+            } else {
+                if (ca.checked) {
+                    cp.checked = false;
+                    mirrorLayer.classList.remove('mirror-patient-active');
+                    bodyEl.classList.add('mirror-all');
+                } else {
+                    bodyEl.classList.remove('mirror-all');
+                }
+            }
+        }
+
+        const zoomSelect = document.getElementById('zoom-select');
+        for (let i = 30; i <= 150; i += 10) {
+            let opt = document.createElement('option');
+            opt.value = i / 100;
+            opt.innerHTML = i + '%';
+            if (i === 100) opt.selected = true;
+            zoomSelect.appendChild(opt);
+        }
+
+        function updateScale(val) {
+            document.documentElement.style.setProperty('--scale-factor', val);
+        }
+    </script>
 </body>
 </html>
