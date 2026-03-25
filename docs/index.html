@@ -16,17 +16,17 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             height: 100vh;
+            overflow: hidden;
+            box-sizing: border-box;
+            padding-top: 60px;
         }
         .main-menu {
             display: flex;
             flex-direction: column;
             gap: 20px;
             text-align: center;
+            align-items: center;
         }
         .main-menu a {
             color: #94d2bd;
@@ -37,6 +37,7 @@
             border-radius: 8px;
             background: rgba(255, 255, 255, 0.05);
             transition: all 0.2s ease;
+            display: inline-block;
         }
         .main-menu a:hover {
             background: rgba(255, 255, 255, 0.1);
@@ -49,6 +50,7 @@
             position: fixed;
             top: 70px;
             right: 15px;
+            width: max-content;
             max-height: calc(100vh - 85px);
             overflow-y: auto;
             z-index: 3000;
@@ -103,6 +105,7 @@
             align-items: center;
             justify-content: center;
             width: 100%;
+            height: calc(100vh - 60px);
         }
         #mirror-layer {
             display: flex;
