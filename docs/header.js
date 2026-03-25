@@ -59,7 +59,7 @@ class MriHeader extends HTMLElement {
                 MRI Tools
             </a>
             <div style="display: flex; align-items: center; gap: 15px;">
-                <button id="mri-disclaimer-btn" style="background: none; border: 1px solid #94d2bd; color: #94d2bd; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: all 0.2s ease;" title="Review Disclaimer">Disclaimer Accepted</button>
+                <span id="mri-disclaimer-btn" style="color: #94d2bd; font-size: 0.8rem; cursor: pointer; transition: all 0.2s ease; text-decoration: underline;" title="Review Disclaimer">You are using this website because you accepted the conditions</span>
                 <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
             </div>
         `;
