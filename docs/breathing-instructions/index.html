@@ -556,6 +556,25 @@ RECOMMENDED APP SETTINGS:
       document.getElementById('alertSpeed').onchange = (e) => {
         document.documentElement.style.setProperty('--flash-duration', e.target.value + 's');
       };
+
+      // Keyboard Controls
+      document.addEventListener('keydown', (e) => {
+        // Do not trigger if the user is typing in inputs or editing instructions
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.isContentEditable) {
+          return;
+        }
+        
+        if (e.code === 'Space') {
+          e.preventDefault(); // Prevent page scrolling
+          if (!startBtn.disabled) {
+            startBtn.click();
+          }
+        } else if (e.code === 'Escape') {
+          if (!stopBtn.disabled) {
+            stopBtn.click();
+          }
+        }
+      });
     })();
 
     // --- TOOLBOX LOGIC ---
