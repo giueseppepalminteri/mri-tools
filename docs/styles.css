@@ -68,7 +68,8 @@ body.attending { animation: attentionFlash var(--flash-duration) infinite; }
 
 /* --- 4. Shared Tool UI --- */
 #settings-panel {
-    position: fixed; top: 15px; left: 15px; z-index: 3000;
+    position: fixed; top: 70px; right: 15px; z-index: 3000;
+    max-height: calc(100vh - 85px); overflow-y: auto;
     background: rgba(0, 0, 0, 0.9); border: 1px solid #444;
     border-radius: 8px; padding: 10px; transition: all 0.3s ease;
 }

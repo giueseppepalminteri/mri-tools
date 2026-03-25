@@ -47,49 +47,7 @@
             color: #fff;
         }
         
-        /* --- TOOLBOX STYLES --- */
-        #settings-panel {
-            position: fixed;
-            top: 70px;
-            right: 15px;
-            max-height: calc(100vh - 85px);
-            overflow-y: auto;
-            z-index: 3000;
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 10px;
-            transition: all 0.3s ease;
-        }
-        #settings-panel.collapsed {
-            background: transparent;
-            border: none;
-            padding: 0;
-        }
-        #settings-content {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
-            font-size: 0.8rem;
-        }
-        .collapsed #settings-content {
-            display: none;
-        }
-        .control-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
-        .control-row select {
-            background: #222;
-            color: white;
-            border: 1px solid #666;
-            padding: 4px;
-            border-radius: 4px;
-            width: auto;
-        }
+
 
         /* --- MIRRORING & SCALING --- */
         .mirror-all {
