@@ -165,9 +165,12 @@
             100% { background-color: var(--accent-teal); box-shadow: 0 0 25px var(--accent-teal); }
         }
 
-        @keyframes drift {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(2px, 2px); }
+        @keyframes jitter {
+            0% { transform: translate(0,0); }
+            25% { transform: translate(1px, -1px); }
+            50% { transform: translate(-1px, 1px); }
+            75% { transform: translate(1px, 1px); }
+            100% { transform: translate(0,0); }
         }
 
         @keyframes backgroundDrift {
