@@ -72,6 +72,18 @@
             position: relative;
         }
 
+        /* Subtle drifting background to prevent Troxler effect */
+        #main-viewport::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at center, rgba(148, 210, 189, 0.08) 0%, transparent 65%);
+            animation: backgroundDrift 45s infinite alternate ease-in-out;
+            z-index: -1;
+            pointer-events: none;
+        }
+
         #scaling-layer {
             transform: scale(var(--scale-factor));
             transform-origin: center center;
@@ -153,12 +165,15 @@
             100% { background-color: var(--accent-teal); box-shadow: 0 0 25px var(--accent-teal); }
         }
 
-        @keyframes jitter {
-            0% { transform: translate(0,0); }
-            25% { transform: translate(1px, -1px); }
-            50% { transform: translate(-1px, 1px); }
-            75% { transform: translate(1px, 1px); }
-            100% { transform: translate(0,0); }
+        @keyframes drift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(2px, 2px); }
+        }
+
+        @keyframes backgroundDrift {
+            0% { transform: translate(10%, 10%) rotate(0deg); }
+            50% { transform: translate(-5%, 5%) rotate(5deg); }
+            100% { transform: translate(-10%, -10%) rotate(-5deg); }
         }
     </style>
     <script src="../header.js"></script>
