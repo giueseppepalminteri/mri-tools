@@ -105,35 +105,6 @@
             color: #94d2bd;
             box-shadow: 0 4px 18px rgba(0,0,0,0.45);
         }
-
-        /* DEBUG STYLES */
-        .debug-rect {
-            position: absolute;
-            border: 2px solid #ff0000;
-            pointer-events: none;
-            z-index: 1000;
-            left: 20.73%;
-            top: 19.22%;
-            width: 58.31%;
-            height: 63.99%;
-        }
-        .debug-dot {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: #ff0000;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 1001;
-            box-shadow: 0 0 10px #ff0000;
-        }
-        .debug-line {
-            position: absolute;
-            background: rgba(255, 0, 0, 0.6);
-            pointer-events: none;
-            z-index: 999;
-        }
     </style>
 </head>
 <body id="mainBody">
@@ -167,12 +138,6 @@
                 <a href="tmj">TMJ Study</a>
                 <a href="breathing-pattern">Breathing pattern</a>
             </div>
-
-            <!-- DEBUG OVERLAY -->
-            <div class="debug-rect"></div>
-            <div class="debug-dot" style="left: 49.88%; top: 51.22%;"></div>
-            <div class="debug-line" style="left: 49.88%; top: 0; width: 2px; height: 100%;"></div>
-            <div class="debug-line" style="left: 0; top: 51.22%; width: 100%; height: 2px;"></div>
         </div>
     </div>
 
