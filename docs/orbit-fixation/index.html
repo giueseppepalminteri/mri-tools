@@ -175,10 +175,43 @@
             100% { transform: translate(0,0); }
         }
 
-        @keyframes backgroundDrift {
-            0% { transform: translate(10%, 10%) rotate(0deg); }
-            50% { transform: translate(-5%, 5%) rotate(5deg); }
-            100% { transform: translate(-10%, -10%) rotate(-5deg); }
+        /* Timer HUD */
+        #top-status {
+            position: fixed;
+            top: 65px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            text-align: center;
+            min-width: 300px;
+            display: none;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 15px;
+        }
+
+        #status-text {
+            font-size: 3.5rem;
+            font-weight: bold;
+            font-family: monospace;
+            color: var(--accent-teal);
+        }
+
+        #progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #111;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        #progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-teal);
+            transition: width 1s linear;
         }
 
         /* --- TOOLBAR --- */
@@ -187,9 +220,14 @@
             border-top: 1px solid #222;
             z-index: 2001;
             display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 15px;
+        }
+        .toolbar-row {
+            display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px;
             gap: 30px;
         }
         .tool-group {
@@ -204,10 +242,34 @@
             letter-spacing: 1px;
             font-weight: bold;
         }
+        button {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        button:hover {
+            background: #333;
+            border-color: #666;
+        }
         input[type="range"] {
             cursor: pointer;
             accent-color: var(--accent-teal);
             width: 150px;
+        }
+        input[type="number"] {
+            background: #111;
+            color: var(--accent-teal);
+            border: 1px solid #444;
+            width: 55px;
+            text-align: center;
+            padding: 4px;
+            border-radius: 4px;
+            font-weight: bold;
         }
         .val-display {
             font-size: 0.8rem;
@@ -239,6 +301,13 @@
         </div>
     </div>
 
+    <div id="top-status">
+        <div id="status-text">00:00</div>
+        <div id="progress-bar-container">
+            <div id="progress-bar-fill"></div>
+        </div>
+    </div>
+
     <div id="main-viewport">
         <div id="scaling-layer">
             <div id="mirror-layer">
@@ -254,15 +323,30 @@
     </div>
 
     <div id="bottom-toolbar">
-        <div class="tool-group">
-            <span class="val-label">Dot Size:</span>
-            <input type="range" id="size-slider" min="10" max="150" value="50" oninput="updateDotSize(this.value)">
-            <span class="val-display" id="size-display">50px</span>
+        <div class="toolbar-row">
+            <div class="tool-group">
+                <span class="val-label">Dot Size:</span>
+                <input type="range" id="size-slider" min="10" max="150" value="50" oninput="updateDotSize(this.value)">
+                <span class="val-display" id="size-display">50px</span>
+            </div>
+            <div class="tool-group">
+                <span class="val-label">Jitter Intensity:</span>
+                <input type="range" id="jitter-slider" min="0" max="10" step="0.5" value="1" oninput="updateJitter(this.value)">
+                <span class="val-display" id="jitter-display">1.0px</span>
+            </div>
         </div>
-        <div class="tool-group">
-            <span class="val-label">Jitter Intensity:</span>
-            <input type="range" id="jitter-slider" min="0" max="10" step="0.5" value="1" oninput="updateJitter(this.value)">
-            <span class="val-display" id="jitter-display">1.0px</span>
+        <div class="toolbar-row">
+            <div class="tool-group">
+                <span class="val-label">Timer:</span>
+                <button onclick="startTimer()">Start</button>
+                <button style="color:#ff5f5f" onclick="stopAllTimers()">Stop</button>
+            </div>
+            <div class="tool-group">
+                <span class="val-label">Countdown (s):</span>
+                <input type="number" id="cd-val" value="60">
+                <button onclick="startCountdown()">Start</button>
+                <button style="color:#ff5f5f" onclick="stopAllTimers()">Stop</button>
+            </div>
         </div>
     </div>
 
@@ -318,6 +402,44 @@
         function updateJitter(val) {
             document.documentElement.style.setProperty('--jitter-amount', val + 'px');
             document.getElementById('jitter-display').innerText = parseFloat(val).toFixed(1) + 'px';
+        }
+
+        // --- TIMER LOGIC ---
+        let globalInt; let elapsed = 0;
+        const topUI = document.getElementById('top-status');
+        const timeText = document.getElementById('status-text');
+        const progFill = document.getElementById('progress-bar-fill');
+
+        function stopAllTimers() { 
+            clearInterval(globalInt); 
+            topUI.style.display = 'none'; 
+            document.getElementById('progress-bar-container').style.display = 'none'; 
+        }
+        function startTimer() {
+            stopAllTimers(); 
+            elapsed = 0; 
+            topUI.style.display = 'block';
+            globalInt = setInterval(() => { 
+                elapsed++; 
+                let m = Math.floor(elapsed / 60).toString().padStart(2, '0'); 
+                let s = (elapsed % 60).toString().padStart(2, '0'); 
+                timeText.innerText = `${m}:${s}`; 
+            }, 1000);
+        }
+        function startCountdown() {
+            stopAllTimers(); 
+            let total = parseInt(document.getElementById('cd-val').value); 
+            let rem = total;
+            topUI.style.display = 'block'; 
+            document.getElementById('progress-bar-container').style.display = 'block';
+            globalInt = setInterval(() => { 
+                rem--; 
+                let m = Math.floor(rem / 60).toString().padStart(2, '0'); 
+                let s = (rem % 60).toString().padStart(2, '0'); 
+                timeText.innerText = `${m}:${s}`; 
+                progFill.style.width = ((total - rem) / total * 100) + '%'; 
+                if (rem <= 0) stopAllTimers(); 
+            }, 1000);
         }
     </script>
 </body>
