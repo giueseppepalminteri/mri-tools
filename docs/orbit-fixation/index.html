@@ -8,6 +8,8 @@
         :root {
             --scale-factor: 1.0;
             --accent-teal: #94d2bd;
+            --dot-size: 50px;
+            --jitter-amount: 1px;
         }
         body {
             background-color: #000;
@@ -114,8 +116,8 @@
         }
 
         .target {
-            width: 50px;
-            height: 50px;
+            width: var(--dot-size);
+            height: var(--dot-size);
             background-color: var(--accent-teal);
             border-radius: 50%;
             position: relative;
@@ -167,9 +169,9 @@
 
         @keyframes jitter {
             0% { transform: translate(0,0); }
-            25% { transform: translate(1px, -1px); }
-            50% { transform: translate(-1px, 1px); }
-            75% { transform: translate(1px, 1px); }
+            25% { transform: translate(var(--jitter-amount), calc(-1 * var(--jitter-amount))); }
+            50% { transform: translate(calc(-1 * var(--jitter-amount)), var(--jitter-amount)); }
+            75% { transform: translate(var(--jitter-amount), var(--jitter-amount)); }
             100% { transform: translate(0,0); }
         }
 
@@ -177,6 +179,41 @@
             0% { transform: translate(10%, 10%) rotate(0deg); }
             50% { transform: translate(-5%, 5%) rotate(5deg); }
             100% { transform: translate(-10%, -10%) rotate(-5deg); }
+        }
+
+        /* --- TOOLBAR --- */
+        #bottom-toolbar {
+            background: #050505;
+            border-top: 1px solid #222;
+            z-index: 2001;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            gap: 30px;
+        }
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .val-label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            cursor: pointer;
+            accent-color: var(--accent-teal);
+            width: 150px;
+        }
+        .val-display {
+            font-size: 0.8rem;
+            color: var(--accent-teal);
+            min-width: 40px;
+            font-family: monospace;
         }
     </style>
     <script src="../header.js"></script>
@@ -213,6 +250,19 @@
                     <div class="target"></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="bottom-toolbar">
+        <div class="tool-group">
+            <span class="val-label">Dot Size:</span>
+            <input type="range" id="size-slider" min="10" max="150" value="50" oninput="updateDotSize(this.value)">
+            <span class="val-display" id="size-display">50px</span>
+        </div>
+        <div class="tool-group">
+            <span class="val-label">Jitter Intensity:</span>
+            <input type="range" id="jitter-slider" min="0" max="10" step="0.5" value="1" oninput="updateJitter(this.value)">
+            <span class="val-display" id="jitter-display">1.0px</span>
         </div>
     </div>
 
@@ -258,6 +308,16 @@
 
         function updateScale(val) {
             document.documentElement.style.setProperty('--scale-factor', val);
+        }
+
+        function updateDotSize(val) {
+            document.documentElement.style.setProperty('--dot-size', val + 'px');
+            document.getElementById('size-display').innerText = val + 'px';
+        }
+
+        function updateJitter(val) {
+            document.documentElement.style.setProperty('--jitter-amount', val + 'px');
+            document.getElementById('jitter-display').innerText = parseFloat(val).toFixed(1) + 'px';
         }
     </script>
 </body>
