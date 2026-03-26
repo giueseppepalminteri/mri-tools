@@ -56,7 +56,7 @@ class MriHeader extends HTMLElement {
                 #mri-page-title {
                     position: absolute;
                     left: 50%;
-                    transform: translateX(-50%);
+                    transform: translateX(-50%) translateY(-4px);
                     color: #fff;
                     font-size: 1.2rem;
                     font-weight: bold;
@@ -70,7 +70,7 @@ class MriHeader extends HTMLElement {
             </a>
             <div id="mri-page-title"></div>
             <div style="display: flex; align-items: center; gap: 15px;">
-                <span id="mri-disclaimer-btn" style="color: #94d2bd; font-size: 0.8rem; cursor: pointer; transition: all 0.2s ease; text-decoration: underline;" title="Review Disclaimer">You are using this website because you accepted the conditions</span>
+                <span id="mri-disclaimer-btn" style="color: #94d2bd; font-size: 0.7rem; cursor: pointer; transition: all 0.2s ease; text-decoration: underline; margin-top: 4px;" title="Review Disclaimer">You are using this website because you accepted the conditions</span>
                 <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
             </div>
         `;
