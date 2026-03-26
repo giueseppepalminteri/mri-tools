@@ -53,16 +53,32 @@ class MriHeader extends HTMLElement {
                     color: #fff;
                     transform: scale(1.1);
                 }
+                #mri-page-title {
+                    position: absolute;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    color: #fff;
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    white-space: nowrap;
+                    pointer-events: none;
+                }
             </style>
             <a href="${root}index.html" class="mri-logo" title="Back to Home">
                 <img src="${root}atom_logo.png" style="height: 36px; margin-right: 10px; border-radius: 5px;">
                 MRI Tools
             </a>
+            <div id="mri-page-title"></div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="mri-disclaimer-btn" style="color: #94d2bd; font-size: 0.8rem; cursor: pointer; transition: all 0.2s ease; text-decoration: underline;" title="Review Disclaimer">You are using this website because you accepted the conditions</span>
                 <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
             </div>
         `;
+
+        const titleEl = this.shadowRoot.getElementById('mri-page-title');
+        if (titleEl && root !== './' && document.title !== 'MRI Tools Index') {
+            titleEl.textContent = document.title;
+        }
 
         this.shadowRoot.getElementById('mri-global-settings-toggle').addEventListener('click', () => {
             const panel = document.getElementById('settings-panel');
