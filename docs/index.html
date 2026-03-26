@@ -19,35 +19,19 @@
             height: 100vh;
             overflow: hidden;
             box-sizing: border-box;
-            padding-top: 60px;
         }
-        .main-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            text-align: center;
-            width: 300px;
-            max-width: 90vw;
-            margin: 0 auto;
-        }
-        .main-menu a {
-            color: #94d2bd;
-            font-size: 1.5rem;
-            text-decoration: none;
-            padding: 15px;
-            border: 1px solid #333;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            transition: all 0.2s ease;
-            display: block;
-        }
-        .main-menu a:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: scale(1.05);
-            color: #fff;
-        }
-        
 
+        /* Full-viewport background image */
+        #bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+            z-index: 0;
+        }
 
         /* --- MIRRORING & SCALING --- */
         .mirror-all {
@@ -56,26 +40,73 @@
         .mirror-patient-active {
             transform: scaleX(-1);
         }
+
+        /* Scaling layer covers the full viewport */
         #scaling-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             transform: scale(var(--scale-factor));
             transform-origin: center center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: calc(100vh - 60px);
+            z-index: 1;
         }
         #mirror-layer {
-            display: flex;
-            justify-content: center;
             width: 100%;
+            height: 100%;
             transition: transform 0.2s ease;
+            position: relative;
+        }
+
+        /*
+         * Menu positioned to match the white screen area in the image.
+         * Image native size: 1836x1033
+         * Screen TL: x=507, y=258  →  left=27.6%, top=25.0%
+         * Screen BR: x=1352, y=561 →  width=46.0%, height=29.3%
+         */
+        .main-menu {
+            position: absolute;
+            left: 27.6%;
+            top: 25.0%;
+            width: 46.0%;
+            height: 29.3%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+            gap: 6px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .main-menu a {
+            color: #001219;
+            font-size: clamp(0.75rem, 1.8vh, 1.3rem);
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+            display: block;
+            text-align: center;
+            font-weight: 700;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .main-menu a:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: scale(1.03);
+            color: #000;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }
     </style>
 </head>
 <body id="mainBody">
     <mri-header root="./"></mri-header>
+
+    <!-- Background image -->
+    <img id="bg-image" src="mri_background.png" alt="MRI Scanner">
 
     <div id="settings-panel" class="collapsed">
         <div id="settings-content">
