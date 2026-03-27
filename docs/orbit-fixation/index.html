@@ -329,13 +329,13 @@
             </div>
             <div class="tool-group">
                 <span class="val-label">Jitter Distance:</span>
-                <input type="range" id="jitter-slider" min="0" max="10" step="0.5" value="1" oninput="updateJitterDistance(this.value)">
+                <input type="range" id="jitter-slider" min="0" max="10" step="0.1" value="1.0" oninput="updateJitterDistance(this.value)">
                 <span class="val-display" id="jitter-display">1.0px</span>
             </div>
             <div class="tool-group">
                 <span class="val-label">Jitter Speed:</span>
-                <input type="range" id="speed-slider" min="0.1" max="3.0" step="0.1" value="1.0" oninput="updateJitterSpeed(this.value)">
-                <span class="val-display" id="speed-display">1.0x</span>
+                <input type="range" id="speed-slider" min="1" max="100" step="1" value="20" oninput="updateJitterSpeed(this.value)">
+                <span class="val-display" id="speed-display">20 px/s</span>
             </div>
             <button onclick="resetDefaults()" style="margin-left: 20px; border-color: #444; color: #888; font-size: 0.7rem;">Reset Defaults</button>
         </div>
@@ -411,7 +411,7 @@
         }
 
         let currentDistance = 1.0;
-        let currentVelocity = 1.0;
+        let currentPxPerSec = 20.0;
         const shimEl = document.getElementById('fixation-shim');
 
         function updateJitterDistance(val) {
@@ -420,15 +420,27 @@
         }
 
         function updateJitterSpeed(val) {
-            currentVelocity = parseFloat(val);
-            document.getElementById('speed-display').innerText = currentVelocity.toFixed(1) + 'x';
+            currentPxPerSec = parseFloat(val);
+            document.getElementById('speed-display').innerText = currentPxPerSec.toFixed(0) + ' px/s';
         }
 
         function runJitterLoop(now) {
-            // Smooth natural jitter using Lissajous-style math
-            // Multiplying 'now' by a constant to get a base frequency, then scaling by currentVelocity
-            const x = Math.sin(now * 0.015 * currentVelocity) * currentDistance;
-            const y = Math.cos(now * 0.021 * currentVelocity) * currentDistance;
+            // Constant velocity perceptual logic: 
+            // Path length per full sine cycle (0 -> D -> 0 -> -D -> 0) is approx 4D
+            // We want Velocity V = 4D / T  =>  T = 4D / V
+            // Omega (rad/s) = 2PI / T = 2PI * V / 4D = (PI * V) / (2D)
+            
+            let x = 0;
+            let y = 0;
+            
+            if (currentDistance >= 0.1) {
+                const omega = (Math.PI * currentPxPerSec) / (2 * currentDistance);
+                const timeSec = now / 1000;
+                
+                // Use slightly different frequencies for X and Y for a more natural 2D jitter
+                x = Math.sin(timeSec * omega) * currentDistance;
+                y = Math.cos(timeSec * omega * 1.2) * currentDistance;
+            }
             
             if (shimEl) {
                 shimEl.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px)`;
@@ -446,8 +458,8 @@
             updateJitterDistance(1.0);
             document.getElementById('jitter-slider').value = 1.0;
             
-            updateJitterSpeed(1.0);
-            document.getElementById('speed-slider').value = 1.0;
+            updateJitterSpeed(20.0);
+            document.getElementById('speed-slider').value = 20.0;
             
             updateTimerOpacity(0.3);
             document.getElementById('opacity-slider').value = 0.3;
