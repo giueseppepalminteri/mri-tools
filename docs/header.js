@@ -221,6 +221,26 @@ class MriHeader extends HTMLElement {
                     border-radius: 4px;
                     cursor: pointer;
                 }
+                #mri-disclaimer-btn {
+                    position: fixed;
+                    bottom: 15px;
+                    right: 20px;
+                    color: #94d2bd;
+                    font-size: 0.55rem;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    text-decoration: underline;
+                    z-index: 10002;
+                    opacity: 0.7;
+                    line-height: 1.4;
+                    text-align: right;
+                    max-width: 200px;
+                    display: inline-block;
+                }
+                #mri-disclaimer-btn:hover {
+                    opacity: 1;
+                    color: #fff;
+                }
             </style>
             <a href="${root}index.html" class="mri-logo" title="Back to Home">
                 <img src="${root}atom_logo.png" style="height: 36px; margin-right: 10px; border-radius: 5px;">
@@ -236,8 +256,6 @@ class MriHeader extends HTMLElement {
                 <div id="mri-info-content" style="font-size: 0.95rem; line-height: 1.6;"></div>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
-                <span id="mri-disclaimer-btn" style="color: #94d2bd; font-size: 0.7rem; cursor: pointer; transition: all 0.2s ease; text-decoration: underline; transform: translateY(18px); display: inline-block;" title="Review Disclaimer">By using this website, you acknowledge and accept the disclaimer.</span>
-                
                 <button id="mri-notes-toggle" class="mri-notes-btn" title="Open Notes">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -248,6 +266,8 @@ class MriHeader extends HTMLElement {
 
                 <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
             </div>
+
+            <span id="mri-disclaimer-btn" title="Review Disclaimer">By using this website, you acknowledge and accept the disclaimer.</span>
 
             <div id="mri-notes-panel">
                 <span class="info-close" id="notes-panel-close">&times;</span>
@@ -321,17 +341,6 @@ class MriHeader extends HTMLElement {
             if (typeof window.showMriDisclaimer === 'function') {
                 window.showMriDisclaimer(true);
             }
-        });
-        
-        // Add hover effect for the disclaimer button
-        const disclaimerBtn = this.shadowRoot.getElementById('mri-disclaimer-btn');
-        disclaimerBtn.addEventListener('mouseover', () => {
-            disclaimerBtn.style.background = '#94d2bd';
-            disclaimerBtn.style.color = '#001219';
-        });
-        disclaimerBtn.addEventListener('mouseout', () => {
-            disclaimerBtn.style.background = 'none';
-            disclaimerBtn.style.color = '#94d2bd';
         });
 
         // --- Notes Logic ---
