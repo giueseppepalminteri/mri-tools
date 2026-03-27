@@ -139,6 +139,78 @@ class MriHeader extends HTMLElement {
                     background: rgba(148, 210, 189, 0.1);
                     color: #fff;
                 }
+                #mri-nav-panel {
+                    position: fixed;
+                    top: 60px;
+                    left: 0;
+                    width: 280px;
+                    height: calc(100vh - 60px);
+                    background: rgba(0, 18, 25, 0.98);
+                    border-right: 1px solid rgba(148, 210, 189, 0.3);
+                    padding: 30px 20px;
+                    color: #fff;
+                    z-index: 10003;
+                    box-shadow: 10px 0 40px rgba(0,0,0,0.8);
+                    display: none;
+                    backdrop-filter: blur(15px);
+                    flex-direction: column;
+                    gap: 15px;
+                }
+                #mri-nav-panel.visible {
+                    display: flex;
+                    animation: fadeInLeft 0.3s ease-out;
+                }
+                @keyframes fadeInLeft {
+                    from { opacity: 0; transform: translateX(-20px); }
+                    to { opacity: 1; transform: translateX(0); }
+                }
+                .nav-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 15px;
+                    color: #fff;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    transition: all 0.2s ease;
+                    font-weight: 500;
+                    border: 1px solid transparent;
+                }
+                .nav-item:hover {
+                    background: rgba(148, 210, 189, 0.1);
+                    color: #94d2bd;
+                    border-color: rgba(148, 210, 189, 0.2);
+                    transform: translateX(5px);
+                }
+                .nav-item.active {
+                    background: rgba(148, 210, 189, 0.15);
+                    color: #94d2bd;
+                    border-color: rgba(148, 210, 189, 0.5);
+                }
+                .mri-icon-btn {
+                    height: 40px;
+                    cursor: pointer;
+                    transition: transform 0.2s ease, filter 0.2s ease;
+                    filter: drop-shadow(0 0 5px rgba(148, 210, 189, 0.2));
+                }
+                .mri-icon-btn:hover {
+                    transform: scale(1.1);
+                    filter: drop-shadow(0 0 10px rgba(148, 210, 189, 0.5));
+                }
+                .mri-logo-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+                #mri-nav-panel h3 {
+                    color: #94d2bd;
+                    font-size: 0.8rem;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin-bottom: 10px;
+                    padding-left: 15px;
+                    opacity: 0.7;
+                }
                 #mri-notes-panel {
                     position: fixed;
                     top: 70px;
@@ -247,10 +319,22 @@ class MriHeader extends HTMLElement {
                     border-color: rgba(148, 210, 189, 0.5);
                 }
             </style>
-            <a href="${root}index.html" class="mri-logo" title="Back to Home">
-                <img src="${root}atom_logo.png" style="height: 36px; margin-right: 10px; border-radius: 5px;">
-                MRI Tools
-            </a>
+            <div class="mri-logo-container">
+                <img src="${root}mri_icon.png" class="mri-icon-btn" id="mri-nav-toggle" title="Navigation Menu">
+                <a href="${root}index.html" class="mri-logo" title="Back to Home">
+                    MRI Tools
+                </a>
+            </div>
+
+            <div id="mri-nav-panel">
+                <span class="info-close" id="nav-panel-close" style="top: 15px; right: 20px;">&times;</span>
+                <h3>Tools & Studies</h3>
+                <a href="${root}index.html" class="nav-item ${pageTitle === 'MRI Tools Index' ? 'active' : ''}">🏠 Home</a>
+                <a href="${root}breathing-pattern/index.html" class="nav-item ${pageTitle === 'MRI Breathing Pattern' ? 'active' : ''}">🫁 Breathing Pattern</a>
+                <a href="${root}breathing-instructions/index.html" class="nav-item ${pageTitle === 'MRI Breathing Instructions' ? 'active' : ''}">🗣️ Breathing Instructions</a>
+                <a href="${root}orbit-fixation/index.html" class="nav-item ${pageTitle === 'MRI Orbit Fixation' ? 'active' : ''}">👁️ Orbit Fixation</a>
+                <a href="${root}tmj/index.html" class="nav-item ${pageTitle === 'TMJ Study' ? 'active' : ''}">🦷 TMJ Study</a>
+            </div>
             <div id="mri-page-title">
                 <span id="mri-title-text"></span>
                 <button id="mri-info-toggle" title="How to use this tool">i</button>
@@ -386,6 +470,22 @@ class MriHeader extends HTMLElement {
         notesPanelClose.addEventListener('click', () => notesPanel.classList.remove('visible'));
         
         notesPanel.addEventListener('click', (e) => e.stopPropagation());
+
+        // --- Navigation Logic ---
+        const navToggle = this.shadowRoot.getElementById('mri-nav-toggle');
+        const navPanel = this.shadowRoot.getElementById('mri-nav-panel');
+        const navPanelClose = this.shadowRoot.getElementById('nav-panel-close');
+
+        navToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navPanel.classList.toggle('visible');
+        });
+
+        navPanelClose.addEventListener('click', () => navPanel.classList.remove('visible'));
+        
+        // Close nav on outside click
+        document.addEventListener('click', () => navPanel.classList.remove('visible'));
+        navPanel.addEventListener('click', (e) => e.stopPropagation());
 
         // Update the button if disclaimer not accepted
         if (typeof window !== 'undefined' && localStorage.getItem('mri_disclaimer_accepted') !== 'true') {
