@@ -341,9 +341,10 @@
             </div>
             <div class="tool-group">
                 <span class="val-label">Jitter Speed:</span>
-                <input type="range" id="speed-slider" min="0.1" max="2.0" step="0.1" value="0.5" oninput="updateJitterSpeed(this.value)">
-                <span class="val-display" id="speed-display">0.5s</span>
+                <input type="range" id="speed-slider" min="0.1" max="3.0" step="0.1" value="1.0" oninput="updateJitterSpeed(this.value)">
+                <span class="val-display" id="speed-display">1.0x</span>
             </div>
+            <button onclick="resetDefaults()" style="margin-left: 20px; border-color: #444; color: #888; font-size: 0.7rem;">Reset Defaults</button>
         </div>
         <div class="toolbar-row">
             <div class="tool-group">
@@ -416,14 +417,42 @@
             document.getElementById('size-display').innerText = val + 'px';
         }
 
+        let currentDistance = 1.0;
+        let currentVelocity = 1.0;
+
         function updateJitterDistance(val) {
-            document.documentElement.style.setProperty('--jitter-amount', val + 'px');
-            document.getElementById('jitter-display').innerText = parseFloat(val).toFixed(1) + 'px';
+            currentDistance = parseFloat(val);
+            document.documentElement.style.setProperty('--jitter-amount', currentDistance + 'px');
+            document.getElementById('jitter-display').innerText = currentDistance.toFixed(1) + 'px';
+            recalcJitterDuration();
         }
 
         function updateJitterSpeed(val) {
-            document.documentElement.style.setProperty('--jitter-speed', val + 's');
-            document.getElementById('speed-display').innerText = parseFloat(val).toFixed(1) + 's';
+            currentVelocity = parseFloat(val);
+            document.getElementById('speed-display').innerText = currentVelocity.toFixed(1) + 'x';
+            recalcJitterDuration();
+        }
+
+        function recalcJitterDuration() {
+            // Constant velocity perceptual logic: Duration = (Base Duration * Distance) / SpeedFactor
+            const baseDuration = 0.5; 
+            // Avoid division by zero, and ensure 0 distance stops visible jitter
+            const duration = (currentDistance <= 0.1) ? 0.5 : (baseDuration * currentDistance) / currentVelocity;
+            document.documentElement.style.setProperty('--jitter-speed', duration.toFixed(3) + 's');
+        }
+
+        function resetDefaults() {
+            updateDotSize(50);
+            document.getElementById('size-slider').value = 50;
+            
+            updateJitterDistance(1.0);
+            document.getElementById('jitter-slider').value = 1.0;
+            
+            updateJitterSpeed(1.0);
+            document.getElementById('speed-slider').value = 1.0;
+            
+            updateTimerOpacity(0.3);
+            document.getElementById('opacity-slider').value = 0.3;
         }
 
         function updateTimerOpacity(val) {
