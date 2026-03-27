@@ -335,7 +335,9 @@
             </div>
             <div class="tool-group">
                 <span class="val-label">Countdown:</span>
-                <input type="number" id="cd-val" value="60">
+                <input type="number" id="cd-min" value="1" min="0" max="99" title="Minutes">
+                <span style="color:#666; font-weight:bold;">:</span>
+                <input type="number" id="cd-sec" value="00" min="0" max="59" title="Seconds">
                 <button onclick="startCountdown()">Start</button>
                 <button style="color:#ff5f5f" onclick="stopAllTimers()">Stop</button>
             </div>
@@ -505,15 +507,48 @@
         const timeText = document.getElementById('status-text');
         const progFill = document.getElementById('progress-bar-fill');
 
-        function stopAllTimers() { clearInterval(globalInt); topUI.style.display = 'none'; document.getElementById('progress-bar-container').style.display = 'none'; }
+        function stopAllTimers() { 
+            clearInterval(globalInt); 
+            topUI.style.display = 'none'; 
+            document.getElementById('progress-bar-container').style.display = 'none'; 
+        }
         function startTimer() {
-            stopAllTimers(); elapsed = 0; topUI.style.display = 'block';
-            globalInt = setInterval(() => { elapsed++; let m = Math.floor(elapsed / 60).toString().padStart(2, '0'); let s = (elapsed % 60).toString().padStart(2, '0'); timeText.innerText = `${m}:${s}`; }, 1000);
+            stopAllTimers(); 
+            elapsed = 0; 
+            timeText.innerText = "00:00"; // Flicker fix: Update before display
+            topUI.style.display = 'block';
+            globalInt = setInterval(() => { 
+                elapsed++; 
+                let m = Math.floor(elapsed / 60).toString().padStart(2, '0'); 
+                let s = (elapsed % 60).toString().padStart(2, '0'); 
+                timeText.innerText = `${m}:${s}`; 
+            }, 1000);
         }
         function startCountdown() {
-            stopAllTimers(); let total = parseInt(document.getElementById('cd-val').value); let rem = total;
-            topUI.style.display = 'block'; document.getElementById('progress-bar-container').style.display = 'block';
-            globalInt = setInterval(() => { rem--; let m = Math.floor(rem / 60).toString().padStart(2, '0'); let s = (rem % 60).toString().padStart(2, '0'); timeText.innerText = `${m}:${s}`; progFill.style.width = ((total - rem) / total * 100) + '%'; if (rem <= 0) stopAllTimers(); }, 1000);
+            stopAllTimers(); 
+            let mins = parseInt(document.getElementById('cd-min').value) || 0;
+            let secs = parseInt(document.getElementById('cd-sec').value) || 0;
+            let total = (mins * 60) + secs;
+            if (total <= 0) return;
+            
+            let rem = total;
+            // Flicker fix: Update before display
+            let mInitial = Math.floor(rem / 60).toString().padStart(2, '0');
+            let sInitial = (rem % 60).toString().padStart(2, '0');
+            timeText.innerText = `${mInitial}:${sInitial}`;
+            progFill.style.width = '0%';
+            
+            topUI.style.display = 'block'; 
+            document.getElementById('progress-bar-container').style.display = 'block';
+            
+            globalInt = setInterval(() => { 
+                rem--; 
+                let m = Math.floor(rem / 60).toString().padStart(2, '0'); 
+                let s = (rem % 60).toString().padStart(2, '0'); 
+                timeText.innerText = `${m}:${s}`; 
+                progFill.style.width = ((total - rem) / total * 100) + '%'; 
+                if (rem <= 0) stopAllTimers(); 
+            }, 1000);
         }
 
         const zs = document.getElementById('zoom-select');
