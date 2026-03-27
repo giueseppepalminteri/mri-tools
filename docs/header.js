@@ -6,6 +6,7 @@ class MriHeader extends HTMLElement {
 
     connectedCallback() {
         const root = this.getAttribute('root') || '../';
+        const pageTitle = document.title;
         
         this.shadowRoot.innerHTML = `
             <style>
@@ -422,7 +423,6 @@ class MriHeader extends HTMLElement {
         const infoContent = this.shadowRoot.getElementById('mri-info-content');
         const infoClose = this.shadowRoot.querySelector('.info-close');
 
-        const pageTitle = document.title;
         if (titleEl && root !== './' && pageTitle !== 'MRI Tools Index') {
             titleEl.textContent = pageTitle;
         } else if (infoToggle) {
