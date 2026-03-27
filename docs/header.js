@@ -223,21 +223,28 @@ class MriHeader extends HTMLElement {
                 }
                 #mri-disclaimer-btn {
                     position: fixed;
-                    bottom: 5px;
-                    right: 15px;
+                    bottom: 8px;
+                    right: 12px;
                     color: #94d2bd;
                     font-size: 0.5rem;
                     cursor: pointer;
                     transition: all 0.2s ease;
                     text-decoration: underline;
                     z-index: 10002;
-                    opacity: 0.6;
+                    opacity: 0.8;
                     white-space: nowrap;
                     display: inline-block;
+                    background: rgba(0, 18, 25, 0.85);
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                    border: 1px solid rgba(148, 210, 189, 0.15);
+                    backdrop-filter: blur(5px);
                 }
                 #mri-disclaimer-btn:hover {
                     opacity: 1;
                     color: #fff;
+                    background: rgba(148, 210, 189, 0.2);
+                    border-color: rgba(148, 210, 189, 0.5);
                 }
             </style>
             <a href="${root}index.html" class="mri-logo" title="Back to Home">
@@ -265,7 +272,7 @@ class MriHeader extends HTMLElement {
                 <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
             </div>
 
-            <span id="mri-disclaimer-btn" title="Review Disclaimer">By using this site, you accept the medical disclaimer.</span>
+            <span id="mri-disclaimer-btn" title="Review Disclaimer">By using this site, you accept the disclaimer.</span>
 
             <div id="mri-notes-panel">
                 <span class="info-close" id="notes-panel-close">&times;</span>
