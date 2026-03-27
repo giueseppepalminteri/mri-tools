@@ -62,23 +62,118 @@ class MriHeader extends HTMLElement {
                     font-weight: bold;
                     white-space: nowrap;
                     pointer-events: none;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                #mri-info-toggle {
+                    background: #94d2bd;
+                    color: #001219;
+                    border: none;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    font-size: 14px;
+                    font-weight: 900;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    pointer-events: auto;
+                    transition: all 0.2s ease;
+                    font-family: 'serif';
+                    font-style: italic;
+                }
+                #mri-info-toggle:hover {
+                    background: #fff;
+                    transform: scale(1.1);
+                }
+                #mri-info-panel {
+                    position: fixed;
+                    top: 70px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 90%;
+                    max-width: 500px;
+                    background: rgba(0, 18, 25, 0.95);
+                    border: 1px solid #94d2bd;
+                    border-radius: 12px;
+                    padding: 20px;
+                    color: #fff;
+                    z-index: 10000;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    display: none;
+                    backdrop-filter: blur(10px);
+                }
+                #mri-info-panel.visible {
+                    display: block;
+                    animation: fadeInDown 0.3s ease-out;
+                }
+                @keyframes fadeInDown {
+                    from { opacity: 0; transform: translate(-50%, -20px); }
+                    to { opacity: 1; transform: translate(-50%, 0); }
+                }
+                .info-close {
+                    position: absolute;
+                    top: 10px;
+                    right: 15px;
+                    color: #94d2bd;
+                    cursor: pointer;
+                    font-size: 20px;
                 }
             </style>
             <a href="${root}index.html" class="mri-logo" title="Back to Home">
                 <img src="${root}atom_logo.png" style="height: 36px; margin-right: 10px; border-radius: 5px;">
                 MRI Tools
             </a>
-            <div id="mri-page-title"></div>
+            <div id="mri-page-title">
+                <span id="mri-title-text"></span>
+                <button id="mri-info-toggle" title="How to use this tool">i</button>
+            </div>
+            <div id="mri-info-panel">
+                <span class="info-close">&times;</span>
+                <h3 style="color: #94d2bd; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px;">How to use this tool</h3>
+                <div id="mri-info-content" style="font-size: 0.95rem; line-height: 1.6;"></div>
+            </div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="mri-disclaimer-btn" style="color: #94d2bd; font-size: 0.7rem; cursor: pointer; transition: all 0.2s ease; text-decoration: underline; transform: translateY(18px); display: inline-block;" title="Review Disclaimer">By using this website, you acknowledge and accept the disclaimer.</span>
                 <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
             </div>
         `;
 
-        const titleEl = this.shadowRoot.getElementById('mri-page-title');
-        if (titleEl && root !== './' && document.title !== 'MRI Tools Index') {
-            titleEl.textContent = document.title;
+        const titleEl = this.shadowRoot.getElementById('mri-title-text');
+        const infoToggle = this.shadowRoot.getElementById('mri-info-toggle');
+        const infoPanel = this.shadowRoot.getElementById('mri-info-panel');
+        const infoContent = this.shadowRoot.getElementById('mri-info-content');
+        const infoClose = this.shadowRoot.querySelector('.info-close');
+
+        const pageTitle = document.title;
+        if (titleEl && root !== './' && pageTitle !== 'MRI Tools Index') {
+            titleEl.textContent = pageTitle;
+        } else if (infoToggle) {
+            // Hide info button on home page if desired, or keep for general info
+            // In this case, let's keep it but handle the click
         }
+
+        const descriptions = {
+            "MRI Tools Index": "Welcome to the MRI Tools Suite. Designed to improve patient cooperation and comfort during MRI scans. Select a tool from the menu to assist with specific procedures like guided breathing, orbital fixation, or TMJ studies.",
+            "MRI Breathing Pattern": "Guided breathing tool to help patients maintain a steady rhythm. <br><br><b>How to use:</b><br>1. Set the target BPM or manually adjust In/Out times.<br>2. Enable 'Pulse' or 'Text' cues for the patient.<br>3. Use the Timer or Countdown to synchronize with MRI sequences.",
+            "MRI Orbit Fixation": "Visual fixation target to help patients keep eyes steady. <br><br><b>How to use:</b><br>1. Adjust 'Dot Size' for patient visibility.<br>2. Use 'Jitter' to prevent visual fading (Troxler effect).<br>3. The 'Timer' is centered behind the dot; use 'Opacity' to adjust its subtlety.",
+            "TMJ Study": "Guided jaw opening positions for joint imaging. <br><br><b>How to use:</b><br>1. Preview study phases and select which to include.<br>2. Click 'Start Study' for full-screen presentation.<br>3. Use Spacebar or Click to advance to the next position."
+        };
+
+        infoToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const text = descriptions[pageTitle] || "Instructions for this tool are currently being finalized. Please consult your standard clinical protocols.";
+            infoContent.innerHTML = text;
+            infoPanel.classList.toggle('visible');
+        });
+
+        infoClose.addEventListener('click', () => infoPanel.classList.remove('visible'));
+        
+        // Close on outside click
+        document.addEventListener('click', () => infoPanel.classList.remove('visible'));
+        infoPanel.addEventListener('click', (e) => e.stopPropagation());
 
         this.shadowRoot.getElementById('mri-global-settings-toggle').addEventListener('click', () => {
             const panel = document.getElementById('settings-panel');
