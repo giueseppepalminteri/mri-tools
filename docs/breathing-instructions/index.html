@@ -330,12 +330,6 @@
       font-size: clamp(11px, 1.5vmin, 14px);
     }
 
-    .btn-help {
-      background: #475569;
-      color: white;
-      padding: 6px 12px;
-    }
-
     .btn-attention {
       background: var(--warning);
       color: #000;
@@ -386,23 +380,12 @@
     </div>
   </div>
 
-  <div id="helpModal" class="modal-overlay">
-    <div class="modal-content">
-      <h2 style="margin-top:0; color:var(--accent)">Instructions</h2>
-      <div id="instructionText" contenteditable="false"></div>
-      <div class="modal-actions">
-        <button id="editHelpBtn" style="background:var(--warning); color:black">EDIT</button>
-        <button id="closeHelpBtn" style="background:var(--accent); color:black">CLOSE</button>
-      </div>
-    </div>
-  </div>
 
   <div id="scaling-layer">
     <div class="app-container">
 
       <header>
         <div style="display:flex; gap:15px; align-items:center">
-          <button id="openHelpBtn" class="btn-help">HELP</button>
           <div id="cycleInfo">Cycle 0/0</div>
         </div>
       </header>
@@ -462,30 +445,7 @@
       const startBtn = document.getElementById('startBtn');
       const stopBtn = document.getElementById('stopBtn');
 
-      // Modal Elements
-      const helpModal = document.getElementById('helpModal');
-      const helpDisplay = document.getElementById('instructionText');
-      const openHelpBtn = document.getElementById('openHelpBtn');
-      const editHelpBtn = document.getElementById('editHelpBtn');
-      const closeHelpBtn = document.getElementById('closeHelpBtn');
-
-      const defaultInstructions = `ON THE MRI SCANNER:
-1. Right-click on all breath-hold sequences.
-2. Select "Edit properties".
-3. Navigate to "Voice commands" and select "Short hold breath".
-4. Note the pause duration for sequences with more than one breath hold.
-5. Navigate to "Execution" and select "Wait for User to Start".
-
-RECOMMENDED APP SETTINGS:
-- Inhale time: 2 seconds.
-- Recovery time: Add 3 seconds for sequences with multiple breath holds (e.g., if the scanner pause is 15s, use 18s).`;
-
       let state = { running: false, stopRequested: false };
-      let isEditing = false;
-
-      // Initialize Help
-      const savedHelp = localStorage.getItem('mri_help_text');
-      helpDisplay.innerText = savedHelp || defaultInstructions;
 
       function setTint(color) {
         const colors = { yellow: 'rgba(250, 204, 21, 0.15)', red: 'rgba(251, 113, 133, 0.2)', green: 'rgba(74, 222, 128, 0.2)', none: 'rgba(0,0,0,0)' };
@@ -546,24 +506,6 @@ RECOMMENDED APP SETTINGS:
         }
       };
 
-      // Modal Logic
-      openHelpBtn.onclick = () => helpModal.style.display = 'flex';
-      closeHelpBtn.onclick = () => {
-        helpModal.style.display = 'none';
-        if (isEditing) toggleEdit();
-      };
-
-      function toggleEdit() {
-        isEditing = !isEditing;
-        helpDisplay.contentEditable = isEditing;
-        editHelpBtn.innerText = isEditing ? "SAVE" : "EDIT";
-        if (!isEditing) {
-          localStorage.setItem('mri_help_text', helpDisplay.innerText);
-        }
-        helpDisplay.style.background = isEditing ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.3)";
-      }
-
-      editHelpBtn.onclick = toggleEdit;
 
       document.getElementById('alertSpeed').onchange = (e) => {
         document.documentElement.style.setProperty('--flash-duration', e.target.value + 's');

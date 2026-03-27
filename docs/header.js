@@ -121,6 +121,106 @@ class MriHeader extends HTMLElement {
                     cursor: pointer;
                     font-size: 20px;
                 }
+                .mri-notes-btn {
+                    background: none;
+                    border: none;
+                    color: #94d2bd;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 0.85rem;
+                    font-weight: bold;
+                    transition: all 0.2s ease;
+                    padding: 5px 10px;
+                    border-radius: 6px;
+                }
+                .mri-notes-btn:hover {
+                    background: rgba(148, 210, 189, 0.1);
+                    color: #fff;
+                }
+                #mri-notes-panel {
+                    position: fixed;
+                    top: 70px;
+                    right: 20px;
+                    width: 320px;
+                    background: rgba(0, 18, 25, 0.98);
+                    border: 1px solid #94d2bd;
+                    border-radius: 12px;
+                    padding: 20px;
+                    color: #fff;
+                    z-index: 10001;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+                    display: none;
+                    backdrop-filter: blur(15px);
+                }
+                #mri-notes-panel.visible {
+                    display: block;
+                    animation: fadeInRight 0.3s ease-out;
+                }
+                @keyframes fadeInRight {
+                    from { opacity: 0; transform: translateX(20px); }
+                    to { opacity: 1; transform: translateX(0); }
+                }
+                .notes-section {
+                    margin-bottom: 15px;
+                }
+                .notes-label {
+                    font-size: 0.75rem;
+                    color: #94d2bd;
+                    text-transform: uppercase;
+                    margin-bottom: 5px;
+                    display: block;
+                    font-weight: bold;
+                }
+                .notes-area {
+                    width: 100%;
+                    height: 100px;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid #333;
+                    border-radius: 6px;
+                    color: #fff;
+                    padding: 10px;
+                    font-size: 0.9rem;
+                    resize: none;
+                    font-family: inherit;
+                }
+                .notes-area:focus {
+                    outline: none;
+                    border-color: #94d2bd;
+                    background: rgba(255,255,255,0.08);
+                }
+                .notes-warning {
+                    font-size: 0.65rem;
+                    color: #fb7185;
+                    margin-bottom: 15px;
+                    line-height: 1.3;
+                    display: flex;
+                    gap: 5px;
+                }
+                .notes-actions {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 10px;
+                }
+                .btn-save-notes {
+                    flex: 1;
+                    background: #94d2bd;
+                    color: #001219;
+                    border: none;
+                    padding: 8px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    cursor: pointer;
+                }
+                .btn-close-notes {
+                    background: #333;
+                    color: #fff;
+                    border: none;
+                    padding: 8px 15px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
             </style>
             <a href="${root}index.html" class="mri-logo" title="Back to Home">
                 <img src="${root}atom_logo.png" style="height: 36px; margin-right: 10px; border-radius: 5px;">
@@ -135,9 +235,43 @@ class MriHeader extends HTMLElement {
                 <h3 style="color: #94d2bd; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px;">How to use this tool</h3>
                 <div id="mri-info-content" style="font-size: 0.95rem; line-height: 1.6;"></div>
             </div>
-            <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
                 <span id="mri-disclaimer-btn" style="color: #94d2bd; font-size: 0.7rem; cursor: pointer; transition: all 0.2s ease; text-decoration: underline; transform: translateY(18px); display: inline-block;" title="Review Disclaimer">By using this website, you acknowledge and accept the disclaimer.</span>
+                
+                <button id="mri-notes-toggle" class="mri-notes-btn" title="Open Notes">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Notes
+                </button>
+
                 <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
+            </div>
+
+            <div id="mri-notes-panel">
+                <span class="info-close" id="notes-panel-close">&times;</span>
+                <h3 style="color: #94d2bd; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.1rem;">Notes</h3>
+                
+                <div class="notes-warning">
+                    <span>⚠️</span>
+                    <span>These notes are temporary and stored locally in your browser. They may be lost if browser cache is cleared.</span>
+                </div>
+
+                <div class="notes-section">
+                    <label class="notes-label">Session Notes (Shared)</label>
+                    <textarea id="notes-global" class="notes-area" placeholder="Add general patient or session notes here..."></textarea>
+                </div>
+
+                <div class="notes-section">
+                    <label class="notes-label" id="label-tool-notes">Tool Notes</label>
+                    <textarea id="notes-specific" class="notes-area" placeholder="Add notes specific to this tool..."></textarea>
+                </div>
+
+                <div class="notes-actions">
+                    <button class="btn-save-notes" id="notes-save-btn">SAVE NOTES</button>
+                    <button class="btn-close-notes" id="notes-cancel-btn">CLOSE</button>
+                </div>
             </div>
         `;
 
@@ -200,7 +334,46 @@ class MriHeader extends HTMLElement {
             disclaimerBtn.style.color = '#94d2bd';
         });
 
-        // Hide the button if disclaimer is not accepted yet (so we don't show "Accepted" prematurely)
+        // --- Notes Logic ---
+        const notesToggle = this.shadowRoot.getElementById('mri-notes-toggle');
+        const notesPanel = this.shadowRoot.getElementById('mri-notes-panel');
+        const notesGlobal = this.shadowRoot.getElementById('notes-global');
+        const notesSpecific = this.shadowRoot.getElementById('notes-specific');
+        const notesSaveBtn = this.shadowRoot.getElementById('notes-save-btn');
+        const notesCancelBtn = this.shadowRoot.getElementById('notes-cancel-btn');
+        const notesPanelClose = this.shadowRoot.getElementById('notes-panel-close');
+        const labelToolNotes = this.shadowRoot.getElementById('label-tool-notes');
+
+        const toolName = pageTitle === 'MRI Tools Index' ? 'General' : pageTitle;
+        labelToolNotes.textContent = toolName + " Notes";
+        
+        const storageKeyGlobal = 'mri_global_notes';
+        const storageKeySpecific = 'mri_notes_' + pageTitle.replace(/\s+/g, '_').toLowerCase();
+
+        const loadNotes = () => {
+            notesGlobal.value = localStorage.getItem(storageKeyGlobal) || '';
+            notesSpecific.value = localStorage.getItem(storageKeySpecific) || '';
+        };
+
+        const saveNotes = () => {
+            localStorage.setItem(storageKeyGlobal, notesGlobal.value);
+            localStorage.setItem(storageKeySpecific, notesSpecific.value);
+            notesPanel.classList.remove('visible');
+        };
+
+        notesToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            loadNotes();
+            notesPanel.classList.toggle('visible');
+        });
+
+        notesSaveBtn.addEventListener('click', saveNotes);
+        notesCancelBtn.addEventListener('click', () => notesPanel.classList.remove('visible'));
+        notesPanelClose.addEventListener('click', () => notesPanel.classList.remove('visible'));
+        
+        notesPanel.addEventListener('click', (e) => e.stopPropagation());
+
+        // Update the button if disclaimer not accepted
         if (typeof window !== 'undefined' && localStorage.getItem('mri_disclaimer_accepted') !== 'true') {
             disclaimerBtn.style.display = 'none';
         }
