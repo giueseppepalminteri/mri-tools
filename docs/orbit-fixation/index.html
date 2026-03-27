@@ -295,9 +295,9 @@
             </div>
             <hr style="border:0; border-top:1px solid #333; margin: 10px 0;">
             <div style="font-size: 0.6rem; color: #666; text-align: center; line-height: 1.4;">
-                Tools created by <br><b style="color:#94d2bd">Giuseppe Palminteri</b><br>with the support of AI
-                <a href="https://www.linkedin.com/in/giuseppepalminteri" target="_blank" style="display: block; color: #94d2bd; text-decoration: none; margin-top: 5px; font-weight: bold; font-size: 0.65rem; border: 1px solid #333; padding: 3px; border-radius: 4px;">
-                    LinkedIn Profile
+                Tools created by <br>
+                <a href="https://www.linkedin.com/in/giuseppepalminteri" target="_blank" style="color:#94d2bd; text-decoration: none; font-weight: bold;">
+                    Giuseppe Palminteri
                 </a>
             </div>
         </div>
@@ -340,9 +340,9 @@
                 <span class="val-display" id="jitter-display">1.5px</span>
             </div>
             <div class="tool-group">
-                <span class="val-label">Jitter Speed:</span>
-                <input type="range" id="speed-slider" min="1" max="100" step="1" value="10" oninput="updateJitterSpeed(this.value)">
-                <span class="val-display" id="speed-display">10 px/s</span>
+                <span class="val-label">Jitter Freq:</span>
+                <input type="range" id="freq-slider" min="0.1" max="5" step="0.1" value="1.0" oninput="updateJitterFreq(this.value)">
+                <span class="val-display" id="freq-display">1.0 Hz</span>
             </div>
             <button onclick="resetDefaults()" style="margin-left: 20px; border-color: #444; color: #888; font-size: 0.7rem;">Reset Defaults</button>
         </div>
@@ -418,7 +418,7 @@
         }
 
         let currentDistance = 1.5;
-        let currentPxPerSec = 10.0;
+        let currentFreq = 1.0;
         const shimEl = document.getElementById('fixation-shim');
 
         function updateJitterDistance(val) {
@@ -426,22 +426,17 @@
             document.getElementById('jitter-display').innerText = currentDistance.toFixed(1) + 'px';
         }
 
-        function updateJitterSpeed(val) {
-            currentPxPerSec = parseFloat(val);
-            document.getElementById('speed-display').innerText = currentPxPerSec.toFixed(0) + ' px/s';
+        function updateJitterFreq(val) {
+            currentFreq = parseFloat(val);
+            document.getElementById('freq-display').innerText = currentFreq.toFixed(1) + ' Hz';
         }
 
         function runJitterLoop(now) {
-            // Constant velocity perceptual logic: 
-            // Path length per full sine cycle (0 -> D -> 0 -> -D -> 0) is approx 4D
-            // We want Velocity V = 4D / T  =>  T = 4D / V
-            // Omega (rad/s) = 2PI / T = 2PI * V / 4D = (PI * V) / (2D)
-            
             let x = 0;
             let y = 0;
             
             if (currentDistance >= 0.1) {
-                const omega = (Math.PI * currentPxPerSec) / (2 * currentDistance);
+                const omega = 2 * Math.PI * currentFreq;
                 const timeSec = now / 1000;
                 
                 // Use slightly different frequencies for X and Y for a more natural 2D jitter
@@ -465,8 +460,8 @@
             updateJitterDistance(1.5);
             document.getElementById('jitter-slider').value = 1.5;
             
-            updateJitterSpeed(10.0);
-            document.getElementById('speed-slider').value = 10.0;
+            updateJitterFreq(1.0);
+            document.getElementById('freq-slider').value = 1.0;
             
             updateTimerOpacity(0.3);
             document.getElementById('opacity-slider').value = 0.3;
