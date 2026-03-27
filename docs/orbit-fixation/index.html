@@ -329,13 +329,13 @@
             </div>
             <div class="tool-group">
                 <span class="val-label">Jitter Distance:</span>
-                <input type="range" id="jitter-slider" min="0" max="10" step="0.1" value="1.0" oninput="updateJitterDistance(this.value)">
-                <span class="val-display" id="jitter-display">1.0px</span>
+                <input type="range" id="jitter-slider" min="0" max="10" step="0.1" value="1.5" oninput="updateJitterDistance(this.value)">
+                <span class="val-display" id="jitter-display">1.5px</span>
             </div>
             <div class="tool-group">
                 <span class="val-label">Jitter Speed:</span>
-                <input type="range" id="speed-slider" min="1" max="100" step="1" value="20" oninput="updateJitterSpeed(this.value)">
-                <span class="val-display" id="speed-display">20 px/s</span>
+                <input type="range" id="speed-slider" min="1" max="100" step="1" value="10" oninput="updateJitterSpeed(this.value)">
+                <span class="val-display" id="speed-display">10 px/s</span>
             </div>
             <button onclick="resetDefaults()" style="margin-left: 20px; border-color: #444; color: #888; font-size: 0.7rem;">Reset Defaults</button>
         </div>
@@ -410,8 +410,8 @@
             document.getElementById('size-display').innerText = val + 'px';
         }
 
-        let currentDistance = 1.0;
-        let currentPxPerSec = 20.0;
+        let currentDistance = 1.5;
+        let currentPxPerSec = 10.0;
         const shimEl = document.getElementById('fixation-shim');
 
         function updateJitterDistance(val) {
@@ -455,11 +455,11 @@
             updateDotSize(50);
             document.getElementById('size-slider').value = 50;
             
-            updateJitterDistance(1.0);
-            document.getElementById('jitter-slider').value = 1.0;
+            updateJitterDistance(1.5);
+            document.getElementById('jitter-slider').value = 1.5;
             
-            updateJitterSpeed(20.0);
-            document.getElementById('speed-slider').value = 20.0;
+            updateJitterSpeed(10.0);
+            document.getElementById('speed-slider').value = 10.0;
             
             updateTimerOpacity(0.3);
             document.getElementById('opacity-slider').value = 0.3;
