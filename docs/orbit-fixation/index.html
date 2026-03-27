@@ -10,6 +10,7 @@
             --accent-teal: #94d2bd;
             --dot-size: 50px;
             --jitter-amount: 1px;
+            --jitter-speed: 0.5s;
             --timer-opacity: 0.3;
         }
         body {
@@ -127,7 +128,7 @@
             animation: 
                 pulse 4s infinite ease-in-out, 
                 colorShift 12s infinite linear,
-                jitter 0.5s infinite linear;
+                jitter var(--jitter-speed) infinite linear;
             
             box-shadow: 0 0 25px rgba(148, 210, 189, 0.6);
         }
@@ -334,9 +335,14 @@
                 <span class="val-display" id="size-display">50px</span>
             </div>
             <div class="tool-group">
-                <span class="val-label">Jitter Intensity:</span>
-                <input type="range" id="jitter-slider" min="0" max="10" step="0.5" value="1" oninput="updateJitter(this.value)">
+                <span class="val-label">Jitter Distance:</span>
+                <input type="range" id="jitter-slider" min="0" max="10" step="0.5" value="1" oninput="updateJitterDistance(this.value)">
                 <span class="val-display" id="jitter-display">1.0px</span>
+            </div>
+            <div class="tool-group">
+                <span class="val-label">Jitter Speed:</span>
+                <input type="range" id="speed-slider" min="0.1" max="2.0" step="0.1" value="0.5" oninput="updateJitterSpeed(this.value)">
+                <span class="val-display" id="speed-display">0.5s</span>
             </div>
         </div>
         <div class="toolbar-row">
@@ -410,9 +416,14 @@
             document.getElementById('size-display').innerText = val + 'px';
         }
 
-        function updateJitter(val) {
+        function updateJitterDistance(val) {
             document.documentElement.style.setProperty('--jitter-amount', val + 'px');
             document.getElementById('jitter-display').innerText = parseFloat(val).toFixed(1) + 'px';
+        }
+
+        function updateJitterSpeed(val) {
+            document.documentElement.style.setProperty('--jitter-speed', val + 's');
+            document.getElementById('speed-display').innerText = parseFloat(val).toFixed(1) + 's';
         }
 
         function updateTimerOpacity(val) {
