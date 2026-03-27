@@ -295,28 +295,51 @@ class MriHeader extends HTMLElement {
                 }
                 #mri-disclaimer-btn {
                     position: fixed;
-                    bottom: 8px;
-                    right: 12px;
-                    color: #94d2bd;
-                    font-size: 0.5rem;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    text-decoration: underline;
-                    z-index: 10002;
-                    opacity: 0.8;
-                    white-space: nowrap;
-                    display: inline-block;
-                    background: rgba(0, 18, 25, 0.85);
-                    padding: 4px 10px;
+                    bottom: 10px;
+                    right: 15px;
+                    display: flex;
+                    align-items: center;
+                    gap: 0;
+                    background: rgba(0, 18, 25, 0.9);
+                    padding: 6px;
                     border-radius: 20px;
-                    border: 1px solid rgba(148, 210, 189, 0.15);
-                    backdrop-filter: blur(5px);
+                    border: 1px solid rgba(251, 113, 133, 0.4);
+                    cursor: pointer;
+                    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    z-index: 10002;
+                    overflow: hidden;
+                    max-width: 34px;
+                    white-space: nowrap;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
                 }
                 #mri-disclaimer-btn:hover {
-                    opacity: 1;
-                    color: #fff;
-                    background: rgba(148, 210, 189, 0.2);
+                    max-width: 350px;
+                    gap: 12px;
+                    padding: 6px 18px;
                     border-color: rgba(148, 210, 189, 0.5);
+                    background: #001219;
+                }
+                .disclaimer-text {
+                    font-size: 0.65rem;
+                    color: #94d2bd;
+                    opacity: 0;
+                    transition: opacity 0.2s ease;
+                    text-decoration: underline;
+                    font-weight: 500;
+                }
+                #mri-disclaimer-btn:hover .disclaimer-text {
+                    opacity: 1;
+                    transition-delay: 0.1s;
+                }
+                .warning-icon {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+                #mri-disclaimer-btn:hover .disclaimer-text {
+                    color: #fff;
                 }
             </style>
             <div class="mri-logo-container">
@@ -356,7 +379,16 @@ class MriHeader extends HTMLElement {
                 <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
             </div>
 
-            <span id="mri-disclaimer-btn" title="Review Disclaimer">By using this site, you accept the disclaimer.</span>
+            <div id="mri-disclaimer-btn" title="Review Medical Disclaimer">
+                <div class="warning-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <span class="disclaimer-text">By using this site, you accept the medical disclaimer.</span>
+            </div>
 
             <div id="mri-notes-panel">
                 <span class="info-close" id="notes-panel-close">&times;</span>
@@ -488,7 +520,8 @@ class MriHeader extends HTMLElement {
         navPanel.addEventListener('click', (e) => e.stopPropagation());
 
         // Update the button if disclaimer not accepted
-        if (typeof window !== 'undefined' && localStorage.getItem('mri_disclaimer_accepted') !== 'true') {
+        const disclaimerBtn = this.shadowRoot.getElementById('mri-disclaimer-btn');
+        if (disclaimerBtn && typeof window !== 'undefined' && localStorage.getItem('mri_disclaimer_accepted') !== 'true') {
             disclaimerBtn.style.display = 'none';
         }
     }
