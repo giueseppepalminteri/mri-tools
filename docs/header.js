@@ -298,18 +298,15 @@ class MriHeader extends HTMLElement {
                     position: fixed;
                     bottom: 10px;
                     right: 15px;
-                    display: grid;
-                    place-items: center;
+                    display: block;
                     background: rgba(0, 18, 25, 0.9);
-                    padding: 6px;
                     border-radius: 20px;
                     border: 1px solid rgba(251, 113, 133, 0.4);
                     cursor: pointer;
                     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                     z-index: 10002;
                     overflow: hidden;
-                    min-width: 34px;
-                    max-width: 34px;
+                    width: 34px;
                     height: 34px;
                     box-sizing: border-box;
                     white-space: nowrap;
@@ -317,13 +314,15 @@ class MriHeader extends HTMLElement {
                     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
                 }
                 #mri-disclaimer-btn:hover {
-                    max-width: 350px;
-                    padding: 6px 18px;
+                    width: 320px;
                     border-color: rgba(148, 210, 189, 0.5);
                     background: #001219;
                 }
                 .warning-icon, .disclaimer-text {
-                    grid-area: 1 / 1;
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
                     transition: opacity 0.3s ease;
                 }
                 .disclaimer-text {
