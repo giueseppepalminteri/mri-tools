@@ -52,7 +52,7 @@
       }
 
       33% {
-        background-color: #ff0000;
+        background-color: #ff6363;
       }
 
       66% {
@@ -369,7 +369,7 @@
     .btn-stop {
       color: var(--danger);
     }
-    </style>
+  </style>
   <script src="../header.js"></script>
 </head>
 
@@ -394,7 +394,8 @@
       <hr style="border:0; border-top:1px solid #333; margin: 10px 0;">
       <div style="font-size: 0.6rem; color: #666; text-align: center; line-height: 1.4;">
         Tools created by <br>
-        <a href="https://www.linkedin.com/in/giuseppepalminteri" target="_blank" style="color:#94d2bd; text-decoration: none; font-weight: bold;">
+        <a href="https://www.linkedin.com/in/giuseppepalminteri" target="_blank"
+          style="color:#94d2bd; text-decoration: none; font-weight: bold;">
           Giuseppe Palminteri
         </a>
       </div>
@@ -428,7 +429,8 @@
       <div class="tool-group"><span class="val-label">Reps</span><input id="reps" type="number" value="1" /></div>
       <div class="tool-group"><span class="val-label">Inhale</span><input id="inhale" type="number" value="2" /></div>
       <div class="tool-group"><span class="val-label">Hold</span><input id="hold" type="number" value="20" /></div>
-      <div class="tool-group"><span class="val-label">Recovery</span><input id="recovery" type="number" value="18" /></div>
+      <div class="tool-group"><span class="val-label">Recovery</span><input id="recovery" type="number" value="18" />
+      </div>
       <div class="tool-group">
         <span class="val-label">Alert</span>
         <select id="alertSpeed">
@@ -538,7 +540,7 @@
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.isContentEditable) {
           return;
         }
-        
+
         if (e.code === 'Space') {
           e.preventDefault(); // Prevent page scrolling
           if (!startBtn.disabled) {
