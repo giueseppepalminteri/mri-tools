@@ -300,6 +300,7 @@ class MriHeader extends HTMLElement {
                     right: 15px;
                     display: flex;
                     align-items: center;
+                    justify-content: center;
                     gap: 0;
                     background: rgba(0, 18, 25, 0.9);
                     padding: 6px;
@@ -316,7 +317,7 @@ class MriHeader extends HTMLElement {
                 }
                 #mri-disclaimer-btn:hover {
                     max-width: 350px;
-                    gap: 12px;
+                    gap: 0;
                     padding: 6px 18px;
                     border-color: rgba(148, 210, 189, 0.5);
                     background: #001219;
@@ -325,22 +326,31 @@ class MriHeader extends HTMLElement {
                     font-size: 0.65rem;
                     color: #94d2bd;
                     opacity: 0;
-                    transition: opacity 0.2s ease;
+                    max-width: 0;
+                    transition: all 0.3s ease;
                     text-decoration: underline;
                     font-weight: 500;
+                    overflow: hidden;
                 }
                 #mri-disclaimer-btn:hover .disclaimer-text {
                     opacity: 1;
-                    transition-delay: 0.1s;
+                    max-width: 300px;
+                    color: #fff;
                 }
                 .warning-icon {
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     flex-shrink: 0;
+                    max-width: 20px;
+                    opacity: 1;
+                    transition: all 0.3s ease;
+                    overflow: hidden;
                 }
-                #mri-disclaimer-btn:hover .disclaimer-text {
-                    color: #fff;
+                #mri-disclaimer-btn:hover .warning-icon {
+                    max-width: 0;
+                    opacity: 0;
+                    margin: 0;
                 }
             </style>
             <div class="mri-logo-container">
