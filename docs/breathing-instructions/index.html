@@ -30,14 +30,19 @@
       box-sizing: border-box;
     }
 
-    html,
     body {
-      height: 100%;
-      margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: var(--bg);
+      background-color: var(--bg);
       color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding-top: 60px;
+      box-sizing: border-box;
     }
 
     /* Flash Alert */
@@ -133,7 +138,7 @@
       transform: scale(var(--scale-factor));
       transform-origin: top center;
       width: 100%;
-      height: 100%;
+      flex: 1;
       display: flex;
       flex-direction: column;
     }
@@ -192,9 +197,9 @@
     .app-container {
       display: flex;
       flex-direction: column;
-      height: 100%;
+      flex: 1;
+      width: 100%;
       padding: 20px 30px;
-      padding-top: 60px;
       position: relative;
       z-index: 1;
     }
@@ -277,76 +282,92 @@
       transition: width 0.1s linear;
     }
 
-    /* Scalable Bottom Controls */
-    .bottom-shelf {
-      background: var(--panel-bg);
-      padding: 15px;
-      border-radius: 20px;
-      border: 2px solid #475569;
-    }
-
-    .controls-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: flex-end;
-      justify-content: center;
-      margin-bottom: 5px;
-    }
-
-    .input-group {
+    /* Toolbar Elements */
+    #bottom-toolbar {
+      background: #050505;
+      border-top: 1px solid #222;
+      z-index: 2001;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      padding: 10px;
+      gap: 10px;
     }
 
-    .input-group label {
-      font-size: clamp(9px, 1.2vmin, 12px);
-      color: var(--muted);
+    .toolbar-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .val-label {
+      font-size: 0.7rem;
+      color: #777;
       text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: bold;
     }
 
-    input,
-    select {
-      background: #000;
-      border: 1px solid #475569;
-      color: #fff;
-      padding: 6px;
-      border-radius: 6px;
-      width: clamp(60px, 8vw, 80px);
-      font-size: clamp(12px, 1.5vmin, 16px);
+    input[type="number"] {
+      background: #111;
+      color: var(--accent);
+      border: 1px solid #444;
+      padding: 5px;
+      border-radius: 4px;
+      font-weight: bold;
+      text-align: center;
+      width: 55px;
+      font-size: 14px;
     }
 
     select {
-      width: clamp(80px, 10vw, 100px);
+      background: #111;
+      color: var(--accent);
+      border: 1px solid #444;
+      padding: 5px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 14px;
     }
 
     button {
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: 0;
-      font-weight: 800;
+      background: #222;
+      color: white;
+      border: 1px solid #444;
+      padding: 6px 12px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: clamp(11px, 1.5vmin, 14px);
+      font-weight: bold;
+      font-size: 0.8rem;
     }
 
-    .btn-attention {
-      background: var(--warning);
-      color: #000;
-    }
-
-    .btn-start {
-      background: var(--accent);
-      color: #000;
-    }
-
-    .btn-stop {
-      background: var(--danger);
-      color: #fff;
+    button:hover {
+      background: #333;
+      border-color: #666;
     }
 
     button:disabled {
-      opacity: 0.1;
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-attention {
+      color: var(--warning);
+    }
+
+    .btn-start {
+      color: var(--accent);
+    }
+
+    .btn-stop {
+      color: var(--danger);
     }
     </style>
   <script src="../header.js"></script>
@@ -399,36 +420,36 @@
 
       <div class="progress"><i id="progressBar"></i></div>
 
-      <footer class="bottom-shelf">
-        <form class="controls-row" onsubmit="return false">
-          <div class="input-group"><label>Reps</label><input id="reps" type="number" value="1" /></div>
-          <div class="input-group"><label>Inhale</label><input id="inhale" type="number" value="2" /></div>
-          <div class="input-group"><label>Hold</label><input id="hold" type="number" value="20" /></div>
-          <div class="input-group"><label>Recovery</label><input id="recovery" type="number" value="18" /></div>
-          <div class="input-group">
-            <label>Alert</label>
-            <select id="alertSpeed">
-              <option value="2">Slow</option>
-              <option value="1">Medium</option>
-              <option value="0.4">Fast</option>
-            </select>
-          </div>
-
-          <div class="actions" style="display:flex; gap: 8px; margin-left: 10px;">
-            <button id="attnBtn" class="btn-attention">ATTENTION</button>
-            <div style="text-align: center;">
-              <button id="startBtn" class="btn-start">START</button>
-              <div style="font-size: 0.6rem; color: var(--muted); margin-top: 2px;">SPACE</div>
-            </div>
-            <div style="text-align: center;">
-              <button id="stopBtn" class="btn-stop" disabled>STOP</button>
-              <div style="font-size: 0.6rem; color: var(--muted); margin-top: 2px;">ESC</div>
-            </div>
-          </div>
-        </form>
-      </footer>
-
     </div>
+  </div>
+
+  <div id="bottom-toolbar">
+    <form class="toolbar-row" onsubmit="return false">
+      <div class="tool-group"><span class="val-label">Reps</span><input id="reps" type="number" value="1" /></div>
+      <div class="tool-group"><span class="val-label">Inhale</span><input id="inhale" type="number" value="2" /></div>
+      <div class="tool-group"><span class="val-label">Hold</span><input id="hold" type="number" value="20" /></div>
+      <div class="tool-group"><span class="val-label">Recovery</span><input id="recovery" type="number" value="18" /></div>
+      <div class="tool-group">
+        <span class="val-label">Alert</span>
+        <select id="alertSpeed">
+          <option value="2">Slow</option>
+          <option value="1">Medium</option>
+          <option value="0.4">Fast</option>
+        </select>
+      </div>
+
+      <div class="tool-group" style="margin-left: 20px; border-left: 1px solid #333; padding-left: 20px;">
+        <button id="attnBtn" class="btn-attention">ATTENTION</button>
+        <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
+          <button id="startBtn" class="btn-start">START</button>
+          <div style="font-size: 0.6rem; color: #777; margin-top: 2px; font-weight: bold;">SPACE</div>
+        </div>
+        <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
+          <button id="stopBtn" class="btn-stop" disabled>STOP</button>
+          <div style="font-size: 0.6rem; color: #777; margin-top: 2px; font-weight: bold;">ESC</div>
+        </div>
+      </div>
+    </form>
   </div>
 
   <script>
