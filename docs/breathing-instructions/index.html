@@ -487,7 +487,7 @@
         let remaining = duration;
         setTint(tint);
         while (remaining > 0 && !state.stopRequested) {
-          stepText.textContent = label;
+          stepText.innerHTML = label;
           countdown.textContent = `${Math.ceil(remaining)}s`;
           progressBar.style.width = `${(1 - remaining / duration) * 100}%`;
           remaining -= 0.1;
@@ -506,7 +506,7 @@
         startBtn.disabled = true; stopBtn.disabled = false;
         body.classList.remove('attending');
 
-        const inhaleText = pattern === 'in' ? "Inhale" : "Inhale and <br /> Breathe Out";
+        const inhaleText = pattern === 'in' ? "Inhale" : "Inhale and<br>Breathe Out";
         const holdText = pattern === 'in' ? "Hold Breath" : "Hold Breath Out";
 
         for (let i = 1; i <= reps; i++) {
@@ -544,11 +544,11 @@
       document.getElementById('patternType').addEventListener('change', (e) => {
         const val = e.target.value;
         if (val === 'in') {
-          document.getElementById('inhaleLabel').textContent = 'Inhale';
+          document.getElementById('inhaleLabel').innerHTML = 'Inhale';
           document.getElementById('hold').value = 20; // reset to original default if switched back
           document.getElementById('inhale').value = 2;
         } else {
-          document.getElementById('inhaleLabel').textContent = 'Inhale & Breathe Out';
+          document.getElementById('inhaleLabel').innerHTML = 'Inhale and<br>Breathe Out';
           document.getElementById('hold').value = 5; // User requested default 5s
           document.getElementById('inhale').value = 5;
         }
