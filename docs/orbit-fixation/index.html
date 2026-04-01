@@ -206,6 +206,9 @@
             overflow: hidden;
             display: none;
             pointer-events: auto;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
         }
 
         #instruction-input::placeholder {
@@ -349,7 +352,7 @@
                                 <div id="progress-bar-fill"></div>
                             </div>
                         </div>
-                        <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="2"></textarea>
+                        <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="1"></textarea>
                     </div>
                     
                     <div id="fixation-shim" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
@@ -378,7 +381,7 @@
                 <span class="val-label">Instr. Size:</span>
                 <input type="range" id="instr-size-slider" min="50" max="150" value="100" style="width: 80px;" oninput="changeInstrSize(this.value)">
             </div>
-            <div class="tool-group" style="margin-left: 10px;">
+            <div class="tool-group" style="margin-left: 10px; border-left: 1px solid #333; padding-left: 20px;">
                 <span class="val-label">Dot Size:</span>
                 <input type="range" id="size-slider" min="10" max="150" value="50" oninput="updateDotSize(this.value)">
                 <span class="val-display" id="size-display">50px</span>

@@ -92,7 +92,9 @@
       resize: none;
       overflow: hidden;
       display: none;
-      margin-bottom: 5px;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
     }
 
     #instruction-input::placeholder {
@@ -441,7 +443,7 @@
       </header>
 
       <main id="mirror-layer" class="display">
-        <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="2"></textarea>
+        <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="1"></textarea>
         <div id="phaseSquare" class="phase-square">
           <div id="stepText" class="step">Ready</div>
           <div id="countdown" class="countdown">00s</div>
@@ -466,7 +468,7 @@
           <span class="val-label">Instr. Size:</span>
           <input type="range" id="instr-size-slider" min="50" max="150" value="100" style="width: 80px;" oninput="changeInstrSize(this.value)">
       </div>
-      <div class="tool-group" style="margin-left: 10px;">
+      <div class="tool-group" style="margin-left: 10px; border-left: 1px solid #333; padding-left: 20px;">
         <span class="val-label">Pattern</span>
         <select id="patternType">
           <option value="in">Breathe IN Hold</option>

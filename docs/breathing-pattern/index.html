@@ -213,9 +213,11 @@
             text-align: center;
             text-transform: uppercase;
             outline: none;
-            resize: none;
             overflow: hidden;
             display: none;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
         }
 
         #instruction-input::placeholder {
@@ -324,7 +326,7 @@
             <div id="patient-content-wrapper">
                 <div id="pulse-circle"></div>
                 <div id="breath-text-display">BREATHE IN</div>
-                <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="2"></textarea>
+                <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="1"></textarea>
             </div>
         </div>
     </div>
@@ -342,7 +344,7 @@
                 <span class="val-label">Instr. Size:</span>
                 <input type="range" id="instr-size-slider" min="50" max="150" value="100" style="width: 80px;" oninput="changeInstrSize(this.value)">
             </div>
-            <div class="tool-group" style="margin-left: 10px;">
+            <div class="tool-group" style="margin-left: 10px; border-left: 1px solid #333; padding-left: 20px;">
                 <span class="val-label">Timer:</span>
                 <button onclick="startTimer()">Start</button>
                 <button style="color:#ff5f5f" onclick="stopAllTimers()">Stop</button>

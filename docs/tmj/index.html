@@ -52,7 +52,9 @@
             resize: none;
             overflow: hidden;
             display: none;
-            margin-bottom: 5px;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
         }
 
         #instruction-input::placeholder {
@@ -245,7 +247,7 @@
             font-size: clamp(1.2rem, 6vh, 2.5rem);
             font-weight: 800;
             color: #ffff00;
-            margin: 15px 0;
+            margin: 5px 0;
             flex-shrink: 0;
         }
 
@@ -333,7 +335,7 @@
                 </div>
 
                 <div id="presentation-screen" style="display:none;" onclick="handleAdvance()">
-                    <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="2"></textarea>
+                    <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="1"></textarea>
                     <div id="instruction-text">Mouth Completely Closed</div>
                     <div id="image-display">
                         <img id="main-img" src="phase1.jpg">
