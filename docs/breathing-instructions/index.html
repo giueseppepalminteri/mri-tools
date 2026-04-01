@@ -92,7 +92,7 @@
       resize: none;
       overflow: hidden;
       display: none;
-      margin-bottom: 20px;
+      margin-bottom: 5px;
     }
 
     #instruction-input::placeholder {
@@ -418,15 +418,7 @@
         <input type="checkbox" id="m-a-check" onchange="toggleMirror('all')">
         <label for="m-a-check">Mirror Everything</label>
       </div>
-      <hr style="border:0; border-top:1px solid #333">
-      <div class="control-row">
-          <input type="checkbox" id="instr-check" onchange="toggleInstr()">
-          <label for="instr-check">Text instructions</label>
-      </div>
-      <div class="control-row" style="margin-top: 5px;">
-          <label>Text Size: </label>
-          <input type="range" id="instr-size-slider" min="50" max="150" value="100" style="width: 80px;" oninput="changeInstrSize(this.value)">
-      </div>
+
       <hr style="border:0; border-top:1px solid #333; margin: 10px 0;">
       <div style="font-size: 0.6rem; color: #666; text-align: center; line-height: 1.4;">
         Tools created by <br>
@@ -464,6 +456,17 @@
   <div id="bottom-toolbar">
     <form class="toolbar-row" onsubmit="return false">
       <div class="tool-group">
+        <button onclick="document.getElementById('instruction-input').value = ''">Clear Text</button>
+      </div>
+      <div class="tool-group">
+          <input type="checkbox" id="instr-check" onchange="toggleInstr()">
+          <label for="instr-check" class="val-label" style="text-transform: none;">Text Instructions</label>
+      </div>
+      <div class="tool-group">
+          <span class="val-label">Instr. Size:</span>
+          <input type="range" id="instr-size-slider" min="50" max="150" value="100" style="width: 80px;" oninput="changeInstrSize(this.value)">
+      </div>
+      <div class="tool-group" style="margin-left: 10px;">
         <span class="val-label">Pattern</span>
         <select id="patternType">
           <option value="in">Breathe IN Hold</option>
