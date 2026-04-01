@@ -518,7 +518,15 @@
       const startBtn = document.getElementById('startBtn');
       const stopBtn = document.getElementById('stopBtn');
 
-      let state = { running: false, stopRequested: false };
+      let state = { running: false, stopRequested: false, phase: 'idle' };
+
+      function updateAttentionButton() {
+        if (!state.running || state.phase === 'recovery' || state.phase === 'idle') {
+          attnBtn.disabled = false;
+        } else {
+          attnBtn.disabled = true;
+        }
+      }
 
       function setTint(color) {
         const colors = { yellow: 'rgba(250, 204, 21, 0.15)', red: 'rgba(251, 113, 133, 0.2)', green: 'rgba(74, 222, 128, 0.2)', none: 'rgba(0,0,0,0)' };
@@ -538,7 +546,8 @@
       }
 
       startBtn.onclick = async () => {
-        state.running = true; state.stopRequested = false;
+        state.running = true; state.stopRequested = false; state.phase = 'idle';
+        updateAttentionButton();
         const reps = +document.getElementById('reps').value;
         const inhale = +document.getElementById('inhale').value;
         const hold = +document.getElementById('hold').value;
@@ -554,12 +563,28 @@
         for (let i = 1; i <= reps; i++) {
           if (state.stopRequested) break;
           cycleInfo.textContent = `Cycle ${i}/${reps}`;
+          
+          state.phase = 'inhale';
+          updateAttentionButton();
           await runTimer(inhale, inhaleText, 'yellow');
+          
+          if (state.stopRequested) break;
+          
+          state.phase = 'hold';
+          updateAttentionButton();
           await runTimer(hold, holdText, 'red');
-          if (i < reps) await runTimer(recovery, "Prepare for next breath hold", 'yellow');
+          
+          if (i < reps) {
+            if (state.stopRequested) break;
+            state.phase = 'recovery';
+            updateAttentionButton();
+            await runTimer(recovery, "Prepare for next breath hold", 'yellow');
+          }
         }
 
         state.running = false;
+        state.phase = 'idle';
+        updateAttentionButton();
         startBtn.disabled = false; stopBtn.disabled = true;
         stepText.textContent = "Breathe normally";
         setTint('green');
@@ -569,6 +594,8 @@
 
       stopBtn.onclick = () => {
         state.stopRequested = true;
+        state.phase = 'idle';
+        updateAttentionButton();
         body.classList.remove('attending');
         if (!state.running) stopBtn.disabled = true;
       };

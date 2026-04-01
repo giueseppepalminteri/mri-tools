@@ -189,7 +189,8 @@
             transform: scale(var(--scale-factor));
             transform-origin: top center;
             width: 100%;
-            height: 100%;
+            flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: column;
         }
@@ -197,7 +198,8 @@
         /* MIRROR WRAPPER: Handles Patient Flipping */
         #mirror-layer {
             width: 100%;
-            height: 100%;
+            flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: column;
             transition: transform 0.2s ease;
@@ -206,7 +208,8 @@
         #preview-screen,
         #presentation-screen {
             width: 100%;
-            height: 100%;
+            flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -223,7 +226,9 @@
             justify-content: center;
             align-items: center;
             overflow-y: auto;
-            max-height: 70vh;
+            flex: 1;
+            min-height: 0;
+            max-height: 100%;
             margin: 10px 0;
         }
 
