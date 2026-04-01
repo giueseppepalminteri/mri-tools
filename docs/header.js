@@ -565,7 +565,7 @@ customElements.define('mri-header', MriHeader);
                     <h3 style="color: #00ff88; margin-bottom: 5px; font-size: 1.1rem;">1. Purpose of This Website</h3>
                     <p style="margin-top: 5px; line-height: 1.6; font-size: 0.95rem;">This website and its associated tools were created as an independent project to improve the MRI patient experience. By projecting visual cues and instructions, it aims to assist patients—particularly those with hearing impairments—and provide general guidance to reduce anxiety and improve cooperation during scans.</p>
                     
-                    <h3 style="color: #00ff88; margin-bottom: 5px; margin-top: 20px; font-size: 1.1rem;">2. Development and Accuracy</h3>
+                    <h3 style="color: #00ff88; margin-bottom: 5px; margin-top: 20px; font-size: 1.1rem;">2. Accuracy</h3>
                     <p style="margin-top: 5px; line-height: 1.6; font-size: 0.95rem;">While every effort has been made to provide helpful and functional tools, the software is not a certified medical device, has not been subjected to regulatory clinical trials, and may contain bugs, errors, or inaccuracies.</p>
                     
                     <h3 style="color: #00ff88; margin-bottom: 5px; margin-top: 20px; font-size: 1.1rem;">3. User Responsibility and Testing</h3>
