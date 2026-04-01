@@ -545,9 +545,11 @@
         if (val === 'in') {
           document.getElementById('inhaleLabel').textContent = 'Inhale';
           document.getElementById('hold').value = 20; // reset to original default if switched back
+          document.getElementById('inhale').value = 2;
         } else {
           document.getElementById('inhaleLabel').textContent = 'Inhale & Breathe Out';
           document.getElementById('hold').value = 5; // User requested default 5s
+          document.getElementById('inhale').value = 5;
         }
       });
 
