@@ -37,6 +37,33 @@
             transform: scaleX(-1);
         }
 
+        /* Instruction Area */
+        #instruction-input {
+            z-index: 1005;
+            width: 90%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: calc(clamp(2rem, 8vh, 5.5rem) * var(--instr-scale, 1));
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+            outline: none;
+            resize: none;
+            overflow: hidden;
+            display: none;
+            margin-top: 10px;
+        }
+
+        #instruction-input::placeholder {
+            color: var(--accent-teal);
+            transition: color 0.5s ease;
+        }
+
+        #instruction-input.faint::placeholder {
+            color: rgba(255, 255, 255, 0.05);
+        }
+
         /* --- TOOLBOX STYLES --- */
         #settings-panel {
             position: fixed;
@@ -247,6 +274,15 @@
                 <input type="checkbox" id="m-a-check" onchange="toggleMirror('all')">
                 <label for="m-a-check">Mirror Everything</label>
             </div>
+            <hr style="border:0; border-top:1px solid #333">
+            <div class="control-row">
+                <input type="checkbox" id="instr-check" onchange="toggleInstr()">
+                <label for="instr-check">Text instructions</label>
+            </div>
+            <div class="control-row" style="margin-top: 5px;">
+                <label>Text Size: </label>
+                <input type="range" id="instr-size-slider" min="50" max="150" value="100" style="width: 80px;" oninput="changeInstrSize(this.value)">
+            </div>
             <hr style="border:0; border-top:1px solid #333; margin: 10px 0;">
             <div style="font-size: 0.6rem; color: #666; text-align: center; line-height: 1.4;">
                 Tools created by <br>
@@ -271,6 +307,7 @@
                 </div>
 
                 <div id="presentation-screen" style="display:none;" onclick="handleAdvance()">
+                    <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="2"></textarea>
                     <div id="instruction-text">Mouth Completely Closed</div>
                     <div id="image-display">
                         <img id="main-img" src="phase1.jpg">
@@ -403,6 +440,29 @@
             if (e.code === 'ArrowLeft') handleBack();
             if (e.code === 'ArrowRight') handleAdvance();
         });
+
+        function toggleInstr() {
+            const el = document.getElementById('instruction-input');
+            if (el) el.style.display = document.getElementById('instr-check').checked ? 'block' : 'none';
+        }
+        function changeInstrSize(val) {
+            document.documentElement.style.setProperty('--instr-scale', val / 100);
+            const inputArea = document.getElementById('instruction-input');
+            if (inputArea) {
+                inputArea.style.height = 'auto'; 
+                inputArea.style.height = (inputArea.scrollHeight) + "px";
+            }
+        }
+        
+        const instrArea = document.getElementById('instruction-input');
+        if (instrArea) {
+            setTimeout(() => { instrArea.classList.add('faint'); }, 3000);
+            instrArea.addEventListener("input", function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; });
+            instrArea.addEventListener('click', e => e.stopPropagation());
+            instrArea.addEventListener('keydown', e => {
+                if(e.code === 'Space' || e.code === 'ArrowLeft' || e.code === 'ArrowRight') e.stopPropagation();
+            });
+        }
     </script>
 </body>
 

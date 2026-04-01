@@ -208,13 +208,14 @@
             background: transparent;
             border: none;
             color: #fff;
-            font-size: clamp(2rem, 8vh, 5.5rem);
+            font-size: calc(clamp(2rem, 8vh, 5.5rem) * var(--instr-scale, 1));
             font-weight: 800;
             text-align: center;
             text-transform: uppercase;
             outline: none;
             resize: none;
             overflow: hidden;
+            display: none;
         }
 
         #instruction-input::placeholder {
@@ -299,6 +300,15 @@
                     for="m-p-check">Mirror Patient Only</label></div>
             <div class="control-row"><input type="checkbox" id="m-a-check" onchange="toggleMirror('all')"><label
                     for="m-a-check">Mirror Everything</label></div>
+            <hr style="border:0; border-top:1px solid #333">
+            <div class="control-row">
+                <input type="checkbox" id="instr-check" onchange="toggleInstr()">
+                <label for="instr-check">Text instructions</label>
+            </div>
+            <div class="control-row" style="margin-top: 5px;">
+                <label>Text Size: </label>
+                <input type="range" id="instr-size-slider" min="50" max="150" value="100" style="width: 80px;" oninput="changeInstrSize(this.value)">
+            </div>
             <hr style="border:0; border-top:1px solid #333; margin: 10px 0;">
             <div style="font-size: 0.6rem; color: #666; text-align: center; line-height: 1.4;">
                 Tools created by <br>
@@ -383,6 +393,20 @@
         let textTimer;
 
         function toggleSettingsPanel() { document.getElementById('settings-panel').classList.toggle('collapsed'); }
+        
+        function toggleInstr() {
+            const el = document.getElementById('instruction-input');
+            if (el) el.style.display = document.getElementById('instr-check').checked ? 'block' : 'none';
+        }
+        function changeInstrSize(val) {
+            document.documentElement.style.setProperty('--instr-scale', val / 100);
+            const inputArea = document.getElementById('instruction-input');
+            if (inputArea) {
+                inputArea.style.height = 'auto'; 
+                inputArea.style.height = (inputArea.scrollHeight) + "px";
+            }
+        }
+
         setTimeout(() => { inputArea.classList.add('faint'); }, 3000);
         inputArea.addEventListener("input", function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; });
 
