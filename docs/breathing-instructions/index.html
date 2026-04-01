@@ -426,8 +426,15 @@
 
   <div id="bottom-toolbar">
     <form class="toolbar-row" onsubmit="return false">
+      <div class="tool-group">
+        <span class="val-label">Pattern</span>
+        <select id="patternType">
+          <option value="in">Breathe IN Hold</option>
+          <option value="out">Breathe OUT Hold</option>
+        </select>
+      </div>
       <div class="tool-group"><span class="val-label">Reps</span><input id="reps" type="number" value="1" /></div>
-      <div class="tool-group"><span class="val-label">Inhale</span><input id="inhale" type="number" value="2" /></div>
+      <div class="tool-group"><span class="val-label" id="inhaleLabel">Inhale</span><input id="inhale" type="number" value="2" /></div>
       <div class="tool-group"><span class="val-label">Hold</span><input id="hold" type="number" value="20" /></div>
       <div class="tool-group"><span class="val-label">Recovery</span><input id="recovery" type="number" value="18" />
       </div>
@@ -493,15 +500,19 @@
         const inhale = +document.getElementById('inhale').value;
         const hold = +document.getElementById('hold').value;
         const recovery = +document.getElementById('recovery').value;
+        const pattern = document.getElementById('patternType').value;
 
         startBtn.disabled = true; stopBtn.disabled = false;
         body.classList.remove('attending');
 
+        const inhaleText = pattern === 'in' ? "Inhale" : "Inhale and Breathe Out";
+        const holdText = pattern === 'in' ? "Hold Breath" : "Hold Breath Out";
+
         for (let i = 1; i <= reps; i++) {
           if (state.stopRequested) break;
           cycleInfo.textContent = `Cycle ${i}/${reps}`;
-          await runTimer(inhale, "Inhale", 'yellow');
-          await runTimer(hold, "Hold Breath", 'red');
+          await runTimer(inhale, inhaleText, 'yellow');
+          await runTimer(hold, holdText, 'red');
           if (i < reps) await runTimer(recovery, "Prepare for next breath hold", 'yellow');
         }
 
@@ -529,6 +540,16 @@
         }
       };
 
+      document.getElementById('patternType').addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'in') {
+          document.getElementById('inhaleLabel').textContent = 'Inhale';
+          document.getElementById('hold').value = 20; // reset to original default if switched back
+        } else {
+          document.getElementById('inhaleLabel').textContent = 'Inhale & Breathe Out';
+          document.getElementById('hold').value = 5; // User requested default 5s
+        }
+      });
 
       document.getElementById('alertSpeed').onchange = (e) => {
         document.documentElement.style.setProperty('--flash-duration', e.target.value + 's');
