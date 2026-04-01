@@ -363,7 +363,7 @@ class MriHeader extends HTMLElement {
                 <a href="${root}orbit-fixation/index.html" class="nav-item ${pageTitle === 'MRI Orbit Fixation' ? 'active' : ''}">👁️ Orbit Fixation</a>
                 <a href="${root}tmj/index.html" class="nav-item ${pageTitle === 'TMJ Study' ? 'active' : ''}">🦷 TMJ Study</a>
                 <h3 style="margin-top: 20px;">Resources</h3>
-                <a href="https://github.com/giueseppepalminteri/mri-tools/archive/refs/heads/main.zip" class="nav-item" title="Download for offline use" target="_blank">💾 Download Offline Version</a>
+                <a href="https://download-directory.github.io/?url=https://github.com/giueseppepalminteri/mri-tools/tree/main/docs" class="nav-item" title="Download for offline use" target="_blank">💾 Download Offline Version</a>
             </div>
             <div id="mri-page-title">
                 <span id="mri-title-text"></span>
