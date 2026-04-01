@@ -434,7 +434,8 @@
         </select>
       </div>
       <div class="tool-group"><span class="val-label">Reps</span><input id="reps" type="number" value="1" /></div>
-      <div class="tool-group"><span class="val-label" id="inhaleLabel">Inhale</span><input id="inhale" type="number" value="2" /></div>
+      <div class="tool-group"><span class="val-label" id="inhaleLabel">Inhale</span><input id="inhale" type="number"
+          value="2" /></div>
       <div class="tool-group"><span class="val-label">Hold</span><input id="hold" type="number" value="20" /></div>
       <div class="tool-group"><span class="val-label">Recovery</span><input id="recovery" type="number" value="18" />
       </div>
@@ -505,7 +506,7 @@
         startBtn.disabled = true; stopBtn.disabled = false;
         body.classList.remove('attending');
 
-        const inhaleText = pattern === 'in' ? "Inhale" : "Inhale and Breathe Out";
+        const inhaleText = pattern === 'in' ? "Inhale" : "Inhale and <br /> Breathe Out";
         const holdText = pattern === 'in' ? "Hold Breath" : "Hold Breath Out";
 
         for (let i = 1; i <= reps; i++) {
