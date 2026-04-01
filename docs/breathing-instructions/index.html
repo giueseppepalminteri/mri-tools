@@ -457,14 +457,14 @@
 
   <div id="bottom-toolbar">
     <form class="toolbar-row" onsubmit="return false">
-      <div class="tool-group">
+      <div class="tool-group" id="instr-clear-grp" style="display: none;">
         <button onclick="document.getElementById('instruction-input').value = ''">Clear Text</button>
       </div>
       <div class="tool-group">
           <input type="checkbox" id="instr-check" onchange="toggleInstr()">
           <label for="instr-check" class="val-label" style="text-transform: none;">Text Instructions</label>
       </div>
-      <div class="tool-group">
+      <div class="tool-group" id="instr-size-grp" style="display: none;">
           <span class="val-label">Instr. Size:</span>
           <input type="range" id="instr-size-slider" min="50" max="150" value="100" style="width: 80px;" oninput="changeInstrSize(this.value)">
       </div>
@@ -665,8 +665,13 @@
     }
 
     function toggleInstr() {
+        const isChecked = document.getElementById('instr-check').checked;
         const el = document.getElementById('instruction-input');
-        if (el) el.style.display = document.getElementById('instr-check').checked ? 'block' : 'none';
+        if (el) el.style.display = isChecked ? 'block' : 'none';
+        const clearGrp = document.getElementById('instr-clear-grp');
+        if (clearGrp) clearGrp.style.display = isChecked ? 'flex' : 'none';
+        const sizeGrp = document.getElementById('instr-size-grp');
+        if (sizeGrp) sizeGrp.style.display = isChecked ? 'flex' : 'none';
     }
     function changeInstrSize(val) {
         document.documentElement.style.setProperty('--instr-scale', val / 100);
