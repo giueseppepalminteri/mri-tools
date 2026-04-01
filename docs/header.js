@@ -7,7 +7,7 @@ class MriHeader extends HTMLElement {
     connectedCallback() {
         const root = this.getAttribute('root') || '../';
         const pageTitle = document.title;
-        
+
         this.shadowRoot.innerHTML = `
             <style>
                 :host {
@@ -451,7 +451,7 @@ class MriHeader extends HTMLElement {
         });
 
         infoClose.addEventListener('click', () => infoPanel.classList.remove('visible'));
-        
+
         // Close on outside click
         document.addEventListener('click', () => infoPanel.classList.remove('visible'));
         infoPanel.addEventListener('click', (e) => e.stopPropagation());
@@ -482,7 +482,7 @@ class MriHeader extends HTMLElement {
 
         const toolName = pageTitle === 'MRI Tools Index' ? 'General' : pageTitle;
         labelToolNotes.textContent = toolName + " Notes";
-        
+
         const storageKeyGlobal = 'mri_global_notes';
         const storageKeySpecific = 'mri_notes_' + pageTitle.replace(/\s+/g, '_').toLowerCase();
 
@@ -506,7 +506,7 @@ class MriHeader extends HTMLElement {
         notesSaveBtn.addEventListener('click', saveNotes);
         notesCancelBtn.addEventListener('click', () => notesPanel.classList.remove('visible'));
         notesPanelClose.addEventListener('click', () => notesPanel.classList.remove('visible'));
-        
+
         notesPanel.addEventListener('click', (e) => e.stopPropagation());
 
         // --- Navigation Logic ---
@@ -520,7 +520,7 @@ class MriHeader extends HTMLElement {
         });
 
         navPanelClose.addEventListener('click', () => navPanel.classList.remove('visible'));
-        
+
         // Close nav on outside click
         document.addEventListener('click', () => navPanel.classList.remove('visible'));
         navPanel.addEventListener('click', (e) => e.stopPropagation());
@@ -536,11 +536,11 @@ class MriHeader extends HTMLElement {
 customElements.define('mri-header', MriHeader);
 
 // --- Global Disclaimer Modal ---
-(function() {
+(function () {
     // Only run this logic if we're actually in a browser environment
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-    window.showMriDisclaimer = function(force = false) {
+    window.showMriDisclaimer = function (force = false) {
         if (!force && localStorage.getItem('mri_disclaimer_accepted') === 'true') {
             // Un-hide the header button if we are passively returning
             const headers = document.querySelectorAll('mri-header');
@@ -566,7 +566,7 @@ customElements.define('mri-header', MriHeader);
                     <p style="margin-top: 5px; line-height: 1.6; font-size: 0.95rem;">This website and its associated tools were created as an independent project to improve the MRI patient experience. By projecting visual cues and instructions, it aims to assist patients—particularly those with hearing impairments—and provide general guidance to reduce anxiety and improve cooperation during scans.</p>
                     
                     <h3 style="color: #00ff88; margin-bottom: 5px; margin-top: 20px; font-size: 1.1rem;">2. Development and Accuracy</h3>
-                    <p style="margin-top: 5px; line-height: 1.6; font-size: 0.95rem;">Please note that this website was developed with the assistance of Artificial Intelligence (AI). While every effort has been made to provide helpful and functional tools, the software is not a certified medical device, has not been subjected to regulatory clinical trials, and may contain bugs, errors, or inaccuracies.</p>
+                    <p style="margin-top: 5px; line-height: 1.6; font-size: 0.95rem;">While every effort has been made to provide helpful and functional tools, the software is not a certified medical device, has not been subjected to regulatory clinical trials, and may contain bugs, errors, or inaccuracies.</p>
                     
                     <h3 style="color: #00ff88; margin-bottom: 5px; margin-top: 20px; font-size: 1.1rem;">3. User Responsibility and Testing</h3>
                     <p style="margin-top: 5px; line-height: 1.6; font-size: 0.95rem;">Anyone utilizing this website (including MRI technologists, radiologists, or any healthcare facility) does so entirely at their own risk.</p>
@@ -605,7 +605,7 @@ customElements.define('mri-header', MriHeader);
         document.getElementById('disclaimer-accept').addEventListener('click', () => {
             localStorage.setItem('mri_disclaimer_accepted', 'true');
             container.remove();
-            
+
             // Show the header button upon acceptance
             const headers = document.querySelectorAll('mri-header');
             headers.forEach(h => {
@@ -619,12 +619,12 @@ customElements.define('mri-header', MriHeader);
         document.getElementById('disclaimer-decline').addEventListener('click', () => {
             window.location.href = "https://www.google.com";
         });
-        
+
         // Add minimal hover effects
         const acceptBtn = document.getElementById('disclaimer-accept');
         acceptBtn.addEventListener('mouseover', () => acceptBtn.style.background = '#a6e4cf');
         acceptBtn.addEventListener('mouseout', () => acceptBtn.style.background = '#94d2bd');
-        
+
         const declineBtn = document.getElementById('disclaimer-decline');
         declineBtn.addEventListener('mouseover', () => declineBtn.style.background = '#333');
         declineBtn.addEventListener('mouseout', () => declineBtn.style.background = '#222');
