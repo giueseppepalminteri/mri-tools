@@ -209,6 +209,7 @@
             margin: 0;
             padding: 0;
             line-height: 1;
+            opacity: var(--timer-opacity);
         }
 
         #instruction-input::placeholder {
@@ -576,7 +577,19 @@
         function toggleInstr() {
             const isChecked = document.getElementById('instr-check').checked;
             const el = document.getElementById('instruction-input');
-            if (el) el.style.display = isChecked ? 'block' : 'none';
+            if (el) {
+                el.style.display = isChecked ? 'block' : 'none';
+                if (isChecked) {
+                    el.classList.remove('faint');
+                    if (window.instrTimeout) clearTimeout(window.instrTimeout);
+                    window.instrTimeout = setTimeout(() => { el.classList.add('faint'); }, 3000);
+                    // Force resize to fit placeholder
+                    setTimeout(() => {
+                        el.style.height = 'auto'; 
+                        el.style.height = (el.scrollHeight) + "px";
+                    }, 0);
+                }
+            }
             const clearGrp = document.getElementById('instr-clear-grp');
             if (clearGrp) clearGrp.style.display = isChecked ? 'flex' : 'none';
             const sizeGrp = document.getElementById('instr-size-grp');
@@ -593,7 +606,6 @@
         
         const instrArea = document.getElementById('instruction-input');
         if (instrArea) {
-            setTimeout(() => { instrArea.classList.add('faint'); }, 3000);
             instrArea.addEventListener("input", function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; });
         }
     </script>
