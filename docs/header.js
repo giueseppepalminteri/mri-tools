@@ -370,7 +370,7 @@ class MriHeader extends HTMLElement {
                 <button id="mri-info-toggle" title="How to use this tool">i</button>
             </div>
             <div id="mri-info-panel">
-                <span class="info-close">&times;</span>
+                <span class="info-close" id="info-panel-close">&times;</span>
                 <h3 style="color: #94d2bd; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px;">How to use this tool</h3>
                 <div id="mri-info-content" style="font-size: 0.95rem; line-height: 1.6;"></div>
             </div>
@@ -408,7 +408,7 @@ class MriHeader extends HTMLElement {
 
                 <div class="notes-section">
                     <label class="notes-label">Session Notes (Shared)</label>
-                    <textarea id="notes-global" class="notes-area" placeholder="Add general patient or session notes here..."></textarea>
+                    <textarea id="notes-global" class="notes-area" placeholder="Add general notes here..."></textarea>
                 </div>
 
                 <div class="notes-section">
@@ -427,7 +427,7 @@ class MriHeader extends HTMLElement {
         const infoToggle = this.shadowRoot.getElementById('mri-info-toggle');
         const infoPanel = this.shadowRoot.getElementById('mri-info-panel');
         const infoContent = this.shadowRoot.getElementById('mri-info-content');
-        const infoClose = this.shadowRoot.querySelector('.info-close');
+        const infoClose = this.shadowRoot.getElementById('info-panel-close');
 
         if (titleEl && root !== './' && pageTitle !== 'MRI Tools Index') {
             titleEl.textContent = pageTitle;
