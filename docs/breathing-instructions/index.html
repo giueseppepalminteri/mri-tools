@@ -643,19 +643,26 @@
 
       // Keyboard Controls
       document.addEventListener('keydown', (e) => {
-        // Do not trigger if the user is typing in inputs or editing instructions
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.isContentEditable) {
+        // Only ignore shortcuts when typing in the instruction text area
+        if (e.target === document.getElementById('instruction-input')) {
           return;
         }
 
-        if (e.code === 'Space') {
-          e.preventDefault(); // Prevent page scrolling
-          if (!startBtn.disabled) {
-            startBtn.click();
+        if (e.code === 'Space' || e.code === 'Escape') {
+          // If a form element is focused, blur it so the shortcut takes effect
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'TEXTAREA') {
+            e.target.blur();
           }
-        } else if (e.code === 'Escape') {
-          if (!stopBtn.disabled) {
-            stopBtn.click();
+
+          if (e.code === 'Space') {
+            e.preventDefault(); // Prevent page scrolling
+            if (!startBtn.disabled) {
+              startBtn.click();
+            }
+          } else if (e.code === 'Escape') {
+            if (!stopBtn.disabled) {
+              stopBtn.click();
+            }
           }
         }
       });
