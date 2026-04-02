@@ -439,7 +439,7 @@ class MriHeader extends HTMLElement {
         const descriptions = {
             "MRI Tools Index": "Welcome to the MRI Tools Suite. Designed to improve patient cooperation and comfort during MRI scans. Select a tool from the menu to assist with specific procedures like guided breathing, orbital fixation, or TMJ studies.",
             "MRI Breathing Pattern": "Guided breathing tool to help patients maintain a steady rhythm. <br><br><b>How to use:</b><br>1. Set the target BPM or manually adjust In/Out times.<br>2. Enable 'Pulse' or 'Text' cues for the patient.<br>3. Use the Timer or Countdown to synchronize with MRI sequences.",
-            "MRI Orbit Fixation": "Visual fixation target to help patients keep eyes steady. <br><br><b>How to use:</b><br>1. Adjust 'Dot Size' for patient visibility.<br>2. Use 'Jitter' to prevent visual fading (Troxler effect).<br>3. The 'Timer' is centered behind the dot; use 'Opacity' to adjust its subtlety.",
+            "MRI Orbit Fixation": "Visual fixation target to help patients keep eyes steady. <br><br><b>How to use:</b><br>1. Adjust 'Dot Size' for patient visibility.<br>2. Use 'Jitter' to prevent visual fading (Troxler effect).",
             "TMJ Study": "Guided jaw opening positions for joint imaging. <br><br><b>How to use:</b><br>1. Preview study phases and select which to include.<br>2. Click 'Start Study' for full-screen presentation.<br>3. Use Spacebar or Click to advance to the next position."
         };
 
