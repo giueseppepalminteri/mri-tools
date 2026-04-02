@@ -140,6 +140,7 @@
             z-index: 0;
             pointer-events: none;
             background-color: color-mix(in srgb, var(--bg-base), var(--bg-pulse) calc(var(--breath-tick, 0) * 100%));
+            --instr-scale: 1.0;
         }
 
         #scaling-wrapper {
@@ -400,7 +401,19 @@
         function toggleInstr() {
             const isChecked = document.getElementById('instr-check').checked;
             const el = document.getElementById('instruction-input');
-            if (el) el.style.display = isChecked ? 'block' : 'none';
+            if (el) {
+                el.style.display = isChecked ? 'block' : 'none';
+                if (isChecked) {
+                    el.classList.remove('faint');
+                    if (window.instrTimeout) clearTimeout(window.instrTimeout);
+                    window.instrTimeout = setTimeout(() => { el.classList.add('faint'); }, 3000);
+                    // Force resize to fit placeholder
+                    setTimeout(() => {
+                        el.style.height = 'auto'; 
+                        el.style.height = (el.scrollHeight) + "px";
+                    }, 0);
+                }
+            }
             const clearGrp = document.getElementById('instr-clear-grp');
             if (clearGrp) clearGrp.style.display = isChecked ? 'flex' : 'none';
             const sizeGrp = document.getElementById('instr-size-grp');
@@ -415,7 +428,6 @@
             }
         }
 
-        setTimeout(() => { inputArea.classList.add('faint'); }, 3000);
         inputArea.addEventListener("input", function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + "px"; });
 
         function toggleMirror(type) {

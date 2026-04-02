@@ -10,6 +10,7 @@
             --accent-teal: #94d2bd;
             --dot-size: 50px;
             --timer-opacity: 0.3;
+            --instr-scale: 0.5;
         }
         body {
             background-color: #000;
@@ -380,7 +381,7 @@
             </div>
             <div class="tool-group" id="instr-size-grp" style="display: none;">
                 <span class="val-label">Instr. Size:</span>
-                <input type="range" id="instr-size-slider" min="50" max="150" value="100" style="width: 80px;" oninput="changeInstrSize(this.value)">
+                <input type="range" id="instr-size-slider" min="50" max="150" value="50" style="width: 80px;" oninput="changeInstrSize(this.value)">
             </div>
             <div class="tool-group" style="margin-left: 10px; border-left: 1px solid #333; padding-left: 20px;">
                 <span class="val-label">Dot Size:</span>
@@ -518,6 +519,7 @@
             
             updateTimerOpacity(0.3);
             document.getElementById('opacity-slider').value = 0.3;
+            changeInstrSize(50);
         }
 
         function updateTimerOpacity(val) {
