@@ -93,9 +93,10 @@
       resize: none;
       overflow: hidden;
       display: none;
-      margin: 0;
+      margin: 0 auto;
       padding: 0;
       line-height: 1;
+      flex-shrink: 0;
     }
 
     #instruction-input::placeholder {
@@ -258,17 +259,21 @@
     .display {
       flex: 1;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       position: relative;
       width: 100%;
+      min-height: 0;
     }
 
     .phase-square {
-      width: 80vh;
-      height: 80vh;
-      max-width: 90vw;
+      width: clamp(250px, 80vh, 100%);
+      aspect-ratio: 1/1;
       max-height: 55vh;
+      flex: 1;
+      min-height: 0;
+      box-sizing: border-box;
       background: var(--tint-none);
       border: 2px solid rgba(255, 255, 255, 0.1);
       border-radius: 40px;
