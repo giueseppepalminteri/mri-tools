@@ -172,6 +172,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-height: 0;
     }
 
     #mirror-layer {
@@ -180,6 +181,7 @@
       display: flex;
       flex-direction: column;
       transition: transform 0.2s ease;
+      min-height: 0;
     }
 
     /* Modal Styles */
@@ -233,6 +235,7 @@
       padding: 20px 30px;
       position: relative;
       z-index: 1;
+      min-height: 0;
     }
 
     /* Compact Header */
@@ -244,6 +247,7 @@
       border-bottom: 2px solid rgba(255, 255, 255, 0.1);
       background: rgba(0, 0, 0, 0.5);
       border-radius: 8px;
+      flex-shrink: 0;
     }
 
     header h1 {
@@ -268,12 +272,11 @@
     }
 
     .phase-square {
-      width: clamp(250px, 80vh, 100%);
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
       aspect-ratio: 1/1;
-      max-height: 55vh;
-      flex: 1;
-      min-height: 0;
-      box-sizing: border-box;
       background: var(--tint-none);
       border: 2px solid rgba(255, 255, 255, 0.1);
       border-radius: 40px;
@@ -284,6 +287,9 @@
       text-align: center;
       transition: background-color 0.5s ease;
       backdrop-filter: blur(2px);
+      flex: 1;
+      min-height: 0;
+      box-sizing: border-box;
     }
 
     /* Core scaling for main display text */
@@ -307,6 +313,7 @@
       overflow: hidden;
       border: 2px solid rgba(255, 255, 255, 0.3);
       margin-bottom: 20px;
+      flex-shrink: 0;
     }
 
     .progress>i {
@@ -326,6 +333,7 @@
       flex-direction: column;
       padding: 10px;
       gap: 10px;
+      flex-shrink: 0;
     }
 
     .toolbar-row {

@@ -153,6 +153,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1;
+            min-height: 0;
         }
 
         #patient-content-wrapper {
@@ -164,13 +165,17 @@
             align-items: center;
             position: relative;
             min-height: 0;
+            flex: 1;
         }
 
         /* Breathing Circle */
         #pulse-circle {
             position: absolute;
             display: none;
-            width: clamp(200px, 55vh, 100%);
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
             aspect-ratio: 1/1;
             background: radial-gradient(circle, var(--accent-teal) 0%, transparent 75%);
             border-radius: 50%;
@@ -178,7 +183,6 @@
             pointer-events: none;
             transform: scale(calc(0.6 + 0.7 * var(--breath-tick, 0)));
             opacity: calc(var(--breath-tick, 0) * 0.6);
-            max-height: 100%;
         }
 
         /* Breathe In/Out Text */
@@ -242,6 +246,7 @@
             flex-direction: column;
             padding: 10px;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .toolbar-row {
