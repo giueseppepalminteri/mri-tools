@@ -485,7 +485,13 @@ class MriHeader extends HTMLElement {
         const navPanel = this.shadowRoot.getElementById('mri-nav-panel');
         const navPanelClose = this.shadowRoot.getElementById('nav-panel-close');
 
-        const isPortalShell = !!document.getElementById('tool-container');
+        // Detect if this is the portal shell (the host page)
+        const currentPath = window.location.pathname;
+        const fileName = currentPath.substring(currentPath.lastIndexOf('/') + 1);
+        const isPortalShell = !!document.getElementById('tool-container') || 
+                              fileName === 'index.html' || 
+                              fileName === '' || 
+                              this.id === 'portal-header';
 
         const navItems = this.shadowRoot.querySelectorAll('.nav-item');
         navItems.forEach(item => {
@@ -501,8 +507,8 @@ class MriHeader extends HTMLElement {
         });
 
         // Redirect standalone pages to portal if not in it already
+        // We skip MRI Tools Index (the inner home page) and the portal shell itself
         if (!isInIframe && !isPortalShell && pageTitle !== 'MRI Tools Index' && !window.location.search.includes('standalone')) {
-            const currentPath = window.location.pathname;
             const fileName = currentPath.substring(currentPath.lastIndexOf('/') + 1);
             const folderName = currentPath.substring(0, currentPath.lastIndexOf('/'));
             const parentFolderName = folderName.substring(folderName.lastIndexOf('/') + 1);
