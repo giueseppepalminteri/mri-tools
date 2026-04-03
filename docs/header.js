@@ -263,6 +263,8 @@ class MriHeader extends HTMLElement {
                     font-size: 0.9rem;
                     resize: none;
                     font-family: inherit;
+                    box-sizing: border-box;
+                    display: block;
                 }
                 .notes-area:focus {
                     outline: none;
@@ -270,8 +272,8 @@ class MriHeader extends HTMLElement {
                     background: rgba(255,255,255,0.08);
                 }
                 .notes-warning {
-                    font-size: 0.65rem;
-                    color: #fb7185;
+                    font-size: 13px;
+                    color: orange;
                     margin-bottom: 15px;
                     line-height: 1.3;
                     display: flex;
@@ -414,8 +416,8 @@ class MriHeader extends HTMLElement {
                 </div>
 
                 <div class="notes-section">
-                    <label class="notes-label">Session Notes (Shared)</label>
-                    <textarea id="notes-global" class="notes-area" placeholder="Add general notes here..."></textarea>
+                    <label class="notes-label">Website notes</label>
+                    <textarea id="notes-global" class="notes-area" placeholder="Write notes visible from all the pages..."></textarea>
                 </div>
 
                 <div class="notes-section">
@@ -487,7 +489,7 @@ class MriHeader extends HTMLElement {
         const notesPanelClose = this.shadowRoot.getElementById('notes-panel-close');
         const labelToolNotes = this.shadowRoot.getElementById('label-tool-notes');
 
-        const toolName = pageTitle === 'MRI Tools Index' ? 'General' : pageTitle;
+        const toolName = pageTitle === 'MRI Tools Index' ? 'Page/Tool' : pageTitle;
         labelToolNotes.textContent = toolName + " Notes";
 
         const storageKeyGlobal = 'mri_global_notes';
