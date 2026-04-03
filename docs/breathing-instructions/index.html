@@ -238,26 +238,9 @@
       min-height: 0;
     }
 
-    /* Compact Header */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 6px 15px;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 8px;
-      flex-shrink: 0;
-    }
-
     header h1 {
       margin: 0;
       font-size: clamp(1rem, 2vw, 1.4rem);
-    }
-
-    #cycleInfo {
-      font-size: clamp(0.9rem, 1.5vw, 1.2rem);
-      font-weight: bold;
     }
 
     .display {
@@ -450,12 +433,6 @@
   <div id="scaling-layer">
     <div class="app-container">
 
-      <header>
-        <div style="display:flex; gap:15px; align-items:center">
-          <div id="cycleInfo">Cycle 0/0</div>
-        </div>
-      </header>
-
       <main id="mirror-layer" class="display">
         <textarea id="instruction-input" placeholder="CLICK HERE TO TYPE INSTRUCTIONS" rows="1"></textarea>
         <div id="phaseSquare" class="phase-square">
@@ -525,7 +502,7 @@
       const stepText = document.getElementById('stepText');
       const countdown = document.getElementById('countdown');
       const progressBar = document.getElementById('progressBar');
-      const cycleInfo = document.getElementById('cycleInfo');
+      const mriHeader = document.querySelector('mri-header');
 
       // UI Controls
       const attnBtn = document.getElementById('attnBtn');
@@ -576,7 +553,11 @@
 
         for (let i = 1; i <= reps; i++) {
           if (state.stopRequested) break;
-          cycleInfo.textContent = `Cycle ${i}/${reps}`;
+          if (reps > 1) {
+            mriHeader.setStatusText(`Cycle ${i}/${reps}`);
+          } else {
+            mriHeader.setStatusText('');
+          }
           
           state.phase = 'inhale';
           updateAttentionButton();
@@ -600,6 +581,7 @@
         state.phase = 'idle';
         updateAttentionButton();
         startBtn.disabled = false; stopBtn.disabled = true;
+        mriHeader.setStatusText('');
         stepText.textContent = "Breathe normally";
         setTint('green');
         countdown.textContent = "00s";
@@ -610,6 +592,7 @@
         state.stopRequested = true;
         state.phase = 'idle';
         updateAttentionButton();
+        mriHeader.setStatusText('');
         body.classList.remove('attending');
         if (!state.running) stopBtn.disabled = true;
       };

@@ -65,7 +65,13 @@ class MriHeader extends HTMLElement {
                     pointer-events: none;
                     display: flex;
                     align-items: center;
-                    gap: 10px;
+                    gap: 12px;
+                }
+                #mri-status-text {
+                    color: #94d2bd;
+                    font-size: 0.9rem;
+                    font-weight: normal;
+                    opacity: 0.8;
                 }
                 #mri-info-toggle {
                     background: #94d2bd;
@@ -367,6 +373,7 @@ class MriHeader extends HTMLElement {
             </div>
             <div id="mri-page-title">
                 <span id="mri-title-text"></span>
+                <span id="mri-status-text"></span>
                 <button id="mri-info-toggle" title="How to use this tool">i</button>
             </div>
             <div id="mri-info-panel">
@@ -529,6 +536,13 @@ class MriHeader extends HTMLElement {
         const disclaimerBtn = this.shadowRoot.getElementById('mri-disclaimer-btn');
         if (disclaimerBtn && typeof window !== 'undefined' && localStorage.getItem('mri_disclaimer_accepted') !== 'true') {
             disclaimerBtn.style.display = 'none';
+        }
+    }
+
+    setStatusText(text) {
+        const statusEl = this.shadowRoot.getElementById('mri-status-text');
+        if (statusEl) {
+            statusEl.textContent = text ? `- ${text}` : '';
         }
     }
 }
