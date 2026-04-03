@@ -354,6 +354,7 @@ class MriHeader extends HTMLElement {
                 #mri-disclaimer-btn:hover .warning-icon {
                     opacity: 0;
                 }
+
             </style>
             <div class="mri-logo-container">
                 <img src="${root}mri_icon.png" class="mri-icon-btn" id="mri-nav-toggle" title="Navigation Menu">
@@ -405,6 +406,8 @@ class MriHeader extends HTMLElement {
                 </div>
                 <span class="disclaimer-text">By using this site, you accept the medical disclaimer.</span>
             </div>
+
+
 
             <div id="mri-notes-panel">
                 <span class="info-close" id="notes-panel-close">&times;</span>
@@ -538,6 +541,166 @@ class MriHeader extends HTMLElement {
         const disclaimerBtn = this.shadowRoot.getElementById('mri-disclaimer-btn');
         if (disclaimerBtn && typeof window !== 'undefined' && localStorage.getItem('mri_disclaimer_accepted') !== 'true') {
             disclaimerBtn.style.display = 'none';
+        }
+
+        // --- Patient Mode Logic ---
+        const headerEl = this; // The <mri-header> custom element itself
+
+        // Create the Patient Mode button in document.body so it stays visible
+        // even when the header slides off-screen
+        const patientModeBtn = document.createElement('button');
+        patientModeBtn.id = 'mri-patient-mode-btn';
+        patientModeBtn.title = 'Toggle Patient Mode - auto-hides header and toolbar';
+        patientModeBtn.innerHTML = '<span class="pm-icon">👁️</span><span class="pm-label">Patient Mode</span><span class="pm-indicator"></span>';
+        Object.assign(patientModeBtn.style, {
+            position: 'fixed', bottom: '10px', left: '15px',
+            display: 'flex', alignItems: 'center', gap: '6px',
+            background: 'rgba(0, 18, 25, 0.9)', borderRadius: '20px',
+            border: '1px solid rgba(148, 210, 189, 0.3)', cursor: 'pointer',
+            zIndex: '10002', padding: '6px 12px', boxSizing: 'border-box',
+            whiteSpace: 'nowrap', backdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.5)', transition: 'all 0.3s ease',
+            color: '#94d2bd', fontSize: '0.75rem', fontWeight: '600',
+            fontFamily: "'Segoe UI', Tahoma, sans-serif"
+        });
+        // Style the indicator dot
+        const pmStyle = document.createElement('style');
+        pmStyle.textContent = `
+            #mri-patient-mode-btn:hover {
+                border-color: rgba(148, 210, 189, 0.6) !important;
+                background: rgba(0, 18, 25, 1) !important;
+                transform: scale(1.05);
+            }
+            #mri-patient-mode-btn.active {
+                border-color: #94d2bd !important;
+                background: rgba(148, 210, 189, 0.15) !important;
+                color: #fff !important;
+            }
+            #mri-patient-mode-btn .pm-icon { font-size: 16px; line-height: 1; }
+            #mri-patient-mode-btn .pm-indicator {
+                width: 8px; height: 8px; border-radius: 50%;
+                background: #555; transition: background 0.3s ease;
+                flex-shrink: 0; display: inline-block;
+            }
+            #mri-patient-mode-btn.active .pm-indicator {
+                background: #4ade80;
+                box-shadow: 0 0 6px rgba(74, 222, 128, 0.6);
+            }
+        `;
+        document.head.appendChild(pmStyle);
+        document.body.appendChild(patientModeBtn);
+
+        // Hide on home page
+        if (pageTitle === 'MRI Tools Index') {
+            patientModeBtn.style.display = 'none';
+        }
+
+        // Restore persisted state
+        let patientModeActive = localStorage.getItem('mri_patient_mode') === 'true';
+
+        const applyPatientMode = () => {
+            const bottomToolbar = document.getElementById('bottom-toolbar');
+
+            if (patientModeActive) {
+                patientModeBtn.classList.add('active');
+
+                // Style the header for auto-hide
+                headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                headerEl.style.transform = 'translateY(-100%)';
+                headerEl.style.opacity = '0';
+
+                // Style the bottom toolbar for auto-hide
+                if (bottomToolbar) {
+                    bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                    bottomToolbar.style.transform = 'translateY(100%)';
+                    bottomToolbar.style.opacity = '0';
+                }
+            } else {
+                patientModeBtn.classList.remove('active');
+
+                headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                headerEl.style.transform = 'translateY(0)';
+                headerEl.style.opacity = '1';
+
+                if (bottomToolbar) {
+                    bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                    bottomToolbar.style.transform = 'translateY(0)';
+                    bottomToolbar.style.opacity = '1';
+                }
+            }
+        };
+
+        const showHeader = () => {
+            if (!patientModeActive) return;
+            headerEl.style.transform = 'translateY(0)';
+            headerEl.style.opacity = '1';
+        };
+        const hideHeader = () => {
+            if (!patientModeActive) return;
+            headerEl.style.transform = 'translateY(-100%)';
+            headerEl.style.opacity = '0';
+        };
+        const showToolbar = () => {
+            if (!patientModeActive) return;
+            const bt = document.getElementById('bottom-toolbar');
+            if (bt) {
+                bt.style.transform = 'translateY(0)';
+                bt.style.opacity = '1';
+            }
+        };
+        const hideToolbar = () => {
+            if (!patientModeActive) return;
+            const bt = document.getElementById('bottom-toolbar');
+            if (bt) {
+                bt.style.transform = 'translateY(100%)';
+                bt.style.opacity = '0';
+            }
+        };
+
+        // Header hover zone: the mri-header element itself
+        headerEl.addEventListener('mouseenter', showHeader);
+        headerEl.addEventListener('mouseleave', hideHeader);
+
+        // Bottom toolbar hover zone: use a document-level listener for bottom-toolbar
+        // We need to wait for it to exist and attach directly
+        const attachToolbarHover = () => {
+            const bt = document.getElementById('bottom-toolbar');
+            if (bt) {
+                bt.addEventListener('mouseenter', showToolbar);
+                bt.addEventListener('mouseleave', hideToolbar);
+            }
+        };
+
+        // Also create an invisible hover trigger zone at the top of the screen
+        // so users can reveal the header even when it's hidden
+        const topTrigger = document.createElement('div');
+        topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
+        document.body.appendChild(topTrigger);
+        topTrigger.addEventListener('mouseenter', showHeader);
+
+        // Invisible hover trigger zone at bottom of the screen
+        const bottomTrigger = document.createElement('div');
+        bottomTrigger.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
+        document.body.appendChild(bottomTrigger);
+        bottomTrigger.addEventListener('mouseenter', showToolbar);
+
+        // Toggle button click
+        patientModeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            patientModeActive = !patientModeActive;
+            localStorage.setItem('mri_patient_mode', patientModeActive);
+            applyPatientMode();
+        });
+
+        // Apply on load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                attachToolbarHover();
+                applyPatientMode();
+            });
+        } else {
+            attachToolbarHover();
+            applyPatientMode();
         }
     }
 
