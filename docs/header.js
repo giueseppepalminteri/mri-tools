@@ -302,59 +302,6 @@ class MriHeader extends HTMLElement {
                     border-radius: 4px;
                     cursor: pointer;
                 }
-                #mri-disclaimer-btn {
-                    position: fixed;
-                    bottom: 10px;
-                    right: 15px;
-                    display: block;
-                    background: rgba(0, 18, 25, 0.9);
-                    border-radius: 20px;
-                    border: 1px solid rgba(251, 113, 133, 0.4);
-                    cursor: pointer;
-                    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                    z-index: 10002;
-                    overflow: hidden;
-                    width: 34px;
-                    height: 34px;
-                    box-sizing: border-box;
-                    white-space: nowrap;
-                    backdrop-filter: blur(10px);
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-                }
-                #mri-disclaimer-btn:hover {
-                    width: 320px;
-                    border-color: rgba(148, 210, 189, 0.5);
-                    background: #001219;
-                }
-                .warning-icon, .disclaimer-text {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    transition: opacity 0.3s ease;
-                }
-                .disclaimer-text {
-                    font-size: 0.65rem;
-                    color: #94d2bd;
-                    opacity: 0;
-                    text-decoration: underline;
-                    font-weight: 500;
-                    pointer-events: none;
-                }
-                #mri-disclaimer-btn:hover .disclaimer-text {
-                    opacity: 1;
-                    color: #fff;
-                }
-                .warning-icon {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    opacity: 1;
-                }
-                #mri-disclaimer-btn:hover .warning-icon {
-                    opacity: 0;
-                }
-
             </style>
             <div class="mri-logo-container">
                 <img src="${root}mri_icon.png" class="mri-icon-btn" id="mri-nav-toggle" title="Navigation Menu">
@@ -394,17 +341,6 @@ class MriHeader extends HTMLElement {
                 </button>
 
                 <button class="mri-settings-btn" id="mri-global-settings-toggle" title="Toggle Settings">⚙️</button>
-            </div>
-
-            <div id="mri-disclaimer-btn" title="Review Medical Disclaimer">
-                <div class="warning-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                        <line x1="12" y1="9" x2="12" y2="13"></line>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
-                </div>
-                <span class="disclaimer-text">By using this site, you accept the medical disclaimer.</span>
             </div>
 
 
@@ -476,11 +412,7 @@ class MriHeader extends HTMLElement {
                 console.warn('MRI Header: Settings panel not found on this page.');
             }
         });
-        this.shadowRoot.getElementById('mri-disclaimer-btn').addEventListener('click', () => {
-            if (typeof window.showMriDisclaimer === 'function') {
-                window.showMriDisclaimer(true);
-            }
-        });
+
 
         // --- Notes Logic ---
         const notesToggle = this.shadowRoot.getElementById('mri-notes-toggle');
@@ -537,170 +469,175 @@ class MriHeader extends HTMLElement {
         document.addEventListener('click', () => navPanel.classList.remove('visible'));
         navPanel.addEventListener('click', (e) => e.stopPropagation());
 
-        // Update the button if disclaimer not accepted
-        const disclaimerBtn = this.shadowRoot.getElementById('mri-disclaimer-btn');
-        if (disclaimerBtn && typeof window !== 'undefined' && localStorage.getItem('mri_disclaimer_accepted') !== 'true') {
-            disclaimerBtn.style.display = 'none';
-        }
+        // --- Inject settings into host page's #settings-content ---
+        const headerEl = this;
 
-        // --- Patient Mode Logic ---
-        const headerEl = this; // The <mri-header> custom element itself
+        const injectSettings = () => {
+            const settingsContent = document.getElementById('settings-content');
+            if (!settingsContent) return;
 
-        // Create the Patient Mode button in document.body so it stays visible
-        // even when the header slides off-screen
-        const patientModeBtn = document.createElement('button');
-        patientModeBtn.id = 'mri-patient-mode-btn';
-        patientModeBtn.title = 'Toggle Patient Mode - auto-hides header and toolbar';
-        patientModeBtn.innerHTML = '<span class="pm-icon">👁️</span><span class="pm-label">Patient Mode</span><span class="pm-indicator"></span>';
-        Object.assign(patientModeBtn.style, {
-            position: 'fixed', bottom: '10px', left: '15px',
-            display: 'flex', alignItems: 'center', gap: '6px',
-            background: 'rgba(0, 18, 25, 0.9)', borderRadius: '20px',
-            border: '1px solid rgba(148, 210, 189, 0.3)', cursor: 'pointer',
-            zIndex: '10002', padding: '6px 12px', boxSizing: 'border-box',
-            whiteSpace: 'nowrap', backdropFilter: 'blur(10px)',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.5)', transition: 'all 0.3s ease',
-            color: '#94d2bd', fontSize: '0.75rem', fontWeight: '600',
-            fontFamily: "'Segoe UI', Tahoma, sans-serif"
-        });
-        // Style the indicator dot
-        const pmStyle = document.createElement('style');
-        pmStyle.textContent = `
-            #mri-patient-mode-btn:hover {
-                border-color: rgba(148, 210, 189, 0.6) !important;
-                background: rgba(0, 18, 25, 1) !important;
-                transform: scale(1.05);
-            }
-            #mri-patient-mode-btn.active {
-                border-color: #94d2bd !important;
-                background: rgba(148, 210, 189, 0.15) !important;
-                color: #fff !important;
-            }
-            #mri-patient-mode-btn .pm-icon { font-size: 16px; line-height: 1; }
-            #mri-patient-mode-btn .pm-indicator {
-                width: 8px; height: 8px; border-radius: 50%;
-                background: #555; transition: background 0.3s ease;
-                flex-shrink: 0; display: inline-block;
-            }
-            #mri-patient-mode-btn.active .pm-indicator {
-                background: #4ade80;
-                box-shadow: 0 0 6px rgba(74, 222, 128, 0.6);
-            }
-        `;
-        document.head.appendChild(pmStyle);
-        document.body.appendChild(patientModeBtn);
+            // Find the "Mirror Patient Only" checkbox to insert before it
+            const mirrorPatientCheck = document.getElementById('m-p-check');
+            const mirrorRow = mirrorPatientCheck ? mirrorPatientCheck.closest('.control-row') : null;
 
-        // Hide on home page
-        if (pageTitle === 'MRI Tools Index') {
-            patientModeBtn.style.display = 'none';
-        }
-
-        // Restore persisted state
-        let patientModeActive = localStorage.getItem('mri_patient_mode') === 'true';
-
-        const applyPatientMode = () => {
-            const bottomToolbar = document.getElementById('bottom-toolbar');
-
-            if (patientModeActive) {
-                patientModeBtn.classList.add('active');
-
-                // Style the header for auto-hide
-                headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-                headerEl.style.transform = 'translateY(-100%)';
-                headerEl.style.opacity = '0';
-
-                // Style the bottom toolbar for auto-hide
-                if (bottomToolbar) {
-                    bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-                    bottomToolbar.style.transform = 'translateY(100%)';
-                    bottomToolbar.style.opacity = '0';
-                }
+            // --- Auto Hide Bars checkbox ---
+            const autoHideRow = document.createElement('div');
+            autoHideRow.className = 'control-row';
+            autoHideRow.innerHTML = '<input type="checkbox" id="auto-hide-check"><label for="auto-hide-check">⇱ Auto Hide Bars</label>';
+            if (mirrorRow) {
+                mirrorRow.parentNode.insertBefore(autoHideRow, mirrorRow);
             } else {
-                patientModeBtn.classList.remove('active');
+                settingsContent.appendChild(autoHideRow);
+            }
 
-                headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+            // --- Full Screen checkbox ---
+            const fullScreenRow = document.createElement('div');
+            fullScreenRow.className = 'control-row';
+            fullScreenRow.innerHTML = '<input type="checkbox" id="fullscreen-check"><label for="fullscreen-check">⛶ Full Screen</label>';
+            autoHideRow.after(fullScreenRow);
+
+            // --- Find "Tools created by" block and insert disclaimer link before it ---
+            const allDivs = settingsContent.querySelectorAll('div');
+            let creditsDiv = null;
+            allDivs.forEach(d => {
+                if (d.textContent.includes('Tools created by')) creditsDiv = d;
+            });
+
+            // Find the <hr> just before credits
+            const disclaimerLink = document.createElement('div');
+            disclaimerLink.style.cssText = 'text-align: center; margin: 4px 0;';
+            disclaimerLink.innerHTML = '<a href="#" id="settings-disclaimer-link" style="color: #fb7185; font-size: 0.65rem; text-decoration: underline; cursor: pointer; font-weight: 500;">⚠ Medical Disclaimer</a>';
+
+            if (creditsDiv) {
+                // Insert a separator and the link before the credits
+                const disclaimerHr = document.createElement('hr');
+                disclaimerHr.style.cssText = 'border:0; border-top:1px solid #333; margin: 6px 0;';
+                creditsDiv.parentNode.insertBefore(disclaimerHr, creditsDiv);
+                creditsDiv.parentNode.insertBefore(disclaimerLink, creditsDiv);
+            } else {
+                settingsContent.appendChild(disclaimerLink);
+            }
+
+            // --- Disclaimer link click handler ---
+            document.getElementById('settings-disclaimer-link').addEventListener('click', (e) => {
+                e.preventDefault();
+                if (typeof window.showMriDisclaimer === 'function') {
+                    window.showMriDisclaimer(true);
+                }
+            });
+
+            // --- Full Screen logic ---
+            const fsCheck = document.getElementById('fullscreen-check');
+            // Sync checkbox with current fullscreen state
+            fsCheck.checked = !!document.fullscreenElement;
+
+            fsCheck.addEventListener('change', () => {
+                if (fsCheck.checked) {
+                    document.documentElement.requestFullscreen().catch(() => {
+                        fsCheck.checked = false;
+                    });
+                } else {
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+
+            // Keep checkbox in sync if user exits fullscreen via Escape/F11
+            document.addEventListener('fullscreenchange', () => {
+                fsCheck.checked = !!document.fullscreenElement;
+            });
+
+            // --- Auto Hide Bars logic ---
+            const autoHideCheck = document.getElementById('auto-hide-check');
+            let autoHideActive = localStorage.getItem('mri_auto_hide_bars') === 'true';
+            autoHideCheck.checked = autoHideActive;
+
+            const applyAutoHide = () => {
+                const bottomToolbar = document.getElementById('bottom-toolbar');
+
+                if (autoHideActive) {
+                    headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                    headerEl.style.transform = 'translateY(-100%)';
+                    headerEl.style.opacity = '0';
+
+                    if (bottomToolbar) {
+                        bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                        bottomToolbar.style.transform = 'translateY(100%)';
+                        bottomToolbar.style.opacity = '0';
+                    }
+                } else {
+                    headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                    headerEl.style.transform = 'translateY(0)';
+                    headerEl.style.opacity = '1';
+
+                    if (bottomToolbar) {
+                        bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                        bottomToolbar.style.transform = 'translateY(0)';
+                        bottomToolbar.style.opacity = '1';
+                    }
+                }
+            };
+
+            const showHeader = () => {
+                if (!autoHideActive) return;
                 headerEl.style.transform = 'translateY(0)';
                 headerEl.style.opacity = '1';
+            };
+            const hideHeader = () => {
+                if (!autoHideActive) return;
+                headerEl.style.transform = 'translateY(-100%)';
+                headerEl.style.opacity = '0';
+            };
+            const showToolbar = () => {
+                if (!autoHideActive) return;
+                const bt = document.getElementById('bottom-toolbar');
+                if (bt) { bt.style.transform = 'translateY(0)'; bt.style.opacity = '1'; }
+            };
+            const hideToolbar = () => {
+                if (!autoHideActive) return;
+                const bt = document.getElementById('bottom-toolbar');
+                if (bt) { bt.style.transform = 'translateY(100%)'; bt.style.opacity = '0'; }
+            };
 
-                if (bottomToolbar) {
-                    bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-                    bottomToolbar.style.transform = 'translateY(0)';
-                    bottomToolbar.style.opacity = '1';
-                }
-            }
-        };
+            // Header hover
+            headerEl.addEventListener('mouseenter', showHeader);
+            headerEl.addEventListener('mouseleave', hideHeader);
 
-        const showHeader = () => {
-            if (!patientModeActive) return;
-            headerEl.style.transform = 'translateY(0)';
-            headerEl.style.opacity = '1';
-        };
-        const hideHeader = () => {
-            if (!patientModeActive) return;
-            headerEl.style.transform = 'translateY(-100%)';
-            headerEl.style.opacity = '0';
-        };
-        const showToolbar = () => {
-            if (!patientModeActive) return;
-            const bt = document.getElementById('bottom-toolbar');
-            if (bt) {
-                bt.style.transform = 'translateY(0)';
-                bt.style.opacity = '1';
-            }
-        };
-        const hideToolbar = () => {
-            if (!patientModeActive) return;
-            const bt = document.getElementById('bottom-toolbar');
-            if (bt) {
-                bt.style.transform = 'translateY(100%)';
-                bt.style.opacity = '0';
-            }
-        };
-
-        // Header hover zone: the mri-header element itself
-        headerEl.addEventListener('mouseenter', showHeader);
-        headerEl.addEventListener('mouseleave', hideHeader);
-
-        // Bottom toolbar hover zone: use a document-level listener for bottom-toolbar
-        // We need to wait for it to exist and attach directly
-        const attachToolbarHover = () => {
+            // Bottom toolbar hover
             const bt = document.getElementById('bottom-toolbar');
             if (bt) {
                 bt.addEventListener('mouseenter', showToolbar);
                 bt.addEventListener('mouseleave', hideToolbar);
             }
+
+            // Invisible trigger zones at screen edges
+            const topTrigger = document.createElement('div');
+            topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
+            document.body.appendChild(topTrigger);
+            topTrigger.addEventListener('mouseenter', showHeader);
+
+            const bottomTrigger = document.createElement('div');
+            bottomTrigger.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
+            document.body.appendChild(bottomTrigger);
+            bottomTrigger.addEventListener('mouseenter', showToolbar);
+
+            // Checkbox change handler
+            autoHideCheck.addEventListener('change', () => {
+                autoHideActive = autoHideCheck.checked;
+                localStorage.setItem('mri_auto_hide_bars', autoHideActive);
+                applyAutoHide();
+            });
+
+            // Apply on load
+            applyAutoHide();
         };
 
-        // Also create an invisible hover trigger zone at the top of the screen
-        // so users can reveal the header even when it's hidden
-        const topTrigger = document.createElement('div');
-        topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
-        document.body.appendChild(topTrigger);
-        topTrigger.addEventListener('mouseenter', showHeader);
-
-        // Invisible hover trigger zone at bottom of the screen
-        const bottomTrigger = document.createElement('div');
-        bottomTrigger.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
-        document.body.appendChild(bottomTrigger);
-        bottomTrigger.addEventListener('mouseenter', showToolbar);
-
-        // Toggle button click
-        patientModeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            patientModeActive = !patientModeActive;
-            localStorage.setItem('mri_patient_mode', patientModeActive);
-            applyPatientMode();
-        });
-
-        // Apply on load
+        // Inject after DOM is ready
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                attachToolbarHover();
-                applyPatientMode();
-            });
+            document.addEventListener('DOMContentLoaded', injectSettings);
         } else {
-            attachToolbarHover();
-            applyPatientMode();
+            injectSettings();
         }
     }
 
@@ -721,14 +658,6 @@ customElements.define('mri-header', MriHeader);
 
     window.showMriDisclaimer = function (force = false) {
         if (!force && localStorage.getItem('mri_disclaimer_accepted') === 'true') {
-            // Un-hide the header button if we are passively returning
-            const headers = document.querySelectorAll('mri-header');
-            headers.forEach(h => {
-                if (h.shadowRoot) {
-                    const btn = h.shadowRoot.getElementById('mri-disclaimer-btn');
-                    if (btn) btn.style.display = 'block';
-                }
-            });
             return;
         }
 
@@ -784,15 +713,6 @@ customElements.define('mri-header', MriHeader);
         document.getElementById('disclaimer-accept').addEventListener('click', () => {
             localStorage.setItem('mri_disclaimer_accepted', 'true');
             container.remove();
-
-            // Show the header button upon acceptance
-            const headers = document.querySelectorAll('mri-header');
-            headers.forEach(h => {
-                if (h.shadowRoot) {
-                    const btn = h.shadowRoot.getElementById('mri-disclaimer-btn');
-                    if (btn) btn.style.display = 'block';
-                }
-            });
         });
 
         document.getElementById('disclaimer-decline').addEventListener('click', () => {
