@@ -23,54 +23,58 @@ class MriHeader extends HTMLElement {
 
         const injectSettings = () => {
             const settingsContent = document.getElementById('settings-content');
-            if (!settingsContent) return;
 
-            const mirrorPatientCheck = document.getElementById('m-p-check');
-            const mirrorRow = mirrorPatientCheck ? mirrorPatientCheck.closest('.control-row') : null;
+            if (settingsContent) {
+                const mirrorPatientCheck = document.getElementById('m-p-check');
+                const mirrorRow = mirrorPatientCheck ? mirrorPatientCheck.closest('.control-row') : null;
 
-            const autoHideRow = document.createElement('div');
-            autoHideRow.className = 'control-row';
-            autoHideRow.innerHTML = '<input type="checkbox" id="auto-hide-check"><label for="auto-hide-check">⇱ Auto Hide Bars</label>';
-            if (mirrorRow) {
-                mirrorRow.parentNode.insertBefore(autoHideRow, mirrorRow);
-            } else {
-                settingsContent.appendChild(autoHideRow);
-            }
-
-            const fullScreenRow = document.createElement('div');
-            fullScreenRow.className = 'control-row';
-            fullScreenRow.innerHTML = '<input type="checkbox" id="fullscreen-check"><label for="fullscreen-check">⛶ Full Screen</label>';
-            autoHideRow.after(fullScreenRow);
-
-            const allDivs = settingsContent.querySelectorAll('div');
-            let creditsDiv = null;
-            allDivs.forEach(d => {
-                if (d.textContent.includes('Tools created by')) creditsDiv = d;
-            });
-
-            const disclaimerLink = document.createElement('div');
-            disclaimerLink.style.cssText = 'text-align: center; margin: 4px 0;';
-            disclaimerLink.innerHTML = '<a href="#" id="settings-disclaimer-link" style="color: #fb7185; font-size: 0.65rem; text-decoration: underline; cursor: pointer; font-weight: 500;">⚠ Medical Disclaimer</a>';
-
-            if (creditsDiv) {
-                const disclaimerHr = document.createElement('hr');
-                disclaimerHr.style.cssText = 'border:0; border-top:1px solid #333; margin: 6px 0;';
-                creditsDiv.parentNode.insertBefore(disclaimerHr, creditsDiv);
-                creditsDiv.parentNode.insertBefore(disclaimerLink, creditsDiv);
-            } else {
-                settingsContent.appendChild(disclaimerLink);
-            }
-
-            document.getElementById('settings-disclaimer-link').addEventListener('click', (e) => {
-                e.preventDefault();
-                if (typeof window.showMriDisclaimer === 'function') {
-                    window.showMriDisclaimer(true);
+                const autoHideRow = document.createElement('div');
+                autoHideRow.className = 'control-row';
+                autoHideRow.innerHTML = '<input type="checkbox" id="auto-hide-check"><label for="auto-hide-check">⇱ Auto Hide Bars</label>';
+                if (mirrorRow) {
+                    mirrorRow.parentNode.insertBefore(autoHideRow, mirrorRow);
+                } else {
+                    settingsContent.appendChild(autoHideRow);
                 }
-            });
+
+                const fullScreenRow = document.createElement('div');
+                fullScreenRow.className = 'control-row';
+                fullScreenRow.innerHTML = '<input type="checkbox" id="fullscreen-check"><label for="fullscreen-check">⛶ Full Screen</label>';
+                autoHideRow.after(fullScreenRow);
+
+                const allDivs = settingsContent.querySelectorAll('div');
+                let creditsDiv = null;
+                allDivs.forEach(d => {
+                    if (d.textContent.includes('Tools created by')) creditsDiv = d;
+                });
+
+                const disclaimerLink = document.createElement('div');
+                disclaimerLink.style.cssText = 'text-align: center; margin: 4px 0;';
+                disclaimerLink.innerHTML = '<a href="#" id="settings-disclaimer-link" style="color: #fb7185; font-size: 0.65rem; text-decoration: underline; cursor: pointer; font-weight: 500;">⚠ Medical Disclaimer</a>';
+
+                if (creditsDiv) {
+                    const disclaimerHr = document.createElement('hr');
+                    disclaimerHr.style.cssText = 'border:0; border-top:1px solid #333; margin: 6px 0;';
+                    creditsDiv.parentNode.insertBefore(disclaimerHr, creditsDiv);
+                    creditsDiv.parentNode.insertBefore(disclaimerLink, creditsDiv);
+                } else {
+                    settingsContent.appendChild(disclaimerLink);
+                }
+
+                document.getElementById('settings-disclaimer-link').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (typeof window.showMriDisclaimer === 'function') {
+                        window.showMriDisclaimer(true);
+                    }
+                });
+            }
 
             const fsCheck = document.getElementById('fullscreen-check');
             let fsPref = localStorage.getItem('mri_fullscreen') === 'true';
-            fsCheck.checked = fsPref;
+            
+            if (fsCheck) {
+                fsCheck.checked = fsPref;
+            }
 
             const tryFullscreen = () => {
                 if (fsPref && !document.fullscreenElement) {
@@ -92,38 +96,44 @@ class MriHeader extends HTMLElement {
                 tryFullscreen();
             }
 
-            fsCheck.addEventListener('change', () => {
-                fsPref = fsCheck.checked;
-                localStorage.setItem('mri_fullscreen', fsPref);
+            if (fsCheck) {
+                fsCheck.addEventListener('change', () => {
+                    fsPref = fsCheck.checked;
+                    localStorage.setItem('mri_fullscreen', fsPref);
 
-                if (isInIframe) {
-                    window.parent.postMessage({ type: 'TOGGLE_FULLSCREEN', active: fsPref }, '*');
-                    return;
-                }
-
-                if (fsPref) {
-                    document.documentElement.requestFullscreen().catch(() => {
-                        localStorage.setItem('mri_fullscreen', 'false');
-                        fsCheck.checked = false;
-                        fsPref = false;
-                    });
-                } else {
-                    if (document.fullscreenElement) {
-                        document.exitFullscreen();
+                    if (isInIframe) {
+                        window.parent.postMessage({ type: 'TOGGLE_FULLSCREEN', active: fsPref }, '*');
+                        return;
                     }
-                }
-            });
+
+                    if (fsPref) {
+                        document.documentElement.requestFullscreen().catch(() => {
+                            localStorage.setItem('mri_fullscreen', 'false');
+                            fsCheck.checked = false;
+                            fsPref = false;
+                        });
+                    } else {
+                        if (document.fullscreenElement) {
+                            document.exitFullscreen();
+                        }
+                    }
+                });
+            }
 
             document.addEventListener('fullscreenchange', () => {
                 const isFs = !!document.fullscreenElement;
-                fsCheck.checked = isFs;
+                if (fsCheck) {
+                    fsCheck.checked = isFs;
+                }
                 fsPref = isFs;
                 localStorage.setItem('mri_fullscreen', isFs);
             });
 
             const autoHideCheck = document.getElementById('auto-hide-check');
             let autoHideActive = localStorage.getItem('mri_auto_hide_bars') === 'true';
-            autoHideCheck.checked = autoHideActive;
+            if (autoHideCheck) {
+                autoHideCheck.checked = autoHideActive;
+            }
 
             const applyAutoHide = () => {
                 const bottomToolbar = document.getElementById('bottom-toolbar');
@@ -212,18 +222,26 @@ class MriHeader extends HTMLElement {
             document.body.appendChild(topTrigger);
             topTrigger.addEventListener('mouseenter', showHeader);
 
-            autoHideCheck.addEventListener('change', () => {
-                autoHideActive = autoHideCheck.checked;
-                localStorage.setItem('mri_auto_hide_bars', autoHideActive);
-                
-                if (isInIframe) {
-                    window.parent.postMessage({ type: 'SET_AUTO_HIDE', active: autoHideActive }, '*');
-                }
-                
-                applyAutoHide();
-            });
+            if (autoHideCheck) {
+                autoHideCheck.addEventListener('change', () => {
+                    autoHideActive = autoHideCheck.checked;
+                    localStorage.setItem('mri_auto_hide_bars', autoHideActive);
+                    
+                    if (isInIframe) {
+                        window.parent.postMessage({ type: 'SET_AUTO_HIDE', active: autoHideActive }, '*');
+                    }
+                    
+                    applyAutoHide();
+                });
+            }
 
             applyAutoHide();
+            
+            // Allow triggering applyAutoHide from message events without needing autoHideCheck
+            window.mri_applyAutoHideGlobal = (active) => {
+                autoHideActive = active;
+                applyAutoHide();
+            };
         };
 
         if (document.readyState === 'loading') {
@@ -242,12 +260,24 @@ class MriHeader extends HTMLElement {
                         autoHideCheck.dispatchEvent(new Event('change'));
                     } else {
                         localStorage.setItem('mri_auto_hide_bars', event.data.active);
+                        if (window.mri_applyAutoHideGlobal) {
+                            window.mri_applyAutoHideGlobal(event.data.active);
+                        }
                     }
                 } else if (event.data.type === 'TOGGLE_FULLSCREEN') {
                     const fsCheck = document.getElementById('fullscreen-check');
                     if (fsCheck) {
                         fsCheck.checked = event.data.active;
                         fsCheck.dispatchEvent(new Event('change'));
+                    } else {
+                        // Directly process fullscreen request on host shell
+                        if (event.data.active) {
+                            document.documentElement.requestFullscreen().catch(() => {});
+                        } else {
+                            if (document.fullscreenElement) {
+                                document.exitFullscreen().catch(() => {});
+                            }
+                        }
                     }
                 }
             });
@@ -785,8 +815,6 @@ class MriHeader extends HTMLElement {
 
         document.addEventListener('click', () => navPanel.classList.remove('visible'));
         navPanel.addEventListener('click', (e) => e.stopPropagation());
-
-        const headerEl = this;
 
     }
 
