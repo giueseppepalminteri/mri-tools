@@ -528,24 +528,41 @@ class MriHeader extends HTMLElement {
 
             // --- Full Screen logic ---
             const fsCheck = document.getElementById('fullscreen-check');
-            // Sync checkbox with current fullscreen state
-            fsCheck.checked = !!document.fullscreenElement;
+            // Restore persisted preference
+            const fsPref = localStorage.getItem('mri_fullscreen') === 'true';
+            fsCheck.checked = fsPref;
+
+            // Auto-re-enter fullscreen on page load if preference is set
+            if (fsPref && !document.fullscreenElement) {
+                // Need a user gesture to enter fullscreen on first load,
+                // but subsequent navigations within the same tab can re-enter
+                document.documentElement.requestFullscreen().catch(() => {
+                    // Browser blocked it (no prior gesture) — clear preference
+                    localStorage.setItem('mri_fullscreen', 'false');
+                    fsCheck.checked = false;
+                });
+            }
 
             fsCheck.addEventListener('change', () => {
                 if (fsCheck.checked) {
+                    localStorage.setItem('mri_fullscreen', 'true');
                     document.documentElement.requestFullscreen().catch(() => {
+                        localStorage.setItem('mri_fullscreen', 'false');
                         fsCheck.checked = false;
                     });
                 } else {
+                    localStorage.setItem('mri_fullscreen', 'false');
                     if (document.fullscreenElement) {
                         document.exitFullscreen();
                     }
                 }
             });
 
-            // Keep checkbox in sync if user exits fullscreen via Escape/F11
+            // Keep checkbox and localStorage in sync if user exits via Escape/F11
             document.addEventListener('fullscreenchange', () => {
-                fsCheck.checked = !!document.fullscreenElement;
+                const isFs = !!document.fullscreenElement;
+                fsCheck.checked = isFs;
+                localStorage.setItem('mri_fullscreen', isFs);
             });
 
             // --- Auto Hide Bars logic ---
