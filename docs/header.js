@@ -9,6 +9,250 @@ class MriHeader extends HTMLElement {
         const pageTitle = document.title;
         const isInIframe = window.self !== window.top;
 
+        // Detect if this is the portal shell (the host page)
+        const currentPath = window.location.pathname;
+        const fileName = currentPath.substring(currentPath.lastIndexOf('/') + 1);
+        const isPortalShell = !!document.getElementById('tool-container') || 
+                              fileName === 'index.html' || 
+                              fileName.includes('index.html') ||
+                              fileName === '' || 
+                              this.id === 'portal-header' ||
+                              this.getAttribute('id') === 'portal-header';
+
+        const headerEl = this;
+
+        const injectSettings = () => {
+            const settingsContent = document.getElementById('settings-content');
+            if (!settingsContent) return;
+
+            const mirrorPatientCheck = document.getElementById('m-p-check');
+            const mirrorRow = mirrorPatientCheck ? mirrorPatientCheck.closest('.control-row') : null;
+
+            const autoHideRow = document.createElement('div');
+            autoHideRow.className = 'control-row';
+            autoHideRow.innerHTML = '<input type="checkbox" id="auto-hide-check"><label for="auto-hide-check">⇱ Auto Hide Bars</label>';
+            if (mirrorRow) {
+                mirrorRow.parentNode.insertBefore(autoHideRow, mirrorRow);
+            } else {
+                settingsContent.appendChild(autoHideRow);
+            }
+
+            const fullScreenRow = document.createElement('div');
+            fullScreenRow.className = 'control-row';
+            fullScreenRow.innerHTML = '<input type="checkbox" id="fullscreen-check"><label for="fullscreen-check">⛶ Full Screen</label>';
+            autoHideRow.after(fullScreenRow);
+
+            const allDivs = settingsContent.querySelectorAll('div');
+            let creditsDiv = null;
+            allDivs.forEach(d => {
+                if (d.textContent.includes('Tools created by')) creditsDiv = d;
+            });
+
+            const disclaimerLink = document.createElement('div');
+            disclaimerLink.style.cssText = 'text-align: center; margin: 4px 0;';
+            disclaimerLink.innerHTML = '<a href="#" id="settings-disclaimer-link" style="color: #fb7185; font-size: 0.65rem; text-decoration: underline; cursor: pointer; font-weight: 500;">⚠ Medical Disclaimer</a>';
+
+            if (creditsDiv) {
+                const disclaimerHr = document.createElement('hr');
+                disclaimerHr.style.cssText = 'border:0; border-top:1px solid #333; margin: 6px 0;';
+                creditsDiv.parentNode.insertBefore(disclaimerHr, creditsDiv);
+                creditsDiv.parentNode.insertBefore(disclaimerLink, creditsDiv);
+            } else {
+                settingsContent.appendChild(disclaimerLink);
+            }
+
+            document.getElementById('settings-disclaimer-link').addEventListener('click', (e) => {
+                e.preventDefault();
+                if (typeof window.showMriDisclaimer === 'function') {
+                    window.showMriDisclaimer(true);
+                }
+            });
+
+            const fsCheck = document.getElementById('fullscreen-check');
+            let fsPref = localStorage.getItem('mri_fullscreen') === 'true';
+            fsCheck.checked = fsPref;
+
+            const tryFullscreen = () => {
+                if (fsPref && !document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                }
+            };
+
+            const onFirstGesture = () => {
+                if (fsPref) {
+                    tryFullscreen();
+                }
+                document.removeEventListener('click', onFirstGesture);
+                document.removeEventListener('keydown', onFirstGesture);
+            };
+
+            if (fsPref) {
+                document.addEventListener('click', onFirstGesture);
+                document.addEventListener('keydown', onFirstGesture);
+                tryFullscreen();
+            }
+
+            fsCheck.addEventListener('change', () => {
+                fsPref = fsCheck.checked;
+                localStorage.setItem('mri_fullscreen', fsPref);
+
+                if (isInIframe) {
+                    window.parent.postMessage({ type: 'TOGGLE_FULLSCREEN', active: fsPref }, '*');
+                    return;
+                }
+
+                if (fsPref) {
+                    document.documentElement.requestFullscreen().catch(() => {
+                        localStorage.setItem('mri_fullscreen', 'false');
+                        fsCheck.checked = false;
+                        fsPref = false;
+                    });
+                } else {
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                const isFs = !!document.fullscreenElement;
+                fsCheck.checked = isFs;
+                fsPref = isFs;
+                localStorage.setItem('mri_fullscreen', isFs);
+            });
+
+            const autoHideCheck = document.getElementById('auto-hide-check');
+            let autoHideActive = localStorage.getItem('mri_auto_hide_bars') === 'true';
+            autoHideCheck.checked = autoHideActive;
+
+            const applyAutoHide = () => {
+                const bottomToolbar = document.getElementById('bottom-toolbar');
+
+                if (autoHideActive) {
+                    headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                    headerEl.style.transform = 'translateY(-100%)';
+                    headerEl.style.opacity = '0';
+
+                    const iframe = document.getElementById('tool-container');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
+                    }
+
+                    if (bottomToolbar) {
+                        bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                        bottomToolbar.style.transform = 'translateY(100%)';
+                        bottomToolbar.style.opacity = '0';
+                    }
+                } else {
+                    headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                    headerEl.style.transform = 'translateY(0)';
+                    headerEl.style.opacity = '1';
+
+                    const iframe = document.getElementById('tool-container');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
+                    }
+
+                    if (bottomToolbar) {
+                        bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                        bottomToolbar.style.transform = 'translateY(0)';
+                        bottomToolbar.style.opacity = '1';
+                    }
+                }
+            };
+
+            const showHeader = () => {
+                if (!autoHideActive) return;
+                headerEl.style.transform = 'translateY(0)';
+                headerEl.style.opacity = '1';
+                const iframe = document.getElementById('tool-container');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
+                }
+            };
+            const hideHeader = () => {
+                if (!autoHideActive) return;
+                headerEl.style.transform = 'translateY(-100%)';
+                headerEl.style.opacity = '0';
+                const iframe = document.getElementById('tool-container');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
+                }
+            };
+            const showToolbar = () => {
+                if (!autoHideActive) return;
+                const bt = document.getElementById('bottom-toolbar');
+                if (bt) { bt.style.transform = 'translateY(0)'; bt.style.opacity = '1'; }
+                const iframe = document.getElementById('tool-container');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
+                }
+            };
+            const hideToolbar = () => {
+                if (!autoHideActive) return;
+                const bt = document.getElementById('bottom-toolbar');
+                if (bt) { bt.style.transform = 'translateY(100%)'; bt.style.opacity = '0'; }
+                const iframe = document.getElementById('tool-container');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
+                }
+            };
+
+            headerEl.addEventListener('mouseenter', showHeader);
+            headerEl.addEventListener('mouseleave', hideHeader);
+
+            const bt = document.getElementById('bottom-toolbar');
+            if (bt) {
+                bt.addEventListener('mouseenter', showToolbar);
+                bt.addEventListener('mouseleave', hideToolbar);
+            }
+
+            const topTrigger = document.createElement('div');
+            topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
+            document.body.appendChild(topTrigger);
+            topTrigger.addEventListener('mouseenter', showHeader);
+
+            autoHideCheck.addEventListener('change', () => {
+                autoHideActive = autoHideCheck.checked;
+                localStorage.setItem('mri_auto_hide_bars', autoHideActive);
+                
+                if (isInIframe) {
+                    window.parent.postMessage({ type: 'SET_AUTO_HIDE', active: autoHideActive }, '*');
+                }
+                
+                applyAutoHide();
+            });
+
+            applyAutoHide();
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', injectSettings);
+        } else {
+            injectSettings();
+        }
+
+        // If we are in the portal shell, we need to listen for messages from the guest settings
+        if (isPortalShell) {
+            window.addEventListener('message', (event) => {
+                if (event.data.type === 'SET_AUTO_HIDE') {
+                    const autoHideCheck = document.getElementById('auto-hide-check');
+                    if (autoHideCheck) {
+                        autoHideCheck.checked = event.data.active;
+                        autoHideCheck.dispatchEvent(new Event('change'));
+                    } else {
+                        localStorage.setItem('mri_auto_hide_bars', event.data.active);
+                    }
+                } else if (event.data.type === 'TOGGLE_FULLSCREEN') {
+                    const fsCheck = document.getElementById('fullscreen-check');
+                    if (fsCheck) {
+                        fsCheck.checked = event.data.active;
+                        fsCheck.dispatchEvent(new Event('change'));
+                    }
+                }
+            });
+        }
+
         // If inside an iframe (portal content), we hide the header completely 
         // to avoid double headers, but keep the background logic running.
         if (isInIframe) {
@@ -413,8 +657,15 @@ class MriHeader extends HTMLElement {
 
         this.shadowRoot.getElementById('mri-global-settings-toggle').addEventListener('click', () => {
             const panel = document.getElementById('settings-panel');
+            const iframe = document.getElementById('tool-container');
+            
             if (panel) {
                 panel.classList.toggle('collapsed');
+            } else if (isPortalShell || iframe) {
+                const targetIframe = iframe || document.getElementById('tool-container');
+                if (targetIframe && targetIframe.contentWindow) {
+                    targetIframe.contentWindow.postMessage({ type: 'TOGGLE_SETTINGS' }, '*');
+                }
             } else {
                 console.warn('MRI Header: Settings panel not found on this page.');
             }
@@ -461,37 +712,32 @@ class MriHeader extends HTMLElement {
         notesPanel.addEventListener('click', (e) => e.stopPropagation());
 
         if (isInIframe) {
+            this.style.display = 'none';
             const handlePortalMessage = (event) => {
                 if (event.data.type === 'SET_TOOLBAR_VISIBILITY') {
-                    const bt = document.getElementById('bottom-toolbar');
-                    if (bt) {
-                        bt.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                    const bottomToolbar = document.getElementById('bottom-toolbar');
+                    if (bottomToolbar) {
+                        bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
                         if (event.data.visible) {
-                            bt.style.transform = 'translateY(0)';
-                            bt.style.opacity = '1';
+                            bottomToolbar.style.transform = 'translateY(0)';
+                            bottomToolbar.style.opacity = '1';
                         } else {
-                            bt.style.transform = 'translateY(100%)';
-                            bt.style.opacity = '0';
+                            bottomToolbar.style.transform = 'translateY(100%)';
+                            bottomToolbar.style.opacity = '0';
                         }
                     }
+                } else if (event.data.type === 'TOGGLE_SETTINGS') {
+                    const panel = document.getElementById('settings-panel');
+                    if (panel) panel.classList.toggle('collapsed');
                 }
             };
             window.addEventListener('message', handlePortalMessage);
-            return;
         }
 
         // --- Navigation Logic ---
         const navToggle = this.shadowRoot.getElementById('mri-nav-toggle');
         const navPanel = this.shadowRoot.getElementById('mri-nav-panel');
         const navPanelClose = this.shadowRoot.getElementById('nav-panel-close');
-
-        // Detect if this is the portal shell (the host page)
-        const currentPath = window.location.pathname;
-        const fileName = currentPath.substring(currentPath.lastIndexOf('/') + 1);
-        const isPortalShell = !!document.getElementById('tool-container') || 
-                              fileName === 'index.html' || 
-                              fileName === '' || 
-                              this.id === 'portal-header';
 
         const navItems = this.shadowRoot.querySelectorAll('.nav-item');
         navItems.forEach(item => {
@@ -509,7 +755,6 @@ class MriHeader extends HTMLElement {
         // Redirect standalone pages to portal if not in it already
         // We skip MRI Tools Index (the inner home page) and the portal shell itself
         if (!isInIframe && !isPortalShell && pageTitle !== 'MRI Tools Index' && !window.location.search.includes('standalone')) {
-            const fileName = currentPath.substring(currentPath.lastIndexOf('/') + 1);
             const folderName = currentPath.substring(0, currentPath.lastIndexOf('/'));
             const parentFolderName = folderName.substring(folderName.lastIndexOf('/') + 1);
             
@@ -543,205 +788,6 @@ class MriHeader extends HTMLElement {
 
         const headerEl = this;
 
-        const injectSettings = () => {
-            const settingsContent = document.getElementById('settings-content');
-            if (!settingsContent) return;
-
-            const mirrorPatientCheck = document.getElementById('m-p-check');
-            const mirrorRow = mirrorPatientCheck ? mirrorPatientCheck.closest('.control-row') : null;
-
-            const autoHideRow = document.createElement('div');
-            autoHideRow.className = 'control-row';
-            autoHideRow.innerHTML = '<input type="checkbox" id="auto-hide-check"><label for="auto-hide-check">⇱ Auto Hide Bars</label>';
-            if (mirrorRow) {
-                mirrorRow.parentNode.insertBefore(autoHideRow, mirrorRow);
-            } else {
-                settingsContent.appendChild(autoHideRow);
-            }
-
-            const fullScreenRow = document.createElement('div');
-            fullScreenRow.className = 'control-row';
-            fullScreenRow.innerHTML = '<input type="checkbox" id="fullscreen-check"><label for="fullscreen-check">⛶ Full Screen</label>';
-            autoHideRow.after(fullScreenRow);
-
-            const allDivs = settingsContent.querySelectorAll('div');
-            let creditsDiv = null;
-            allDivs.forEach(d => {
-                if (d.textContent.includes('Tools created by')) creditsDiv = d;
-            });
-
-            const disclaimerLink = document.createElement('div');
-            disclaimerLink.style.cssText = 'text-align: center; margin: 4px 0;';
-            disclaimerLink.innerHTML = '<a href="#" id="settings-disclaimer-link" style="color: #fb7185; font-size: 0.65rem; text-decoration: underline; cursor: pointer; font-weight: 500;">⚠ Medical Disclaimer</a>';
-
-            if (creditsDiv) {
-                const disclaimerHr = document.createElement('hr');
-                disclaimerHr.style.cssText = 'border:0; border-top:1px solid #333; margin: 6px 0;';
-                creditsDiv.parentNode.insertBefore(disclaimerHr, creditsDiv);
-                creditsDiv.parentNode.insertBefore(disclaimerLink, creditsDiv);
-            } else {
-                settingsContent.appendChild(disclaimerLink);
-            }
-
-            document.getElementById('settings-disclaimer-link').addEventListener('click', (e) => {
-                e.preventDefault();
-                if (typeof window.showMriDisclaimer === 'function') {
-                    window.showMriDisclaimer(true);
-                }
-            });
-
-            const fsCheck = document.getElementById('fullscreen-check');
-            let fsPref = localStorage.getItem('mri_fullscreen') === 'true';
-            fsCheck.checked = fsPref;
-
-            const tryFullscreen = () => {
-                if (fsPref && !document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(() => {});
-                }
-            };
-
-            const onFirstGesture = () => {
-                if (fsPref) {
-                    tryFullscreen();
-                }
-                document.removeEventListener('click', onFirstGesture);
-                document.removeEventListener('keydown', onFirstGesture);
-            };
-
-            if (fsPref) {
-                document.addEventListener('click', onFirstGesture);
-                document.addEventListener('keydown', onFirstGesture);
-                tryFullscreen();
-            }
-
-            fsCheck.addEventListener('change', () => {
-                fsPref = fsCheck.checked;
-                localStorage.setItem('mri_fullscreen', fsPref);
-                if (fsPref) {
-                    document.documentElement.requestFullscreen().catch(() => {
-                        localStorage.setItem('mri_fullscreen', 'false');
-                        fsCheck.checked = false;
-                        fsPref = false;
-                    });
-                } else {
-                    if (document.fullscreenElement) {
-                        document.exitFullscreen();
-                    }
-                }
-            });
-
-            document.addEventListener('fullscreenchange', () => {
-                const isFs = !!document.fullscreenElement;
-                fsCheck.checked = isFs;
-                fsPref = isFs;
-                localStorage.setItem('mri_fullscreen', isFs);
-            });
-
-            const autoHideCheck = document.getElementById('auto-hide-check');
-            let autoHideActive = localStorage.getItem('mri_auto_hide_bars') === 'true';
-            autoHideCheck.checked = autoHideActive;
-
-            const applyAutoHide = () => {
-                const bottomToolbar = document.getElementById('bottom-toolbar');
-
-                if (autoHideActive) {
-                    headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-                    headerEl.style.transform = 'translateY(-100%)';
-                    headerEl.style.opacity = '0';
-
-                    const iframe = document.getElementById('tool-container');
-                    if (iframe && iframe.contentWindow) {
-                        iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
-                    }
-
-                    if (bottomToolbar) {
-                        bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-                        bottomToolbar.style.transform = 'translateY(100%)';
-                        bottomToolbar.style.opacity = '0';
-                    }
-                } else {
-                    headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-                    headerEl.style.transform = 'translateY(0)';
-                    headerEl.style.opacity = '1';
-
-                    const iframe = document.getElementById('tool-container');
-                    if (iframe && iframe.contentWindow) {
-                        iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
-                    }
-
-                    if (bottomToolbar) {
-                        bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-                        bottomToolbar.style.transform = 'translateY(0)';
-                        bottomToolbar.style.opacity = '1';
-                    }
-                }
-            };
-
-            const showHeader = () => {
-                if (!autoHideActive) return;
-                headerEl.style.transform = 'translateY(0)';
-                headerEl.style.opacity = '1';
-                const iframe = document.getElementById('tool-container');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
-                }
-            };
-            const hideHeader = () => {
-                if (!autoHideActive) return;
-                headerEl.style.transform = 'translateY(-100%)';
-                headerEl.style.opacity = '0';
-                const iframe = document.getElementById('tool-container');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
-                }
-            };
-            const showToolbar = () => {
-                if (!autoHideActive) return;
-                const bt = document.getElementById('bottom-toolbar');
-                if (bt) { bt.style.transform = 'translateY(0)'; bt.style.opacity = '1'; }
-                const iframe = document.getElementById('tool-container');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
-                }
-            };
-            const hideToolbar = () => {
-                if (!autoHideActive) return;
-                const bt = document.getElementById('bottom-toolbar');
-                if (bt) { bt.style.transform = 'translateY(100%)'; bt.style.opacity = '0'; }
-                const iframe = document.getElementById('tool-container');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
-                }
-            };
-
-            headerEl.addEventListener('mouseenter', showHeader);
-            headerEl.addEventListener('mouseleave', hideHeader);
-
-            const bt = document.getElementById('bottom-toolbar');
-            if (bt) {
-                bt.addEventListener('mouseenter', showToolbar);
-                bt.addEventListener('mouseleave', hideToolbar);
-            }
-
-            const topTrigger = document.createElement('div');
-            topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
-            document.body.appendChild(topTrigger);
-            topTrigger.addEventListener('mouseenter', showHeader);
-
-            autoHideCheck.addEventListener('change', () => {
-                autoHideActive = autoHideCheck.checked;
-                localStorage.setItem('mri_auto_hide_bars', autoHideActive);
-                applyAutoHide();
-            });
-
-            applyAutoHide();
-        };
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', injectSettings);
-        } else {
-            injectSettings();
-        }
     }
 
     setStatusText(text) {
