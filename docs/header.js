@@ -7,6 +7,13 @@ class MriHeader extends HTMLElement {
     connectedCallback() {
         const root = this.getAttribute('root') || '../';
         const pageTitle = document.title;
+        const isInIframe = window.self !== window.top;
+
+        // If inside an iframe (portal content), we hide the header completely 
+        // to avoid double headers, but keep the background logic running.
+        if (isInIframe) {
+            this.style.display = 'none';
+        }
 
         this.shadowRoot.innerHTML = `
             <style>
@@ -305,7 +312,7 @@ class MriHeader extends HTMLElement {
             </style>
             <div class="mri-logo-container">
                 <img src="${root}mri_icon.png" class="mri-icon-btn" id="mri-nav-toggle" title="Navigation Menu">
-                <a href="${root}index.html" class="mri-logo" title="Back to Home">
+                <a href="${root}home.html" class="mri-logo" id="mri-logo-link" title="Back to Home">
                     MRI Tools
                 </a>
             </div>
@@ -313,7 +320,7 @@ class MriHeader extends HTMLElement {
             <div id="mri-nav-panel">
                 <span class="info-close" id="nav-panel-close" style="top: 15px; right: 20px;">&times;</span>
                 <h3>Tools & Studies</h3>
-                <a href="${root}index.html" class="nav-item ${pageTitle === 'MRI Tools Index' ? 'active' : ''}">🏠 Home</a>
+                <a href="${root}home.html" class="nav-item ${pageTitle === 'MRI Tools Index' ? 'active' : ''}">🏠 Home</a>
                 <a href="${root}breathing-instructions/index.html" class="nav-item ${pageTitle === 'MRI Breathing Instructions' ? 'active' : ''}">🗣️ Breathing Instructions</a>
                 <a href="${root}breathing-pattern/index.html" class="nav-item ${pageTitle === 'MRI Breathing Pattern' ? 'active' : ''}">🫁 Breathing Pattern</a>
                 <a href="${root}orbit-fixation/index.html" class="nav-item ${pageTitle === 'MRI Orbit Fixation' ? 'active' : ''}">👁️ Orbit Fixation</a>
@@ -453,10 +460,70 @@ class MriHeader extends HTMLElement {
 
         notesPanel.addEventListener('click', (e) => e.stopPropagation());
 
+        if (isInIframe) {
+            const handlePortalMessage = (event) => {
+                if (event.data.type === 'SET_TOOLBAR_VISIBILITY') {
+                    const bt = document.getElementById('bottom-toolbar');
+                    if (bt) {
+                        bt.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                        if (event.data.visible) {
+                            bt.style.transform = 'translateY(0)';
+                            bt.style.opacity = '1';
+                        } else {
+                            bt.style.transform = 'translateY(100%)';
+                            bt.style.opacity = '0';
+                        }
+                    }
+                }
+            };
+            window.addEventListener('message', handlePortalMessage);
+            return;
+        }
+
         // --- Navigation Logic ---
         const navToggle = this.shadowRoot.getElementById('mri-nav-toggle');
         const navPanel = this.shadowRoot.getElementById('mri-nav-panel');
         const navPanelClose = this.shadowRoot.getElementById('nav-panel-close');
+
+        const isPortalShell = !!document.getElementById('tool-container');
+
+        const navItems = this.shadowRoot.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            if (isPortalShell && !item.href.includes('github.io')) {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const url = item.getAttribute('href');
+                    const iframe = document.getElementById('tool-container');
+                    if (iframe) iframe.src = url;
+                    navPanel.classList.remove('visible');
+                });
+            }
+        });
+
+        // Redirect standalone pages to portal if not in it already
+        if (!isInIframe && !isPortalShell && pageTitle !== 'MRI Tools Index' && !window.location.search.includes('standalone')) {
+            const currentPath = window.location.pathname;
+            const fileName = currentPath.substring(currentPath.lastIndexOf('/') + 1);
+            const folderName = currentPath.substring(0, currentPath.lastIndexOf('/'));
+            const parentFolderName = folderName.substring(folderName.lastIndexOf('/') + 1);
+            
+            // Construct the relative path for the portal
+            let portalPath = root + 'index.html'; // portal is now index.html
+            let targetPage = (parentFolderName && parentFolderName !== 'docs' ? parentFolderName + '/' : '') + fileName;
+            
+            window.location.href = portalPath + "?page=" + targetPage;
+        }
+
+        // --- Logo navigation logic ---
+        const logoLink = this.shadowRoot.getElementById('mri-logo-link');
+        if (logoLink && isPortalShell) {
+            logoLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const iframe = document.getElementById('tool-container');
+                if (iframe) iframe.src = logoLink.getAttribute('href');
+                navPanel.classList.remove('visible');
+            });
+        }
 
         navToggle.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -465,22 +532,18 @@ class MriHeader extends HTMLElement {
 
         navPanelClose.addEventListener('click', () => navPanel.classList.remove('visible'));
 
-        // Close nav on outside click
         document.addEventListener('click', () => navPanel.classList.remove('visible'));
         navPanel.addEventListener('click', (e) => e.stopPropagation());
 
-        // --- Inject settings into host page's #settings-content ---
         const headerEl = this;
 
         const injectSettings = () => {
             const settingsContent = document.getElementById('settings-content');
             if (!settingsContent) return;
 
-            // Find the "Mirror Patient Only" checkbox to insert before it
             const mirrorPatientCheck = document.getElementById('m-p-check');
             const mirrorRow = mirrorPatientCheck ? mirrorPatientCheck.closest('.control-row') : null;
 
-            // --- Auto Hide Bars checkbox ---
             const autoHideRow = document.createElement('div');
             autoHideRow.className = 'control-row';
             autoHideRow.innerHTML = '<input type="checkbox" id="auto-hide-check"><label for="auto-hide-check">⇱ Auto Hide Bars</label>';
@@ -490,26 +553,22 @@ class MriHeader extends HTMLElement {
                 settingsContent.appendChild(autoHideRow);
             }
 
-            // --- Full Screen checkbox ---
             const fullScreenRow = document.createElement('div');
             fullScreenRow.className = 'control-row';
             fullScreenRow.innerHTML = '<input type="checkbox" id="fullscreen-check"><label for="fullscreen-check">⛶ Full Screen</label>';
             autoHideRow.after(fullScreenRow);
 
-            // --- Find "Tools created by" block and insert disclaimer link before it ---
             const allDivs = settingsContent.querySelectorAll('div');
             let creditsDiv = null;
             allDivs.forEach(d => {
                 if (d.textContent.includes('Tools created by')) creditsDiv = d;
             });
 
-            // Find the <hr> just before credits
             const disclaimerLink = document.createElement('div');
             disclaimerLink.style.cssText = 'text-align: center; margin: 4px 0;';
             disclaimerLink.innerHTML = '<a href="#" id="settings-disclaimer-link" style="color: #fb7185; font-size: 0.65rem; text-decoration: underline; cursor: pointer; font-weight: 500;">⚠ Medical Disclaimer</a>';
 
             if (creditsDiv) {
-                // Insert a separator and the link before the credits
                 const disclaimerHr = document.createElement('hr');
                 disclaimerHr.style.cssText = 'border:0; border-top:1px solid #333; margin: 6px 0;';
                 creditsDiv.parentNode.insertBefore(disclaimerHr, creditsDiv);
@@ -518,7 +577,6 @@ class MriHeader extends HTMLElement {
                 settingsContent.appendChild(disclaimerLink);
             }
 
-            // --- Disclaimer link click handler ---
             document.getElementById('settings-disclaimer-link').addEventListener('click', (e) => {
                 e.preventDefault();
                 if (typeof window.showMriDisclaimer === 'function') {
@@ -526,46 +584,53 @@ class MriHeader extends HTMLElement {
                 }
             });
 
-            // --- Full Screen logic ---
             const fsCheck = document.getElementById('fullscreen-check');
-            // Restore persisted preference
-            const fsPref = localStorage.getItem('mri_fullscreen') === 'true';
+            let fsPref = localStorage.getItem('mri_fullscreen') === 'true';
             fsCheck.checked = fsPref;
 
-            // Auto-re-enter fullscreen on page load if preference is set
-            if (fsPref && !document.fullscreenElement) {
-                // Need a user gesture to enter fullscreen on first load,
-                // but subsequent navigations within the same tab can re-enter
-                document.documentElement.requestFullscreen().catch(() => {
-                    // Browser blocked it (no prior gesture) — clear preference
-                    localStorage.setItem('mri_fullscreen', 'false');
-                    fsCheck.checked = false;
-                });
+            const tryFullscreen = () => {
+                if (fsPref && !document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                }
+            };
+
+            const onFirstGesture = () => {
+                if (fsPref) {
+                    tryFullscreen();
+                }
+                document.removeEventListener('click', onFirstGesture);
+                document.removeEventListener('keydown', onFirstGesture);
+            };
+
+            if (fsPref) {
+                document.addEventListener('click', onFirstGesture);
+                document.addEventListener('keydown', onFirstGesture);
+                tryFullscreen();
             }
 
             fsCheck.addEventListener('change', () => {
-                if (fsCheck.checked) {
-                    localStorage.setItem('mri_fullscreen', 'true');
+                fsPref = fsCheck.checked;
+                localStorage.setItem('mri_fullscreen', fsPref);
+                if (fsPref) {
                     document.documentElement.requestFullscreen().catch(() => {
                         localStorage.setItem('mri_fullscreen', 'false');
                         fsCheck.checked = false;
+                        fsPref = false;
                     });
                 } else {
-                    localStorage.setItem('mri_fullscreen', 'false');
                     if (document.fullscreenElement) {
                         document.exitFullscreen();
                     }
                 }
             });
 
-            // Keep checkbox and localStorage in sync if user exits via Escape/F11
             document.addEventListener('fullscreenchange', () => {
                 const isFs = !!document.fullscreenElement;
                 fsCheck.checked = isFs;
+                fsPref = isFs;
                 localStorage.setItem('mri_fullscreen', isFs);
             });
 
-            // --- Auto Hide Bars logic ---
             const autoHideCheck = document.getElementById('auto-hide-check');
             let autoHideActive = localStorage.getItem('mri_auto_hide_bars') === 'true';
             autoHideCheck.checked = autoHideActive;
@@ -578,6 +643,11 @@ class MriHeader extends HTMLElement {
                     headerEl.style.transform = 'translateY(-100%)';
                     headerEl.style.opacity = '0';
 
+                    const iframe = document.getElementById('tool-container');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
+                    }
+
                     if (bottomToolbar) {
                         bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
                         bottomToolbar.style.transform = 'translateY(100%)';
@@ -587,6 +657,11 @@ class MriHeader extends HTMLElement {
                     headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
                     headerEl.style.transform = 'translateY(0)';
                     headerEl.style.opacity = '1';
+
+                    const iframe = document.getElementById('tool-container');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
+                    }
 
                     if (bottomToolbar) {
                         bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
@@ -600,57 +675,62 @@ class MriHeader extends HTMLElement {
                 if (!autoHideActive) return;
                 headerEl.style.transform = 'translateY(0)';
                 headerEl.style.opacity = '1';
+                const iframe = document.getElementById('tool-container');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
+                }
             };
             const hideHeader = () => {
                 if (!autoHideActive) return;
                 headerEl.style.transform = 'translateY(-100%)';
                 headerEl.style.opacity = '0';
+                const iframe = document.getElementById('tool-container');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
+                }
             };
             const showToolbar = () => {
                 if (!autoHideActive) return;
                 const bt = document.getElementById('bottom-toolbar');
                 if (bt) { bt.style.transform = 'translateY(0)'; bt.style.opacity = '1'; }
+                const iframe = document.getElementById('tool-container');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
+                }
             };
             const hideToolbar = () => {
                 if (!autoHideActive) return;
                 const bt = document.getElementById('bottom-toolbar');
                 if (bt) { bt.style.transform = 'translateY(100%)'; bt.style.opacity = '0'; }
+                const iframe = document.getElementById('tool-container');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
+                }
             };
 
-            // Header hover
             headerEl.addEventListener('mouseenter', showHeader);
             headerEl.addEventListener('mouseleave', hideHeader);
 
-            // Bottom toolbar hover
             const bt = document.getElementById('bottom-toolbar');
             if (bt) {
                 bt.addEventListener('mouseenter', showToolbar);
                 bt.addEventListener('mouseleave', hideToolbar);
             }
 
-            // Invisible trigger zones at screen edges
             const topTrigger = document.createElement('div');
             topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
             document.body.appendChild(topTrigger);
             topTrigger.addEventListener('mouseenter', showHeader);
 
-            const bottomTrigger = document.createElement('div');
-            bottomTrigger.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
-            document.body.appendChild(bottomTrigger);
-            bottomTrigger.addEventListener('mouseenter', showToolbar);
-
-            // Checkbox change handler
             autoHideCheck.addEventListener('change', () => {
                 autoHideActive = autoHideCheck.checked;
                 localStorage.setItem('mri_auto_hide_bars', autoHideActive);
                 applyAutoHide();
             });
 
-            // Apply on load
             applyAutoHide();
         };
 
-        // Inject after DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', injectSettings);
         } else {

@@ -1,226 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRI Tools Index</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>MRI Tools Portal</title>
     <script src="header.js"></script>
     <style>
-        :root {
-            --scale-factor: 1.0;
-        }
-
-        body {
-            background-color: #000;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        body, html {
             margin: 0;
             padding: 0;
             height: 100vh;
+            width: 100vw;
             overflow: hidden;
-            box-sizing: border-box;
-        }
-
-        /* Full-viewport background image */
-        #bg-image {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center center;
-            z-index: 0;
-            /* Restyle palette to match dark teal aesthetic */
-            filter: brightness(0.25) saturate(0.4) sepia(0.5) hue-rotate(140deg) contrast(1.1);
-        }
-
-        /* Dark teal overlay on top of the image */
-        #bg-image::after {
-            content: '';
-        }
-
-        /* Separate overlay element for teal depth effect */
-        #bg-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-            background: 
-                radial-gradient(ellipse at center, rgba(0, 43, 54, 0.55) 0%, rgba(0, 0, 0, 0.82) 100%),
-                linear-gradient(to bottom, rgba(148, 210, 189, 0.04) 0%, transparent 60%);
-        }
-
-        /* --- MIRRORING & SCALING --- */
-        .mirror-all {
-            transform: scaleX(-1);
-        }
-
-        .mirror-patient-active {
-            transform: scaleX(-1);
-        }
-
-        /* Scaling layer covers the full viewport */
-        #scaling-layer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            transform: scale(var(--scale-factor));
-            transform-origin: center center;
-            z-index: 1;
-        }
-
-        #mirror-layer {
-            width: 100%;
-            height: 100%;
-            transition: transform 0.2s ease;
-            position: relative;
-        }
-
-        /*
-         * Menu centred on the screen area in the image.
-         * Image native size: 1264x739
-         * Screen dimensions (refined): x=262-999, y=19.22%-83.21%
-         * Centre X: 49.88%
-         * Centre Y: 51.22%
-         * Width: 58.31%
-         */
-        .main-menu {
-            position: absolute;
-            left: 49.88%;
-            top: 51.22%;
-            transform: translate(-50%, -50%);
-            width: 58.31%;
+            background-color: #000;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            padding: 10px;
-            box-sizing: border-box;
         }
-
-        .main-menu a {
-            color: #ffffff;
-            font-size: clamp(0.9rem, 1.92vh, 1.32rem);
-            text-decoration: none;
-            padding: 11px 24px;
-            border-radius: 8px;
-            background: rgba(0, 18, 25, 0.72);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            transition: all 0.2s ease;
-            display: block;
-            text-align: center;
-            font-weight: 600;
-            letter-spacing: 0.03em;
-            border: 1px solid rgba(148, 210, 189, 0.4);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-            width: 72%;
+        #tool-container {
+            flex-grow: 1;
+            border: none;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
         }
-
-        .main-menu a:hover {
-            background: rgba(0, 18, 25, 0.92);
-            border-color: #94d2bd;
-            transform: scale(1.04);
-            color: #94d2bd;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+        /* Ensure the header from the standalone pages doesn't show when in portal */
+        iframe {
+            background-color: #000;
         }
     </style>
 </head>
-
-<body id="mainBody">
-    <mri-header root="./"></mri-header>
-
-    <!-- Background image -->
-    <img id="bg-image" src="mri_background.png" alt="MRI Scanner">
-    <!-- Dark teal depth overlay -->
-    <div id="bg-overlay"></div>
-
-    <div id="settings-panel" class="collapsed">
-        <div id="settings-content">
-            <div class="control-row">
-                <label>Zoom: </label>
-                <select id="zoom-select" onchange="updateScale(this.value)"></select>
-            </div>
-            <hr style="border:0; border-top:1px solid #333">
-            <div class="control-row">
-                <input type="checkbox" id="m-p-check" onchange="toggleMirror('patient')">
-                <label for="m-p-check">Mirror Patient Only</label>
-            </div>
-            <div class="control-row">
-                <input type="checkbox" id="m-a-check" onchange="toggleMirror('all')">
-                <label for="m-a-check">Mirror Everything</label>
-            </div>
-            <hr style="border:0; border-top:1px solid #333; margin: 10px 0;">
-            <div style="font-size: 0.6rem; color: #666; text-align: center; line-height: 1.4;">
-                Tools created by <br>
-                <a href="https://www.linkedin.com/in/giuseppepalminteri" target="_blank"
-                    style="color:#94d2bd; text-decoration: none; font-weight: bold;">
-                    Giuseppe Palminteri
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div id="scaling-layer">
-        <div id="mirror-layer">
-            <div class="main-menu">
-                <a href="breathing-instructions/index.html">🗣️ Breathing Instructions</a>
-                <a href="breathing-pattern/index.html">🫁 Breathing Pattern</a>
-                <a href="orbit-fixation/index.html">👁️ Orbit Fixation</a>
-                <a href="tmj/index.html">🦷 TMJ Study</a>
-            </div>
-        </div>
-    </div>
+<body>
+    <mri-header root="./" id="portal-header"></mri-header>
+    <iframe id="tool-container" src="home.html"></iframe>
 
     <script>
-        const scalingLayer = document.getElementById('scaling-layer');
-        const mirrorLayer = document.getElementById('mirror-layer');
-        const bodyEl = document.getElementById('mainBody');
+        const portalHeader = document.getElementById('portal-header');
+        const toolIframe = document.getElementById('tool-container');
 
-        function toggleMirror(type) {
-            const cp = document.getElementById('m-p-check');
-            const ca = document.getElementById('m-a-check');
+        // Handle direct page requests via query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetPage = urlParams.get('page');
+        if (targetPage) {
+            toolIframe.src = targetPage;
+            // Clean up the URL in the address bar without reloading
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
 
-            if (type === 'patient') {
-                if (cp.checked) {
-                    ca.checked = false;
-                    bodyEl.classList.remove('mirror-all');
-                    mirrorLayer.classList.add('mirror-patient-active');
-                } else {
-                    mirrorLayer.classList.remove('mirror-patient-active');
-                }
-            } else {
-                if (ca.checked) {
-                    cp.checked = false;
-                    mirrorLayer.classList.remove('mirror-patient-active');
-                    bodyEl.classList.add('mirror-all');
-                } else {
-                    bodyEl.classList.remove('mirror-all');
-                }
+        // Handle navigation messages from header
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'NAVIGATE') {
+                toolIframe.src = event.data.url;
             }
-        }
+        });
 
-        const zoomSelect = document.getElementById('zoom-select');
-        for (let i = 30; i <= 150; i += 10) {
-            let opt = document.createElement('option');
-            opt.value = i / 100;
-            opt.innerHTML = i + '%';
-            if (i === 100) opt.selected = true;
-            zoomSelect.appendChild(opt);
-        }
+        // Update document title and header based on iframe content
+        toolIframe.onload = () => {
+            try {
+                const innerDoc = toolIframe.contentDocument || toolIframe.contentWindow.document;
+                const innerWin = toolIframe.contentWindow;
+                
+                if (innerDoc.title) {
+                    document.title = innerDoc.title + " (Portal)";
+                    // Update header title display
+                    if (portalHeader.shadowRoot) {
+                        const titleText = portalHeader.shadowRoot.getElementById('mri-title-text');
+                        if (titleText) titleText.textContent = innerDoc.title;
+                    }
+                }
 
-        function updateScale(val) {
-            document.documentElement.style.setProperty('--scale-factor', val);
-        }
+                // Sync status text if present in the header component
+                const pollStatus = () => {
+                   if (portalHeader && portalHeader.shadowRoot) {
+                       const innerHeader = innerDoc.querySelector('mri-header');
+                       // We could sync status text here if needed
+                   }
+                };
+                
+            } catch (e) {
+                // Cross-origin issues (unlikely since it's local)
+            }
+        };
     </script>
 </body>
-
 </html>
