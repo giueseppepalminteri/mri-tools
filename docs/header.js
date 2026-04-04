@@ -13,9 +13,6 @@ class MriHeader extends HTMLElement {
         const currentPath = window.location.pathname;
         const fileName = currentPath.substring(currentPath.lastIndexOf('/') + 1);
         const isPortalShell = !!document.getElementById('tool-container') || 
-                              fileName === 'index.html' || 
-                              fileName.includes('index.html') ||
-                              fileName === '' || 
                               this.id === 'portal-header' ||
                               this.getAttribute('id') === 'portal-header';
 
@@ -77,7 +74,7 @@ class MriHeader extends HTMLElement {
             }
 
             const tryFullscreen = () => {
-                if (fsPref && !document.fullscreenElement) {
+                if (fsPref && !document.fullscreenElement && !isInIframe) {
                     document.documentElement.requestFullscreen().catch(() => {});
                 }
             };
@@ -179,6 +176,9 @@ class MriHeader extends HTMLElement {
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
                 }
+                if (isInIframe) {
+                    window.parent.postMessage({ type: 'SET_HEADER_VISIBILITY', visible: true }, '*');
+                }
             };
             const hideHeader = () => {
                 if (!autoHideActive) return;
@@ -187,6 +187,9 @@ class MriHeader extends HTMLElement {
                 const iframe = document.getElementById('tool-container');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
+                }
+                if (isInIframe) {
+                    window.parent.postMessage({ type: 'SET_HEADER_VISIBILITY', visible: false }, '*');
                 }
             };
             const showToolbar = () => {
@@ -197,6 +200,9 @@ class MriHeader extends HTMLElement {
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
                 }
+                if (isInIframe) {
+                    window.parent.postMessage({ type: 'SET_HEADER_VISIBILITY', visible: true }, '*');
+                }
             };
             const hideToolbar = () => {
                 if (!autoHideActive) return;
@@ -205,6 +211,9 @@ class MriHeader extends HTMLElement {
                 const iframe = document.getElementById('tool-container');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
+                }
+                if (isInIframe) {
+                    window.parent.postMessage({ type: 'SET_HEADER_VISIBILITY', visible: false }, '*');
                 }
             };
 
@@ -218,9 +227,14 @@ class MriHeader extends HTMLElement {
             }
 
             const topTrigger = document.createElement('div');
-            topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:12px;z-index:9998;pointer-events:auto;';
+            topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:18px;z-index:9998;pointer-events:auto;';
             document.body.appendChild(topTrigger);
             topTrigger.addEventListener('mouseenter', showHeader);
+
+            const bottomTrigger = document.createElement('div');
+            bottomTrigger.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:18px;z-index:9998;pointer-events:auto;';
+            document.body.appendChild(bottomTrigger);
+            bottomTrigger.addEventListener('mouseenter', showToolbar);
 
             if (autoHideCheck) {
                 autoHideCheck.addEventListener('change', () => {
@@ -241,6 +255,11 @@ class MriHeader extends HTMLElement {
             window.mri_applyAutoHideGlobal = (active) => {
                 autoHideActive = active;
                 applyAutoHide();
+            };
+
+            window.mri_applyHeaderVisibility = (visible) => {
+                if (visible) showHeader();
+                else hideHeader();
             };
         };
 
@@ -278,6 +297,10 @@ class MriHeader extends HTMLElement {
                                 document.exitFullscreen().catch(() => {});
                             }
                         }
+                    }
+                } else if (event.data.type === 'SET_HEADER_VISIBILITY') {
+                    if (window.mri_applyHeaderVisibility) {
+                        window.mri_applyHeaderVisibility(event.data.visible);
                     }
                 }
             });
