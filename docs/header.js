@@ -227,12 +227,12 @@ class MriHeader extends HTMLElement {
             }
 
             const topTrigger = document.createElement('div');
-            topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:36px;z-index:9998;pointer-events:auto;';
+            topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:72px;z-index:9998;pointer-events:auto;';
             document.body.appendChild(topTrigger);
             topTrigger.addEventListener('mouseenter', showHeader);
 
             const bottomTrigger = document.createElement('div');
-            bottomTrigger.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:36px;z-index:9998;pointer-events:auto;';
+            bottomTrigger.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:72px;z-index:9998;pointer-events:auto;';
             document.body.appendChild(bottomTrigger);
             bottomTrigger.addEventListener('mouseenter', showToolbar);
 
@@ -768,15 +768,35 @@ class MriHeader extends HTMLElement {
             this.style.display = 'none';
             const handlePortalMessage = (event) => {
                 if (event.data.type === 'SET_TOOLBAR_VISIBILITY') {
+                    if (event.data.visible) {
+                        document.body.classList.remove('toolbars-hidden');
+                    } else {
+                        document.body.classList.add('toolbars-hidden');
+                    }
+                    
+                    // Fallback for elements lacking CSS rules for the class
                     const bottomToolbar = document.getElementById('bottom-toolbar');
                     if (bottomToolbar) {
-                        bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+                        bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
                         if (event.data.visible) {
                             bottomToolbar.style.transform = 'translateY(0)';
                             bottomToolbar.style.opacity = '1';
+                            bottomToolbar.style.pointerEvents = 'auto';
                         } else {
-                            bottomToolbar.style.transform = 'translateY(100%)';
+                            bottomToolbar.style.transform = 'translateY(110%)';
                             bottomToolbar.style.opacity = '0';
+                            bottomToolbar.style.pointerEvents = 'none';
+                        }
+                    }
+
+                    // For top-status (timer HUD)
+                    const topStatus = document.getElementById('top-status');
+                    if (topStatus) {
+                        topStatus.style.transition = 'opacity 0.35s ease';
+                        if (event.data.visible) {
+                            topStatus.style.opacity = ''; // Reverts to CSS default/var
+                        } else {
+                            topStatus.style.opacity = '0';
                         }
                     }
                 } else if (event.data.type === 'TOGGLE_SETTINGS') {
