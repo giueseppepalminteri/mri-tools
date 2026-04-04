@@ -132,7 +132,7 @@ input[type="number"] { width: 55px; text-align: center; }
     white-space: pre-wrap;
 }
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
-.app-container { display: flex; flex-direction: column; height: 100%; padding: 20px 30px; padding-top: 60px; position: relative; z-index: 1; }
+.app-container { display: flex; flex-direction: column; height: 100%; padding: 20px 30px; position: relative; z-index: 1; }
 header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 6px 15px; border-bottom: 2px solid rgba(255,255,255,0.1);
@@ -232,6 +232,7 @@ header h1 { margin: 0; font-size: clamp(1rem, 2vw, 1.4rem); }
 
 /* Toolbar */
 #bottom-toolbar {
+    position: fixed; bottom: 0; left: 0; width: 100%; box-sizing: border-box;
     background: #050505; border-top: 1px solid #222; z-index: 2001;
     display: flex; flex-direction: column; padding: 10px 10px 30px 10px; gap: 10px;
 }

@@ -227,12 +227,12 @@ class MriHeader extends HTMLElement {
             }
 
             const topTrigger = document.createElement('div');
-            topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:18px;z-index:9998;pointer-events:auto;';
+            topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:36px;z-index:9998;pointer-events:auto;';
             document.body.appendChild(topTrigger);
             topTrigger.addEventListener('mouseenter', showHeader);
 
             const bottomTrigger = document.createElement('div');
-            bottomTrigger.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:18px;z-index:9998;pointer-events:auto;';
+            bottomTrigger.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:36px;z-index:9998;pointer-events:auto;';
             document.body.appendChild(bottomTrigger);
             bottomTrigger.addEventListener('mouseenter', showToolbar);
 
