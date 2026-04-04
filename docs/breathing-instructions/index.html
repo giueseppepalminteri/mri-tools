@@ -680,8 +680,10 @@
           cp.checked = false;
           mirrorLayer.classList.remove('mirror-patient-active');
           bodyEl.classList.add('mirror-all');
+          if (window.parent !== window) window.parent.postMessage({ type: 'SET_MIRROR_ALL', active: true }, '*');
         } else {
           bodyEl.classList.remove('mirror-all');
+          if (window.parent !== window) window.parent.postMessage({ type: 'SET_MIRROR_ALL', active: false }, '*');
         }
       }
     }

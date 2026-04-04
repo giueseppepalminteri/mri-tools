@@ -132,27 +132,30 @@ class MriHeader extends HTMLElement {
                 autoHideCheck.checked = autoHideActive;
             }
 
-            const applyAutoHide = () => {
-                const bottomToolbar = document.getElementById('bottom-toolbar');
+            window.mriHeaderMirror = false;
+            const getTransform = (y) => `translateY(${y}) ${window.mriHeaderMirror ? 'scaleX(-1)' : ''}`;
+            
+            window.mri_updateHeaderTransform = () => {
+                const currentY = autoHideActive && (headerEl.style.opacity === '0') ? '-100%' : '0';
+                headerEl.style.transform = getTransform(currentY);
+            };
 
+            const applyAutoHide = () => {
                 if (autoHideActive) {
                     headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-                    headerEl.style.transform = 'translateY(-100%)';
+                    headerEl.style.transform = getTransform('-100%');
                     headerEl.style.opacity = '0';
 
-                    const iframe = document.getElementById('tool-container');
-                    if (iframe && iframe.contentWindow) {
-                        iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
-                    }
-
+                    const bottomToolbar = document.getElementById('bottom-toolbar');
                     if (bottomToolbar) {
                         bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-                        bottomToolbar.style.transform = 'translateY(100%)';
+                        bottomToolbar.style.transform = 'translateY(110%)';
                         bottomToolbar.style.opacity = '0';
+                        bottomToolbar.style.pointerEvents = 'none';
                     }
                 } else {
                     headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-                    headerEl.style.transform = 'translateY(0)';
+                    headerEl.style.transform = getTransform('0');
                     headerEl.style.opacity = '1';
 
                     const iframe = document.getElementById('tool-container');
@@ -160,17 +163,20 @@ class MriHeader extends HTMLElement {
                         iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
                     }
 
+                    const bottomToolbar = document.getElementById('bottom-toolbar');
                     if (bottomToolbar) {
                         bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
                         bottomToolbar.style.transform = 'translateY(0)';
                         bottomToolbar.style.opacity = '1';
+                        bottomToolbar.style.pointerEvents = 'auto';
                     }
+                    document.body.classList.remove('toolbars-hidden');
                 }
             };
 
             const showHeader = () => {
                 if (!autoHideActive) return;
-                headerEl.style.transform = 'translateY(0)';
+                headerEl.style.transform = getTransform('0');
                 headerEl.style.opacity = '1';
                 const iframe = document.getElementById('tool-container');
                 if (iframe && iframe.contentWindow) {
@@ -182,7 +188,7 @@ class MriHeader extends HTMLElement {
             };
             const hideHeader = () => {
                 if (!autoHideActive) return;
-                headerEl.style.transform = 'translateY(-100%)';
+                headerEl.style.transform = getTransform('-100%');
                 headerEl.style.opacity = '0';
                 const iframe = document.getElementById('tool-container');
                 if (iframe && iframe.contentWindow) {
@@ -301,6 +307,11 @@ class MriHeader extends HTMLElement {
                 } else if (event.data.type === 'SET_HEADER_VISIBILITY') {
                     if (window.mri_applyHeaderVisibility) {
                         window.mri_applyHeaderVisibility(event.data.visible);
+                    }
+                } else if (event.data.type === 'SET_MIRROR_ALL') {
+                    window.mriHeaderMirror = event.data.active;
+                    if (window.mri_updateHeaderTransform) {
+                        window.mri_updateHeaderTransform();
                     }
                 }
             });

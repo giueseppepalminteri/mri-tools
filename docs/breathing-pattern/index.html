@@ -454,8 +454,14 @@
                 if (cp.checked) { ca.checked = false; body.classList.remove('mirror-all'); patientWrapper.classList.add('mirror-patient-only'); st.classList.add('mirror-patient-only'); }
                 else { patientWrapper.classList.remove('mirror-patient-only'); st.classList.remove('mirror-patient-only'); }
             } else {
-                if (ca.checked) { cp.checked = false; patientWrapper.classList.remove('mirror-patient-only'); st.classList.remove('mirror-patient-only'); body.classList.add('mirror-all'); }
-                else { body.classList.remove('mirror-all'); }
+                if (ca.checked) { 
+                    cp.checked = false; patientWrapper.classList.remove('mirror-patient-only'); st.classList.remove('mirror-patient-only'); body.classList.add('mirror-all'); 
+                    if (window.parent !== window) window.parent.postMessage({ type: 'SET_MIRROR_ALL', active: true }, '*');
+                }
+                else { 
+                    body.classList.remove('mirror-all'); 
+                    if (window.parent !== window) window.parent.postMessage({ type: 'SET_MIRROR_ALL', active: false }, '*');
+                }
             }
         }
 

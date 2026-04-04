@@ -56,6 +56,12 @@
         // Update document title and header based on iframe content
         toolIframe.onload = () => {
             try {
+                // Reset mirror state for header because guest tools reset their mirror on load
+                if (window.mri_updateHeaderTransform) {
+                    window.mriHeaderMirror = false;
+                    window.mri_updateHeaderTransform();
+                }
+
                 const innerDoc = toolIframe.contentDocument || toolIframe.contentWindow.document;
                 const innerWin = toolIframe.contentWindow;
                 
