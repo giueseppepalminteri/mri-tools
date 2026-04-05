@@ -530,15 +530,34 @@
       }
 
       async function runTimer(duration, label, tint) {
-        let remaining = duration;
         setTint(tint);
-        while (remaining > 0 && !state.stopRequested) {
-          stepText.innerHTML = label;
-          countdown.textContent = `${Math.ceil(remaining)}s`;
-          progressBar.style.width = `${(1 - remaining / duration) * 100}%`;
-          remaining -= 0.1;
-          await new Promise(r => setTimeout(r, 100));
-        }
+        stepText.innerHTML = label;
+        
+        return new Promise(resolve => {
+            const startTime = performance.now();
+            const durationMs = duration * 1000;
+            
+            function tick(now) {
+                if (state.stopRequested) {
+                    resolve();
+                    return;
+                }
+                
+                const elapsed = now - startTime;
+                const remaining = Math.max(0, duration - (elapsed / 1000));
+                
+                countdown.textContent = `${Math.ceil(remaining)}s`;
+                progressBar.style.width = `${(elapsed / durationMs) * 100}%`;
+                
+                if (elapsed < durationMs) {
+                    requestAnimationFrame(tick);
+                } else {
+                    resolve();
+                }
+            }
+            
+            requestAnimationFrame(tick);
+        });
       }
 
       startBtn.onclick = async () => {

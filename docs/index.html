@@ -73,14 +73,6 @@
                         if (titleText) titleText.textContent = innerDoc.title;
                     }
                 }
-
-                // Sync status text if present in the header component
-                const pollStatus = () => {
-                   if (portalHeader && portalHeader.shadowRoot) {
-                       const innerHeader = innerDoc.querySelector('mri-header');
-                       // We could sync status text here if needed
-                   }
-                };
                 
             } catch (e) {
                 // Cross-origin issues (unlikely since it's local)

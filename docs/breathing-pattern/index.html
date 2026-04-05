@@ -502,9 +502,15 @@
             applySync(bpm, inSec, outSec);
         }
 
+        let cachedBpm = 6;
+        let cachedInSec = 5;
+        let cachedOutSec = 5;
+        let cachedTextShown = false;
+
         function applySync(bpm, inSec, outSec) {
-            // No longer needed to update CSS variables here
-            // The loop will pick up the input values directly
+            cachedBpm = bpm;
+            cachedInSec = inSec;
+            cachedOutSec = outSec;
         }
 
         let breathStartTime = 0;
@@ -514,9 +520,9 @@
             if (!breathStartTime) breathStartTime = now;
             const elapsed = now - breathStartTime;
             
-            const bpm = parseFloat(document.getElementById('bpm-val').value) || 6;
-            const inSec = parseFloat(document.getElementById('in-val').value) || 5;
-            const outSec = parseFloat(document.getElementById('out-val').value) || 5;
+            const bpm = cachedBpm;
+            const inSec = cachedInSec;
+            const outSec = cachedOutSec;
             const totalMs = (inSec + outSec) * 1000;
             
             const cyclePos = elapsed % totalMs;
@@ -539,8 +545,7 @@
             document.documentElement.style.setProperty('--breath-tick', tickValue.toFixed(4));
             
             // Synchronize text
-            const textShown = document.getElementById('text-toggle').checked;
-            if (textShown) {
+            if (cachedTextShown) {
                 const newText = (phase === "in") ? "BREATHE IN" : "BREATHE OUT";
                 const newClass = (phase === "in") ? "inhale" : "exhale";
                 
@@ -561,6 +566,7 @@
         }
 
         function updateTextVisibility(v) {
+            cachedTextShown = v;
             if (!v) {
                 breathText.style.display = 'none';
                 breathText.innerText = "";

@@ -209,7 +209,7 @@ class MriHeader extends HTMLElement {
                 headerEl.style.opacity = '0';
                 
                 // Collapse panels
-                const settingsPanel = headerEl.shadowRoot.getElementById('settings-panel');
+                const settingsPanel = document.getElementById('settings-panel');
                 if (settingsPanel && !settingsPanel.classList.contains('collapsed')) {
                     settingsPanel.classList.add('collapsed');
                 }
@@ -850,6 +850,14 @@ class MriHeader extends HTMLElement {
                             bottomToolbar.style.transform = 'translateY(110%)';
                             bottomToolbar.style.opacity = '0';
                             bottomToolbar.style.pointerEvents = 'none';
+                        }
+                    }
+
+                    // Collapse settings-panel in guest tool when bars hide
+                    if (!event.data.visible) {
+                        const guestSettingsPanel = document.getElementById('settings-panel');
+                        if (guestSettingsPanel && !guestSettingsPanel.classList.contains('collapsed')) {
+                            guestSettingsPanel.classList.add('collapsed');
                         }
                     }
 
