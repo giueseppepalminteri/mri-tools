@@ -132,6 +132,21 @@ class MriHeader extends HTMLElement {
                 autoHideCheck.checked = autoHideActive;
             }
 
+            if (!document.getElementById('mri-pinned-bars-style')) {
+                const style = document.createElement('style');
+                style.id = 'mri-pinned-bars-style';
+                if (!isPortalShell) {
+                    style.innerHTML = `
+                        body.bars-pinned {
+                            padding-top: 60px !important;
+                            padding-bottom: 75px !important;
+                            box-sizing: border-box !important;
+                        }
+                    `;
+                }
+                document.head.appendChild(style);
+            }
+
             window.mriHeaderMirror = false;
             const getTransform = (y) => `translateY(${y}) ${window.mriHeaderMirror ? 'scaleX(-1)' : ''}`;
             
@@ -153,6 +168,7 @@ class MriHeader extends HTMLElement {
                         bottomToolbar.style.opacity = '0';
                         bottomToolbar.style.pointerEvents = 'none';
                     }
+                    document.body.classList.remove('bars-pinned');
                 } else {
                     headerEl.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
                     headerEl.style.transform = getTransform('0');
@@ -171,6 +187,7 @@ class MriHeader extends HTMLElement {
                         bottomToolbar.style.pointerEvents = 'auto';
                     }
                     document.body.classList.remove('toolbars-hidden');
+                    document.body.classList.add('bars-pinned');
                 }
             };
 
