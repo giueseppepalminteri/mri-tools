@@ -207,6 +207,21 @@ class MriHeader extends HTMLElement {
                 if (!autoHideActive) return;
                 headerEl.style.transform = getTransform('-100%');
                 headerEl.style.opacity = '0';
+                
+                // Collapse panels
+                const settingsPanel = headerEl.shadowRoot.getElementById('settings-panel');
+                if (settingsPanel && !settingsPanel.classList.contains('collapsed')) {
+                    settingsPanel.classList.add('collapsed');
+                }
+                const navPanel = headerEl.shadowRoot.getElementById('mri-nav-panel');
+                if (navPanel) {
+                    navPanel.classList.remove('visible');
+                }
+                const notesPanel = headerEl.shadowRoot.getElementById('mri-notes-panel');
+                if (notesPanel) {
+                    notesPanel.classList.remove('visible');
+                }
+
                 const iframe = document.getElementById('tool-container');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
@@ -240,24 +255,45 @@ class MriHeader extends HTMLElement {
                 }
             };
 
-            headerEl.addEventListener('mouseenter', showHeader);
-            headerEl.addEventListener('mouseleave', hideHeader);
+            let hideTimeout;
+            const scheduleHide = () => {
+                if (!autoHideActive) return;
+                if (hideTimeout) clearTimeout(hideTimeout);
+                hideTimeout = setTimeout(() => {
+                    hideHeader();
+                    hideToolbar();
+                }, 300);
+            };
 
-            const bt = document.getElementById('bottom-toolbar');
-            if (bt) {
-                bt.addEventListener('mouseenter', showToolbar);
-                bt.addEventListener('mouseleave', hideToolbar);
-            }
+            const cancelHide = () => {
+                if (!autoHideActive) return;
+                if (hideTimeout) clearTimeout(hideTimeout);
+                showHeader();
+                showToolbar();
+            };
 
-            const topTrigger = document.createElement('div');
-            topTrigger.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:72px;z-index:9998;pointer-events:auto;';
-            document.body.appendChild(topTrigger);
-            topTrigger.addEventListener('mouseenter', showHeader);
+            document.addEventListener('mousemove', (e) => {
+                if (!autoHideActive) return;
+                
+                const path = e.composedPath();
+                const isOverHeader = path.some(el => el === headerEl || (el.classList && (el.classList.contains('mri-nav-panel') || el.id === 'settings-panel')));
+                
+                const bt = document.getElementById('bottom-toolbar');
+                const isOverBottomBar = bt && path.some(el => el === bt);
 
-            const bottomTrigger = document.createElement('div');
-            bottomTrigger.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:72px;z-index:9998;pointer-events:auto;';
-            document.body.appendChild(bottomTrigger);
-            bottomTrigger.addEventListener('mouseenter', showToolbar);
+                const isOverTopEdge = e.clientY <= 72;
+                const isOverBottomEdge = window.innerHeight - e.clientY <= 72;
+
+                if (isOverHeader || isOverBottomBar || isOverTopEdge || isOverBottomEdge) {
+                    cancelHide();
+                } else {
+                    scheduleHide();
+                }
+            });
+
+            document.addEventListener('mouseleave', () => {
+                scheduleHide();
+            });
 
             if (autoHideCheck) {
                 autoHideCheck.addEventListener('change', () => {
