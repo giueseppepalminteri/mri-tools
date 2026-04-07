@@ -650,8 +650,8 @@
 
       // Keyboard Controls
       document.addEventListener('keydown', (e) => {
-        // Only ignore shortcuts when typing in the instruction text area
-        if (e.target === document.getElementById('instruction-input')) {
+        // Ignore shortcuts when typing in any text input or textarea
+        if (e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'INPUT' && e.target.type === 'text')) {
           return;
         }
 

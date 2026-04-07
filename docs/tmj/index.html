@@ -473,6 +473,8 @@
         }
 
         window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'INPUT' && e.target.type === 'text')) return;
+            
             if (e.code === 'Space') { e.preventDefault(); if (!isStarted) startPresentation(); else handleAdvance(); }
             if (e.code === 'ArrowLeft') handleBack();
             if (e.code === 'ArrowRight') handleAdvance();
