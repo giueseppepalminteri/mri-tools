@@ -721,6 +721,15 @@ class MriHeader extends HTMLElement {
         if (pageTitle !== 'MRI Tools Index') {
             const excludedInputIds = ['fullscreen-check', 'auto-hide-check', 'preset-name-input', 'preset-select', 'zoom-select', 'm-p-check', 'm-a-check', 'instr-check', 'instr-size-slider'];
             
+            const keyMap = {
+                'reps':'r', 'inhale':'i', 'hold':'h', 'recovery':'c', 'patternType':'p', 'alertSpeed':'a',
+                'size-slider':'s', 'jitter-slider':'j', 'freq-slider':'f', 'cd-min':'m', 'cd-sec':'x', 'opacity-slider':'o',
+                'bpm':'b', 'inOutSelect':'io', 'pulse-en':'pe', 'text-en':'te', 'timer-select':'ts'
+            };
+            const revMap = Object.entries(keyMap).reduce((acc, [k,v]) => { acc[v]=k; return acc; }, {});
+            const shortK = k => keyMap[k] || k;
+            const longK = k => revMap[k] || k;
+
             const getSyncableInputs = () => {
                 const nodes = document.querySelectorAll('input[id], select[id]');
                 return Array.from(nodes).filter(el => !excludedInputIds.includes(el.id) && !(headerEl.shadowRoot && headerEl.shadowRoot.contains(el)));
@@ -731,22 +740,19 @@ class MriHeader extends HTMLElement {
                 const params = new URLSearchParams(window.location.search);
                 let changed = false;
 
-                inputs.forEach(input => {
-                    let val;
-                    if (input.type === 'checkbox') {
-                        val = input.checked ? '1' : '0';
-                    } else {
-                        val = input.value;
-                    }
+                // Keep only existing non-mapped keys if they exist, but clear mapped ones to rebuild concisely
+                const newParams = new URLSearchParams();
 
-                    if (params.get(input.id) !== val) {
-                        params.set(input.id, val);
-                        changed = true;
-                    }
+                inputs.forEach(input => {
+                    let val = input.type === 'checkbox' ? (input.checked ? '1' : '0') : input.value;
+                    let sk = shortK(input.id);
+                    newParams.set(sk, val);
+                    
+                    if (params.get(sk) !== val) changed = true;
                 });
 
-                if (changed) {
-                    const newUrl = `${window.location.pathname}?${params.toString()}`;
+                if (changed || params.toString() !== newParams.toString()) {
+                    const newUrl = `${window.location.pathname}?${newParams.toString()}`;
                     window.history.replaceState({}, '', newUrl);
                 }
             };
@@ -757,7 +763,8 @@ class MriHeader extends HTMLElement {
                 // Track changes constantly for new/init values
                 const inputs = getSyncableInputs();
                 inputs.forEach(input => {
-                    const val = params.get(input.id);
+                    const sk = shortK(input.id);
+                    const val = params.get(sk) || params.get(input.id); // fallback for older links
                     if (val !== null) {
                         if (input.type === 'checkbox') {
                             input.checked = val === '1';
