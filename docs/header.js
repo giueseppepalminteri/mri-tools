@@ -717,6 +717,158 @@ class MriHeader extends HTMLElement {
         document.addEventListener('click', () => navPanel.classList.remove('visible'));
         navPanel.addEventListener('click', (e) => e.stopPropagation());
 
+        // --- URL State Synchronization & Presets ---
+        if (pageTitle !== 'MRI Tools Index') {
+            const syncUiStateToUrl = () => {
+                const inputs = document.querySelectorAll('input[id]:not(#fullscreen-check):not(#auto-hide-check):not(#preset-name-input), select[id]:not(#preset-select)');
+                const params = new URLSearchParams(window.location.search);
+                let changed = false;
+
+                inputs.forEach(input => {
+                    if (headerEl.shadowRoot && headerEl.shadowRoot.contains(input)) return;
+
+                    let val;
+                    if (input.type === 'checkbox') {
+                        val = input.checked ? '1' : '0';
+                    } else {
+                        val = input.value;
+                    }
+
+                    if (params.get(input.id) !== val) {
+                        params.set(input.id, val);
+                        changed = true;
+                    }
+                });
+
+                if (changed) {
+                    const newUrl = `${window.location.pathname}?${params.toString()}`;
+                    window.history.replaceState({}, '', newUrl);
+                }
+            };
+
+            const loadUiStateFromUrl = () => {
+                const params = new URLSearchParams(window.location.search);
+                
+                // Track changes constantly for new/init values
+                const inputs = document.querySelectorAll('input[id]:not(#fullscreen-check):not(#auto-hide-check):not(#preset-name-input), select[id]:not(#preset-select)');
+                inputs.forEach(input => {
+                    if (headerEl.shadowRoot && headerEl.shadowRoot.contains(input)) return;
+                    
+                    const val = params.get(input.id);
+                    if (val !== null) {
+                        if (input.type === 'checkbox') {
+                            input.checked = val === '1';
+                        } else {
+                            input.value = val;
+                        }
+                        
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    
+                    input.addEventListener('change', syncUiStateToUrl);
+                    if (input.type === 'range' || input.type === 'number' || input.type === 'text') {
+                        input.addEventListener('input', syncUiStateToUrl);
+                    }
+                });
+                setTimeout(syncUiStateToUrl, 100); // Flush fresh state
+            };
+
+            const initUrlSync = () => {
+                loadUiStateFromUrl();
+
+                const _settingsPanel = document.getElementById('settings-content');
+                if (_settingsPanel) {
+                    const hr = document.createElement('hr');
+                    hr.style.cssText = 'border:0; border-top:1px solid #333; margin: 15px 0 10px 0;';
+                    _settingsPanel.appendChild(hr);
+
+                    const presetDiv = document.createElement('div');
+                    presetDiv.style.cssText = 'display:flex; flex-direction:column; gap:8px; margin-bottom:10px;';
+                    
+                    // Share Button
+                    const btnCopy = document.createElement('button');
+                    btnCopy.textContent = '🔗 Copy Shareable Link';
+                    btnCopy.style.cssText = 'background: #222; color: #94d2bd; border: 1px solid #444; padding: 6px; border-radius: 4px; cursor: pointer; font-weight:bold; font-size: 0.8rem; width: 100%;';
+                    btnCopy.onclick = () => {
+                        syncUiStateToUrl();
+                        navigator.clipboard.writeText(window.location.href).then(() => {
+                            const orig = btnCopy.textContent;
+                            btnCopy.textContent = '✅ Copied to clipboard!';
+                            setTimeout(() => btnCopy.textContent = orig, 1500);
+                        });
+                    };
+                    presetDiv.appendChild(btnCopy);
+                    
+                    // Load Preset Area
+                    const selectPreset = document.createElement('select');
+                    selectPreset.id = 'preset-select';
+                    selectPreset.style.cssText = 'background: #111; color: white; border: 1px solid #444; border-radius: 4px; padding: 6px; width: 100%; font-size: 0.8rem;';
+                    
+                    const updatePresetList = () => {
+                        selectPreset.innerHTML = '<option value="">Load saved preset...</option>';
+                        const prefix = 'mri_preset_' + currentPath + '_';
+                        let found = false;
+                        for (let i = 0; i < localStorage.length; i++) {
+                            const k = localStorage.key(i);
+                            if (k && k.startsWith(prefix)) {
+                                const opt = document.createElement('option');
+                                opt.value = localStorage.getItem(k);
+                                opt.textContent = k.substring(prefix.length);
+                                selectPreset.appendChild(opt);
+                                found = true;
+                            }
+                        }
+                        selectPreset.style.display = found ? 'block' : 'none';
+                    };
+                    
+                    selectPreset.onchange = (e) => {
+                        if (e.target.value) {
+                            window.history.replaceState({}, '', window.location.pathname + e.target.value);
+                            loadUiStateFromUrl();
+                            selectPreset.value = ""; // Reset internal dropdown state
+                        }
+                    };
+                    presetDiv.appendChild(selectPreset);
+
+                    // Save Preset Area
+                    const saveBox = document.createElement('div');
+                    saveBox.style.cssText = 'display:flex; gap:5px;';
+                    
+                    const presetName = document.createElement('input');
+                    presetName.id = 'preset-name-input';
+                    presetName.type = 'text';
+                    presetName.placeholder = 'Preset Name...';
+                    presetName.style.cssText = 'flex:1; background: #111; color: white; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size:0.8rem;';
+                    
+                    const btnSave = document.createElement('button');
+                    btnSave.textContent = 'Save';
+                    btnSave.style.cssText = 'background: #222; border: 1px solid #444; color: white; border-radius: 4px; cursor:pointer; font-weight:bold; font-size:0.8rem;';
+                    
+                    btnSave.onclick = () => {
+                        syncUiStateToUrl();
+                        const name = presetName.value.trim() || 'My Preset';
+                        const key = 'mri_preset_' + currentPath + '_' + name;
+                        localStorage.setItem(key, window.location.search);
+                        updatePresetList();
+                        presetName.value = '';
+                    };
+                    
+                    saveBox.appendChild(presetName);
+                    saveBox.appendChild(btnSave);
+                    presetDiv.appendChild(saveBox);
+
+                    _settingsPanel.appendChild(presetDiv);
+                    updatePresetList();
+                }
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => setTimeout(initUrlSync, 100));
+            } else {
+                setTimeout(initUrlSync, 100);
+            }
+        }
     }
 
     setStatusText(text) {
