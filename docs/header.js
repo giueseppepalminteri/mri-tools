@@ -7,14 +7,7 @@ class MriHeader extends HTMLElement {
     connectedCallback() {
         const root = this.getAttribute('root') || '../';
         const pageTitle = document.title;
-        const isInIframe = window.self !== window.top;
-
-        // Detect if this is the portal shell (the host page)
         const currentPath = window.location.pathname;
-        const fileName = currentPath.substring(currentPath.lastIndexOf('/') + 1);
-        const isPortalShell = !!document.getElementById('tool-container') || 
-                              this.id === 'portal-header' ||
-                              this.getAttribute('id') === 'portal-header';
 
         const headerEl = this;
 
@@ -74,7 +67,7 @@ class MriHeader extends HTMLElement {
             }
 
             const tryFullscreen = () => {
-                if (fsPref && !document.fullscreenElement && !isInIframe) {
+                if (fsPref && !document.fullscreenElement) {
                     document.documentElement.requestFullscreen().catch(() => {});
                 }
             };
@@ -97,11 +90,6 @@ class MriHeader extends HTMLElement {
                 fsCheck.addEventListener('change', () => {
                     fsPref = fsCheck.checked;
                     localStorage.setItem('mri_fullscreen', fsPref);
-
-                    if (isInIframe) {
-                        window.parent.postMessage({ type: 'TOGGLE_FULLSCREEN', active: fsPref }, '*');
-                        return;
-                    }
 
                     if (fsPref) {
                         document.documentElement.requestFullscreen().catch(() => {
@@ -135,15 +123,13 @@ class MriHeader extends HTMLElement {
             if (!document.getElementById('mri-pinned-bars-style')) {
                 const style = document.createElement('style');
                 style.id = 'mri-pinned-bars-style';
-                if (!isPortalShell) {
-                    style.innerHTML = `
-                        body.bars-pinned {
-                            padding-top: 60px !important;
-                            padding-bottom: 75px !important;
-                            box-sizing: border-box !important;
-                        }
-                    `;
-                }
+                style.innerHTML = `
+                    body.bars-pinned {
+                        padding-top: 60px !important;
+                        padding-bottom: 75px !important;
+                        box-sizing: border-box !important;
+                    }
+                `;
                 document.head.appendChild(style);
             }
 
@@ -174,11 +160,6 @@ class MriHeader extends HTMLElement {
                     headerEl.style.transform = getTransform('0');
                     headerEl.style.opacity = '1';
 
-                    const iframe = document.getElementById('tool-container');
-                    if (iframe && iframe.contentWindow) {
-                        iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
-                    }
-
                     const bottomToolbar = document.getElementById('bottom-toolbar');
                     if (bottomToolbar) {
                         bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
@@ -195,13 +176,6 @@ class MriHeader extends HTMLElement {
                 if (!autoHideActive) return;
                 headerEl.style.transform = getTransform('0');
                 headerEl.style.opacity = '1';
-                const iframe = document.getElementById('tool-container');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
-                }
-                if (isInIframe) {
-                    window.parent.postMessage({ type: 'SET_HEADER_VISIBILITY', visible: true }, '*');
-                }
             };
             const hideHeader = () => {
                 if (!autoHideActive) return;
@@ -221,38 +195,16 @@ class MriHeader extends HTMLElement {
                 if (notesPanel) {
                     notesPanel.classList.remove('visible');
                 }
-
-                const iframe = document.getElementById('tool-container');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
-                }
-                if (isInIframe) {
-                    window.parent.postMessage({ type: 'SET_HEADER_VISIBILITY', visible: false }, '*');
-                }
             };
             const showToolbar = () => {
                 if (!autoHideActive) return;
                 const bt = document.getElementById('bottom-toolbar');
                 if (bt) { bt.style.transform = 'translateY(0)'; bt.style.opacity = '1'; }
-                const iframe = document.getElementById('tool-container');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: true }, '*');
-                }
-                if (isInIframe) {
-                    window.parent.postMessage({ type: 'SET_HEADER_VISIBILITY', visible: true }, '*');
-                }
             };
             const hideToolbar = () => {
                 if (!autoHideActive) return;
                 const bt = document.getElementById('bottom-toolbar');
                 if (bt) { bt.style.transform = 'translateY(100%)'; bt.style.opacity = '0'; }
-                const iframe = document.getElementById('tool-container');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ type: 'SET_TOOLBAR_VISIBILITY', visible: false }, '*');
-                }
-                if (isInIframe) {
-                    window.parent.postMessage({ type: 'SET_HEADER_VISIBILITY', visible: false }, '*');
-                }
             };
 
             let hideTimeout;
@@ -328,53 +280,7 @@ class MriHeader extends HTMLElement {
             injectSettings();
         }
 
-        // If we are in the portal shell, we need to listen for messages from the guest settings
-        if (isPortalShell) {
-            window.addEventListener('message', (event) => {
-                if (event.data.type === 'SET_AUTO_HIDE') {
-                    const autoHideCheck = document.getElementById('auto-hide-check');
-                    if (autoHideCheck) {
-                        autoHideCheck.checked = event.data.active;
-                        autoHideCheck.dispatchEvent(new Event('change'));
-                    } else {
-                        localStorage.setItem('mri_auto_hide_bars', event.data.active);
-                        if (window.mri_applyAutoHideGlobal) {
-                            window.mri_applyAutoHideGlobal(event.data.active);
-                        }
-                    }
-                } else if (event.data.type === 'TOGGLE_FULLSCREEN') {
-                    const fsCheck = document.getElementById('fullscreen-check');
-                    if (fsCheck) {
-                        fsCheck.checked = event.data.active;
-                        fsCheck.dispatchEvent(new Event('change'));
-                    } else {
-                        // Directly process fullscreen request on host shell
-                        if (event.data.active) {
-                            document.documentElement.requestFullscreen().catch(() => {});
-                        } else {
-                            if (document.fullscreenElement) {
-                                document.exitFullscreen().catch(() => {});
-                            }
-                        }
-                    }
-                } else if (event.data.type === 'SET_HEADER_VISIBILITY') {
-                    if (window.mri_applyHeaderVisibility) {
-                        window.mri_applyHeaderVisibility(event.data.visible);
-                    }
-                } else if (event.data.type === 'SET_MIRROR_ALL') {
-                    window.mriHeaderMirror = event.data.active;
-                    if (window.mri_updateHeaderTransform) {
-                        window.mri_updateHeaderTransform();
-                    }
-                }
-            });
-        }
 
-        // If inside an iframe (portal content), we hide the header completely 
-        // to avoid double headers, but keep the background logic running.
-        if (isInIframe) {
-            this.style.display = 'none';
-        }
 
         this.shadowRoot.innerHTML = `
             <style>
@@ -673,7 +579,7 @@ class MriHeader extends HTMLElement {
             </style>
             <div class="mri-logo-container">
                 <img src="${root}mri_icon.png" class="mri-icon-btn" id="mri-nav-toggle" title="Navigation Menu">
-                <a href="${root}home.html" class="mri-logo" id="mri-logo-link" title="Back to Home">
+                <a href="${root}index.html" class="mri-logo" id="mri-logo-link" title="Back to Home">
                     MRI Tools
                 </a>
             </div>
@@ -681,7 +587,7 @@ class MriHeader extends HTMLElement {
             <div id="mri-nav-panel">
                 <span class="info-close" id="nav-panel-close" style="top: 15px; right: 20px;">&times;</span>
                 <h3>Tools & Studies</h3>
-                <a href="${root}home.html" class="nav-item ${pageTitle === 'MRI Tools Index' ? 'active' : ''}">🏠 Home</a>
+                <a href="${root}index.html" class="nav-item ${pageTitle === 'MRI Tools Index' ? 'active' : ''}">🏠 Home</a>
                 <a href="${root}breathing-instructions/index.html" class="nav-item ${pageTitle === 'MRI Breathing Instructions' ? 'active' : ''}">🗣️ Breathing Instructions</a>
                 <a href="${root}breathing-pattern/index.html" class="nav-item ${pageTitle === 'MRI Breathing Pattern' ? 'active' : ''}">🫁 Breathing Pattern</a>
                 <a href="${root}orbit-fixation/index.html" class="nav-item ${pageTitle === 'MRI Orbit Fixation' ? 'active' : ''}">👁️ Orbit Fixation</a>
@@ -774,15 +680,9 @@ class MriHeader extends HTMLElement {
 
         this.shadowRoot.getElementById('mri-global-settings-toggle').addEventListener('click', () => {
             const panel = document.getElementById('settings-panel');
-            const iframe = document.getElementById('tool-container');
             
             if (panel) {
                 panel.classList.toggle('collapsed');
-            } else if (isPortalShell || iframe) {
-                const targetIframe = iframe || document.getElementById('tool-container');
-                if (targetIframe && targetIframe.contentWindow) {
-                    targetIframe.contentWindow.postMessage({ type: 'TOGGLE_SETTINGS' }, '*');
-                }
             } else {
                 console.warn('MRI Header: Settings panel not found on this page.');
             }
@@ -828,56 +728,7 @@ class MriHeader extends HTMLElement {
 
         notesPanel.addEventListener('click', (e) => e.stopPropagation());
 
-        if (isInIframe) {
-            this.style.display = 'none';
-            const handlePortalMessage = (event) => {
-                if (event.data.type === 'SET_TOOLBAR_VISIBILITY') {
-                    if (event.data.visible) {
-                        document.body.classList.remove('toolbars-hidden');
-                    } else {
-                        document.body.classList.add('toolbars-hidden');
-                    }
-                    
-                    // Fallback for elements lacking CSS rules for the class
-                    const bottomToolbar = document.getElementById('bottom-toolbar');
-                    if (bottomToolbar) {
-                        bottomToolbar.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
-                        if (event.data.visible) {
-                            bottomToolbar.style.transform = 'translateY(0)';
-                            bottomToolbar.style.opacity = '1';
-                            bottomToolbar.style.pointerEvents = 'auto';
-                        } else {
-                            bottomToolbar.style.transform = 'translateY(110%)';
-                            bottomToolbar.style.opacity = '0';
-                            bottomToolbar.style.pointerEvents = 'none';
-                        }
-                    }
 
-                    // Collapse settings-panel in guest tool when bars hide
-                    if (!event.data.visible) {
-                        const guestSettingsPanel = document.getElementById('settings-panel');
-                        if (guestSettingsPanel && !guestSettingsPanel.classList.contains('collapsed')) {
-                            guestSettingsPanel.classList.add('collapsed');
-                        }
-                    }
-
-                    // For top-status (timer HUD)
-                    const topStatus = document.getElementById('top-status');
-                    if (topStatus) {
-                        topStatus.style.transition = 'opacity 0.35s ease';
-                        if (event.data.visible) {
-                            topStatus.style.opacity = ''; // Reverts to CSS default/var
-                        } else {
-                            topStatus.style.opacity = '0';
-                        }
-                    }
-                } else if (event.data.type === 'TOGGLE_SETTINGS') {
-                    const panel = document.getElementById('settings-panel');
-                    if (panel) panel.classList.toggle('collapsed');
-                }
-            };
-            window.addEventListener('message', handlePortalMessage);
-        }
 
         // --- Navigation Logic ---
         const navToggle = this.shadowRoot.getElementById('mri-nav-toggle');
@@ -885,41 +736,6 @@ class MriHeader extends HTMLElement {
         const navPanelClose = this.shadowRoot.getElementById('nav-panel-close');
 
         const navItems = this.shadowRoot.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            if (isPortalShell && !item.href.includes('github.io')) {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const url = item.getAttribute('href');
-                    const iframe = document.getElementById('tool-container');
-                    if (iframe) iframe.src = url;
-                    navPanel.classList.remove('visible');
-                });
-            }
-        });
-
-        // Redirect standalone pages to portal if not in it already
-        // We skip MRI Tools Index (the inner home page) and the portal shell itself
-        if (!isInIframe && !isPortalShell && pageTitle !== 'MRI Tools Index' && !window.location.search.includes('standalone')) {
-            const folderName = currentPath.substring(0, currentPath.lastIndexOf('/'));
-            const parentFolderName = folderName.substring(folderName.lastIndexOf('/') + 1);
-            
-            // Construct the relative path for the portal
-            let portalPath = root + 'index.html'; // portal is now index.html
-            let targetPage = (parentFolderName && parentFolderName !== 'docs' ? parentFolderName + '/' : '') + fileName;
-            
-            window.location.href = portalPath + "?page=" + targetPage;
-        }
-
-        // --- Logo navigation logic ---
-        const logoLink = this.shadowRoot.getElementById('mri-logo-link');
-        if (logoLink && isPortalShell) {
-            logoLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                const iframe = document.getElementById('tool-container');
-                if (iframe) iframe.src = logoLink.getAttribute('href');
-                navPanel.classList.remove('visible');
-            });
-        }
 
         navToggle.addEventListener('click', (e) => {
             e.stopPropagation();
