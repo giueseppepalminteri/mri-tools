@@ -494,7 +494,7 @@
         </div>
         <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
           <button id="stopBtn" class="btn-stop" disabled>STOP</button>
-          <div style="font-size: 0.6rem; color: #777; margin-top: 2px; font-weight: bold;">ESC</div>
+          <div style="font-size: 0.6rem; color: #777; margin-top: 2px; font-weight: bold;">ENTER</div>
         </div>
       </div>
     </form>
@@ -655,7 +655,7 @@
           return;
         }
 
-        if (e.code === 'Space' || e.code === 'Escape') {
+        if (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') {
           // If a form element is focused, blur it so the shortcut takes effect
           if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'TEXTAREA') {
             e.target.blur();
@@ -666,7 +666,7 @@
             if (!startBtn.disabled) {
               startBtn.click();
             }
-          } else if (e.code === 'Escape') {
+          } else if (e.code === 'Enter' || e.code === 'NumpadEnter') {
             if (!stopBtn.disabled) {
               stopBtn.click();
             }
@@ -758,7 +758,7 @@
         
         // Prevent hotkeys from triggering while typing instructions
         instrArea.addEventListener('keydown', function(e) {
-          if(e.code === 'Space' || e.code === 'Escape') {
+          if(e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') {
             e.stopPropagation();
           }
         });

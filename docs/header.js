@@ -60,42 +60,14 @@ class MriHeader extends HTMLElement {
             }
 
             const fsCheck = document.getElementById('fullscreen-check');
-            let fsPref = localStorage.getItem('mri_fullscreen') === 'true';
             
             if (fsCheck) {
-                fsCheck.checked = fsPref;
-            }
-
-            const tryFullscreen = () => {
-                if (fsPref && !document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(() => {});
-                }
-            };
-
-            const onFirstGesture = () => {
-                if (fsPref) {
-                    tryFullscreen();
-                }
-                document.removeEventListener('click', onFirstGesture);
-                document.removeEventListener('keydown', onFirstGesture);
-            };
-
-            if (fsPref) {
-                document.addEventListener('click', onFirstGesture);
-                document.addEventListener('keydown', onFirstGesture);
-                tryFullscreen();
-            }
-
-            if (fsCheck) {
+                fsCheck.checked = !!document.fullscreenElement;
+                
                 fsCheck.addEventListener('change', () => {
-                    fsPref = fsCheck.checked;
-                    localStorage.setItem('mri_fullscreen', fsPref);
-
-                    if (fsPref) {
+                    if (fsCheck.checked) {
                         document.documentElement.requestFullscreen().catch(() => {
-                            localStorage.setItem('mri_fullscreen', 'false');
                             fsCheck.checked = false;
-                            fsPref = false;
                         });
                     } else {
                         if (document.fullscreenElement) {
@@ -110,8 +82,6 @@ class MriHeader extends HTMLElement {
                 if (fsCheck) {
                     fsCheck.checked = isFs;
                 }
-                fsPref = isFs;
-                localStorage.setItem('mri_fullscreen', isFs);
             });
 
             const autoHideCheck = document.getElementById('auto-hide-check');
