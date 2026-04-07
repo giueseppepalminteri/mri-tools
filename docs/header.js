@@ -811,35 +811,55 @@ class MriHeader extends HTMLElement {
                     presetDiv.appendChild(btnCopy);
                     
                     // Load Preset Area
-                    const selectPreset = document.createElement('select');
-                    selectPreset.id = 'preset-select';
-                    selectPreset.style.cssText = 'background: #111; color: white; border: 1px solid #444; border-radius: 4px; padding: 6px; width: 100%; font-size: 0.8rem;';
+                    const presetListDiv = document.createElement('div');
+                    presetListDiv.style.cssText = 'display:flex; flex-direction:column; gap:4px; margin-top:5px; margin-bottom:5px; max-height: 150px; overflow-y: auto;';
                     
                     const updatePresetList = () => {
-                        selectPreset.innerHTML = '<option value="">Load saved preset...</option>';
+                        presetListDiv.innerHTML = '';
                         const prefix = 'mri_preset_' + currentPath + '_';
                         let found = false;
                         for (let i = 0; i < localStorage.length; i++) {
                             const k = localStorage.key(i);
                             if (k && k.startsWith(prefix)) {
-                                const opt = document.createElement('option');
-                                opt.value = localStorage.getItem(k);
-                                opt.textContent = k.substring(prefix.length);
-                                selectPreset.appendChild(opt);
                                 found = true;
+                                const pName = k.substring(prefix.length);
+                                const pVal = localStorage.getItem(k);
+                                
+                                const chipRow = document.createElement('div');
+                                chipRow.style.cssText = 'display:flex; padding: 4px 8px; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; align-items:center; cursor: pointer;';
+                                chipRow.onmouseover = () => chipRow.style.background = '#2a2a2a';
+                                chipRow.onmouseout = () => chipRow.style.background = '#1a1a1a';
+                                
+                                const lbl = document.createElement('span');
+                                lbl.textContent = pName;
+                                lbl.style.cssText = 'flex:1; font-size: 0.8rem; color: #94d2bd; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+                                
+                                const delBtn = document.createElement('button');
+                                delBtn.innerHTML = '&#10005;'; // X mark
+                                delBtn.style.cssText = 'background:transparent; border:none; color: #ff5555; cursor:pointer; font-size:0.8rem; padding:0 0 0 8px; margin-left: 5px; border-left: 1px solid #333; font-weight: bold;';
+                                
+                                delBtn.onclick = (e) => {
+                                    e.stopPropagation();
+                                    if(confirm(`Delete preset "${pName}"?`)) {
+                                        localStorage.removeItem(k);
+                                        updatePresetList();
+                                    }
+                                };
+                                
+                                chipRow.onclick = () => {
+                                    window.history.replaceState({}, '', window.location.pathname + pVal);
+                                    loadUiStateFromUrl();
+                                };
+                                
+                                chipRow.appendChild(lbl);
+                                chipRow.appendChild(delBtn);
+                                presetListDiv.appendChild(chipRow);
                             }
                         }
-                        selectPreset.style.display = found ? 'block' : 'none';
+                        presetListDiv.style.display = found ? 'flex' : 'none';
                     };
                     
-                    selectPreset.onchange = (e) => {
-                        if (e.target.value) {
-                            window.history.replaceState({}, '', window.location.pathname + e.target.value);
-                            loadUiStateFromUrl();
-                            selectPreset.value = ""; // Reset internal dropdown state
-                        }
-                    };
-                    presetDiv.appendChild(selectPreset);
+                    presetDiv.appendChild(presetListDiv);
 
                     // Save Preset Area
                     const saveBox = document.createElement('div');
