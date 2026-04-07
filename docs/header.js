@@ -719,14 +719,19 @@ class MriHeader extends HTMLElement {
 
         // --- URL State Synchronization & Presets ---
         if (pageTitle !== 'MRI Tools Index') {
+            const excludedInputIds = ['fullscreen-check', 'auto-hide-check', 'preset-name-input', 'preset-select', 'zoom-select', 'm-p-check', 'm-a-check', 'instr-check', 'instr-size-slider'];
+            
+            const getSyncableInputs = () => {
+                const nodes = document.querySelectorAll('input[id], select[id]');
+                return Array.from(nodes).filter(el => !excludedInputIds.includes(el.id) && !(headerEl.shadowRoot && headerEl.shadowRoot.contains(el)));
+            };
+
             const syncUiStateToUrl = () => {
-                const inputs = document.querySelectorAll('input[id]:not(#fullscreen-check):not(#auto-hide-check):not(#preset-name-input), select[id]:not(#preset-select)');
+                const inputs = getSyncableInputs();
                 const params = new URLSearchParams(window.location.search);
                 let changed = false;
 
                 inputs.forEach(input => {
-                    if (headerEl.shadowRoot && headerEl.shadowRoot.contains(input)) return;
-
                     let val;
                     if (input.type === 'checkbox') {
                         val = input.checked ? '1' : '0';
@@ -750,10 +755,8 @@ class MriHeader extends HTMLElement {
                 const params = new URLSearchParams(window.location.search);
                 
                 // Track changes constantly for new/init values
-                const inputs = document.querySelectorAll('input[id]:not(#fullscreen-check):not(#auto-hide-check):not(#preset-name-input), select[id]:not(#preset-select)');
+                const inputs = getSyncableInputs();
                 inputs.forEach(input => {
-                    if (headerEl.shadowRoot && headerEl.shadowRoot.contains(input)) return;
-                    
                     const val = params.get(input.id);
                     if (val !== null) {
                         if (input.type === 'checkbox') {
